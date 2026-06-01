@@ -1,0 +1,43 @@
+[package]
+name = "ts-103-636-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+ts-103-636 = { path = ".." }
+
+# Detach from any parent workspace resolution.
+[workspace]
+
+[[bin]]
+name = "pdu_parse"
+path = "fuzz_targets/pdu_parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "message_bodies"
+path = "fuzz_targets/message_bodies.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "pcc_parse"
+path = "fuzz_targets/pcc_parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "parse_secure"
+path = "fuzz_targets/parse_secure.rs"
+test = false
+doc = false
+bench = false

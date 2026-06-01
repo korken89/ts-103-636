@@ -1,0 +1,7 @@
+# Pinned toolchain for reproducible builds; consumed by rustup and by
+# the Nix flake (fenix.fromToolchainFile). The thumb target is the
+# nRF9151 application core.
+[toolchain]
+channel = "1.96.0"
+components = ["rustfmt", "clippy", "rust-src", "rust-analyzer"]
+targets = ["thumbv8m.main-none-eabihf"]

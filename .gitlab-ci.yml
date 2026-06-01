@@ -1,0 +1,4 @@
+ci:
+  image: rust:latest
+  script:
+    - make ci
