@@ -36,22 +36,43 @@ Spec coverage is broad and round-trip-tested:
   plus a `MacCrypto` trait so a hardware accelerator can be swapped
   in without touching the layout code
 
-Every module carries inline unit tests (`cargo test` runs the full
-suite on the host). Run `make` for the complete check suite (fmt,
-clippy, tests, the hardware-crypto configuration, nRF9151 target
-builds, and docs) - it is exactly what CI runs.
+Every message keeps its inline unit tests (`cargo test` runs the full
+suite on the host), and the parsers are additionally fuzzed with
+coverage-guided libFuzzer targets. Run `make` for the complete check
+suite (generated-code drift check, fmt, clippy, tests, the
+hardware-crypto configuration, nRF9151 target builds, and docs) - it
+is exactly what CI runs. `make fuzz-smoke` runs a short fuzz pass
+over every target (requires `cargo-fuzz`).
 
 ## Design
+
+- **Generated codecs.** Every MAC message codec under
+  `src/mac/messages/generated/` is emitted by the `codegen/` crate
+  from a declarative layout definition (`codegen/src/defs/`, one file
+  per message, written row-by-row against the spec figures). The
+  output is committed and human-readable - direct indexing with
+  static offsets, in the same shape as handwritten code - and each
+  generated module's documentation carries an ASCII wire-layout
+  figure for side-by-side review with the standard. `make codegen`
+  regenerates; CI fails if the committed output drifts from the
+  definitions. Support types with behavior (enums like
+  `ResourceAllocationKind`, composites like `PhyCapability`) stay
+  handwritten; the generated modules implement their codecs.
+- **`const fn` codecs.** For every message that does not carry a
+  variable-length list, `encoded_len` / `serialize` / `parse` are
+  `const fn`: beacons, security info, status IEs and the like can be
+  pre-built (or even pre-parsed) at compile time.
 
 - **Typed everywhere.** Every bit-constrained or invariant-bearing
   field has a typed wrapper. Bit-width errors surface at field
   construction, not on the wire. Fields whose value set is fixed by
   the spec are enums with the spec's discriminant values.
-- **`Parts` + lazy view.** Each body has an owned `*Parts` struct
-  (builder side) and, where useful, a lazy borrowed view
-  (`Foo<'a>(&'a [u8])`) for read-only access without an intermediate
-  allocation. The `Parts` type uses typed fields end-to-end; the lazy
-  view returns raw bytes for hot accessors.
+- **`Parts` structs, zero-copy where it counts.** Each body has a
+  `*Parts` struct with typed fields end-to-end, used for both
+  building and parsing. PDU walking (`Message<'a>`, the IE iterator)
+  borrows the receive buffer, and bodies carrying opaque byte runs
+  (Group Assignment tags, Reconfiguration flow entries) parse them as
+  zero-copy `&'a [T]` slices instead of collecting.
 - **Typestate PDU builder.** `MacPduBuilder<'a, State>` enforces the
   correct call order at compile time: you cannot push an IE before a
   header, cannot finish-with-security from an unsecured state, and
@@ -211,6 +232,18 @@ Disable `software-crypto` (e.g. with `default-features = false`) when
 you are wiring a hardware crypto accelerator behind your own
 `MacCrypto` impl and want to drop the RustCrypto dependencies
 entirely.
+
+## Repository layout
+
+The repo is a Cargo workspace; only the `ts-103-636` library is
+published. The auxiliary crates exist so the full tool chain is
+covered by the same `make ci` run:
+
+| Path       | Crate                | Purpose |
+|------------|----------------------|---------|
+| `/`        | `ts-103-636`         | The published `#![no_std]` library |
+| `codegen/` | `ts-103-636-codegen` | Snapshot generator for `src/mac/messages/generated/` (`make codegen`, drift-checked in CI) |
+| `fuzz/`    | `ts-103-636-fuzz`    | libFuzzer targets (`make fuzz-smoke`); seeds are committed, the working corpus is not |
 
 ## License
 
