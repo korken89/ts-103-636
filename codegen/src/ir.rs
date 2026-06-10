@@ -96,7 +96,11 @@ pub enum Item {
     Variant(Variant),
     /// Constant bits (an arm's discriminant value): serialized as the
     /// given value, ignored on parse (the dispatch already matched).
-    Const { bits: u8, value: u8, fig: &'static str },
+    Const {
+        bits: u8,
+        value: u8,
+        fig: &'static str,
+    },
     /// Mandatory composite group: an optional leading [`Item::Switch`]
     /// followed by static fields, stored as one composite value.
     Inline(Group),

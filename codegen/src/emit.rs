@@ -30,7 +30,10 @@ enum Ctrl<'a> {
 /// A dynamic tail region, in wire order.
 enum Region<'a> {
     /// Mandatory fields between dynamic regions.
-    Fixed { slots: Vec<Slot<'a>>, bytes: usize },
+    Fixed {
+        slots: Vec<Slot<'a>>,
+        bytes: usize,
+    },
     Opt(&'a Group),
     Rep(&'a Repeat),
     Sw(&'a Switch),
@@ -67,7 +70,7 @@ fn kind(name: &str, f: &Field, bit: usize) -> Kind {
             f.name
         );
         Kind::SubByte
-    } else if f.bits % 8 == 0 && o == 0 {
+    } else if f.bits.is_multiple_of(8) && o == 0 {
         assert!(
             matches!(f.bits, 8 | 16 | 32),
             "{name}::{}: unsupported width {}",
@@ -92,16 +95,21 @@ fn layout<'a>(def: &'a MessageDef) -> Layout<'a> {
     let mut run: Vec<Slot<'a>> = Vec::new();
     let mut run_bit = 0usize;
 
-    let flush_run = |regions: &mut Vec<Region<'a>>, run: &mut Vec<Slot<'a>>, run_bit: &mut usize| {
-        if !run.is_empty() || *run_bit > 0 {
-            assert!(*run_bit % 8 == 0, "{}: fixed run not byte aligned", def.name);
-            regions.push(Region::Fixed {
-                slots: std::mem::take(run),
-                bytes: *run_bit / 8,
-            });
-            *run_bit = 0;
-        }
-    };
+    let flush_run =
+        |regions: &mut Vec<Region<'a>>, run: &mut Vec<Slot<'a>>, run_bit: &mut usize| {
+            if !run.is_empty() || *run_bit > 0 {
+                assert!(
+                    (*run_bit).is_multiple_of(8),
+                    "{}: fixed run not byte aligned",
+                    def.name
+                );
+                regions.push(Region::Fixed {
+                    slots: std::mem::take(run),
+                    bytes: *run_bit / 8,
+                });
+                *run_bit = 0;
+            }
+        };
 
     for item in def.items {
         match item {
@@ -127,7 +135,11 @@ fn layout<'a>(def: &'a MessageDef) -> Layout<'a> {
                 }
             }
             Item::PresenceFlag { of, .. } => {
-                assert!(in_prefix, "{}: flag for {of} after a dynamic item", def.name);
+                assert!(
+                    in_prefix,
+                    "{}: flag for {of} after a dynamic item",
+                    def.name
+                );
                 ctrls.push(Ctrl::Flag { of, bit });
                 bit += 1;
             }
@@ -216,7 +228,11 @@ fn layout<'a>(def: &'a MessageDef) -> Layout<'a> {
         }
     }
     if in_prefix {
-        assert!(bit % 8 == 0, "{}: layout is not byte aligned", def.name);
+        assert!(
+            bit.is_multiple_of(8),
+            "{}: layout is not byte aligned",
+            def.name
+        );
     }
     flush_run(&mut regions, &mut run, &mut run_bit);
     if let Some(i) = regions
@@ -241,7 +257,7 @@ fn layout<'a>(def: &'a MessageDef) -> Layout<'a> {
 fn end_prefix(def: &MessageDef, in_prefix: &mut bool, bit: usize) {
     if *in_prefix {
         assert!(
-            bit % 8 == 0,
+            bit.is_multiple_of(8),
             "{}: dynamic item at a non-byte boundary",
             def.name
         );
@@ -274,7 +290,10 @@ fn group_parts<'a>(def: &MessageDef, g: &'a Group) -> GroupParts<'a> {
     for n in &nested {
         assert!(
             n.composite.is_none()
-                && !n.items.iter().any(|i| matches!(i, Item::Optional(_) | Item::Switch(_))),
+                && !n
+                    .items
+                    .iter()
+                    .any(|i| matches!(i, Item::Optional(_) | Item::Switch(_))),
             "{}::{}: nested optional must be a simple field group",
             def.name,
             n.name
@@ -326,7 +345,7 @@ fn validate_inline(def: &MessageDef, g: &Group) {
         );
     }
     assert!(
-        run_bits(parts.statics) % 8 == 0,
+        run_bits(parts.statics).is_multiple_of(8),
         "{}::{}: not byte aligned",
         def.name,
         g.name
@@ -378,7 +397,12 @@ fn validate_group(def: &MessageDef, g: &Group) {
     }
     let parts = group_parts(def, g);
     let bits = run_bits(parts.statics);
-    assert!(bits % 8 == 0, "{}::{}: not byte aligned", def.name, g.name);
+    assert!(
+        bits.is_multiple_of(8),
+        "{}::{}: not byte aligned",
+        def.name,
+        g.name
+    );
     let n_fields = parts
         .statics
         .iter()
@@ -482,7 +506,11 @@ fn read_expr(def: &MessageDef, f: &Field, bit: usize, rel: bool, locals: bool) -
     match kind(def.name, f, bit) {
         Kind::Word => match f.bits {
             8 => buf_at(rel, k),
-            16 => format!("u16::from_be_bytes([{}, {}])", buf_at(rel, k), buf_at(rel, k + 1)),
+            16 => format!(
+                "u16::from_be_bytes([{}, {}])",
+                buf_at(rel, k),
+                buf_at(rel, k + 1)
+            ),
             32 => format!(
                 "u32::from_be_bytes([{}, {}, {}, {}])",
                 buf_at(rel, k),
@@ -501,7 +529,11 @@ fn read_expr(def: &MessageDef, f: &Field, bit: usize, rel: bool, locals: bool) -
             )
         }
         Kind::SubByte => {
-            let be = if locals { format!("b{k}") } else { buf_at(rel, k) };
+            let be = if locals {
+                format!("b{k}")
+            } else {
+                buf_at(rel, k)
+            };
             let o = bit % 8;
             let shift = 8 - o - f.bits as usize;
             let mask = (1u16 << f.bits) - 1;
@@ -648,9 +680,10 @@ fn run_serialize(
             continue;
         }
         // A masked word (e.g. 13-bit channel) starting in this byte?
-        if let Some(s) = slots.iter().find(|s| {
-            s.bit / 8 == k && matches!(kind(def.name, s.field, s.bit), Kind::MaskedWord)
-        }) {
+        if let Some(s) = slots
+            .iter()
+            .find(|s| s.bit / 8 == k && matches!(kind(def.name, s.field, s.bit), Kind::MaskedWord))
+        {
             assert!(
                 slots
                     .iter()
@@ -891,7 +924,7 @@ fn opt_ty(g: &Group) -> String {
         .expect("group has one field")
 }
 
-fn elem_field<'a>(r: &'a Repeat) -> &'a Field {
+fn elem_field(r: &Repeat) -> &Field {
     r.items
         .iter()
         .find_map(|i| match i {
@@ -912,7 +945,11 @@ fn sfield_decl(sf: &SField<'_>) -> (String, String, String) {
     match sf {
         SField::Ctx(c) => (c.name.into(), c.ty.into(), c.doc.into()),
         SField::Plain(f) => (f.name.into(), f.rust_ty(), f.doc.into()),
-        SField::Opt(g) => (g.name.into(), format!("Option<{}>", opt_ty(g)), g.doc.into()),
+        SField::Opt(g) => (
+            g.name.into(),
+            format!("Option<{}>", opt_ty(g)),
+            g.doc.into(),
+        ),
         SField::Rep(r) => {
             let ty = match &r.all_escape {
                 Some(e) => e.ty.to_string(),
@@ -968,9 +1005,7 @@ fn wide_read(sw: &Switch) -> String {
         rel_word_read(16)
     } else {
         let mask = (1u32 << sw.wide_bits) - 1;
-        format!(
-            "u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x{mask:04X}"
-        )
+        format!("u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x{mask:04X}")
     }
 }
 
@@ -993,8 +1028,10 @@ fn rel_word_read(bits: u8) -> String {
     match bits {
         8 => "buffer[pos]".into(),
         16 => "u16::from_be_bytes([buffer[pos], buffer[pos + 1]])".into(),
-        32 => "u32::from_be_bytes([buffer[pos], buffer[pos + 1], buffer[pos + 2], buffer[pos + 3]])"
-            .into(),
+        32 => {
+            "u32::from_be_bytes([buffer[pos], buffer[pos + 1], buffer[pos + 2], buffer[pos + 3]])"
+                .into()
+        }
         _ => panic!("unsupported word width {bits}"),
     }
 }
@@ -1476,7 +1513,10 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                     let Wide::Ctx(expr) = &s.wide else {
                         unreachable!()
                     };
-                    out.push_str(&format!("            if {} {{\n", cond_expr(def, expr, true)));
+                    out.push_str(&format!(
+                        "            if {} {{\n",
+                        cond_expr(def, expr, true)
+                    ));
                     out.push_str(&wide_guard(s, "v", "                "));
                     out.push_str(
                         "                let raw = v.to_be_bytes();\n\
@@ -1514,10 +1554,7 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                     for n in &parts.nested {
                         let nslots = run_slots(n.items);
                         let nbytes = run_bits(n.items) / 8;
-                        out.push_str(&format!(
-                            "            if let Some(v) = v.{} {{\n",
-                            n.name
-                        ));
+                        out.push_str(&format!("            if let Some(v) = v.{} {{\n", n.name));
                         let naccess = |_f: &Field| "v".to_string();
                         for stmt in run_serialize(
                             def,
@@ -1614,19 +1651,18 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                     ts.name, ts.getter
                 ));
             }
-            Region::CSlice(cs) => {
-                match &cs.all_ones {
-                    AllOnes::Reserved => out.push_str(&format!(
-                        "        let mut i = 0;\n\
+            Region::CSlice(cs) => match &cs.all_ones {
+                AllOnes::Reserved => out.push_str(&format!(
+                    "        let mut i = 0;\n\
                          \x20       while i < self.{0}.len() {{\n\
                          \x20           out[pos] = self.{0}[i].{1}();\n\
                          \x20           pos += 1;\n\
                          \x20           i += 1;\n\
                          \x20       }}\n",
-                        cs.name, cs.getter
-                    )),
-                    AllOnes::All { specific, .. } => out.push_str(&format!(
-                        "        if let {specific}(f) = self.{} {{\n\
+                    cs.name, cs.getter
+                )),
+                AllOnes::All { specific, .. } => out.push_str(&format!(
+                    "        if let {specific}(f) = self.{} {{\n\
                          \x20           let mut i = 0;\n\
                          \x20           while i < f.len() {{\n\
                          \x20               out[pos] = f[i].{}();\n\
@@ -1634,10 +1670,9 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                          \x20               i += 1;\n\
                          \x20           }}\n\
                          \x20       }}\n",
-                        cs.name, cs.getter
-                    )),
-                }
-            }
+                    cs.name, cs.getter
+                )),
+            },
             Region::Inline(g) => {
                 let parts = inline_parts(def, g);
                 let c = g.composite.as_ref().expect("inline composite");
@@ -1649,10 +1684,7 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                         unreachable!()
                     };
                     let nmax = (1u32 << sw.narrow_bits) - 1;
-                    out.push_str(&format!(
-                        "        if {} {{\n",
-                        cond_expr(def, expr, true)
-                    ));
+                    out.push_str(&format!("        if {} {{\n", cond_expr(def, expr, true)));
                     out.push_str(&wide_guard(sw, acc, "            "));
                     out.push_str(&format!(
                         "            let raw = {acc}.to_be_bytes();\n\
@@ -1698,9 +1730,7 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                         };
                         out.push_str(&format!("                out[{i}] = raw[{j}];\n"));
                     }
-                    out.push_str(&format!(
-                        "                pos += {n};\n            }}\n"
-                    ));
+                    out.push_str(&format!("                pos += {n};\n            }}\n"));
                 }
                 out.push_str("        }\n");
             }
@@ -1837,14 +1867,13 @@ fn parse_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                         ));
                     }
                     CountTarget::Rep(Repeat {
-                        all_escape: Some(_), ..
+                        all_escape: Some(_),
+                        ..
                     }) => {
                         out.push_str(&format!("        let {of}_count_raw = {read};\n"));
                     }
                     CountTarget::Rep(r) => {
-                        out.push_str(&format!(
-                            "        let {of}_count = ({read}) as usize;\n"
-                        ));
+                        out.push_str(&format!("        let {of}_count = ({read}) as usize;\n"));
                         if r.reserved_max {
                             out.push_str(&format!(
                                 "        if {of}_count == {mask} {{\n\
@@ -1863,9 +1892,7 @@ fn parse_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                             ));
                         }
                         AllOnes::All { .. } => {
-                            out.push_str(&format!(
-                                "        let {of}_count_raw = {read};\n"
-                            ));
+                            out.push_str(&format!("        let {of}_count_raw = {read};\n"));
                         }
                     },
                 }
@@ -2074,9 +2101,7 @@ fn parse_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                          \x20       }}\n"
                     ));
                     if let Some(AllEscape { specific, .. }) = &r.all_escape {
-                        out.push_str(&format!(
-                            "        {specific}({vec_name})\n        }};\n"
-                        ));
+                        out.push_str(&format!("        {specific}({vec_name})\n        }};\n"));
                     }
                 }
                 Region::Sw(s) => {
@@ -2300,8 +2325,7 @@ fn arm_def(def: &MessageDef, arm: &VArm) -> MessageDef {
 
 /// Emit a module whose body is an enum dispatched on leading bits.
 fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
-    let arm_lays: Vec<(MessageDef, &VArm)> =
-        vb.arms.iter().map(|a| (arm_def(def, a), a)).collect();
+    let arm_lays: Vec<(MessageDef, &VArm)> = vb.arms.iter().map(|a| (arm_def(def, a), a)).collect();
     for (ad, a) in &arm_lays {
         assert!(
             matches!(a.items.first(), Some(Item::Const { bits, value, .. })
@@ -2319,9 +2343,12 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
             def.name
         );
     }
-    let has_repeat = arm_lays
-        .iter()
-        .any(|(ad, _)| layout(ad).regions.iter().any(|r| matches!(r, Region::Rep(_))));
+    let has_repeat = arm_lays.iter().any(|(ad, _)| {
+        layout(ad)
+            .regions
+            .iter()
+            .any(|r| matches!(r, Region::Rep(_)))
+    });
     let constness = if has_repeat { "" } else { "const " };
     let fallible = true; // the dispatch itself rejects reserved values
     let scrutinee = if def.ctx.is_empty() {
@@ -2379,7 +2406,7 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
             if let Region::Rep(r) = region {
                 let (_, bits) = find_count(&lay.ctrls, r.name);
                 let max = (1u32 << bits) - 1 + u32::from(r.bias)
-                - u32::from(r.reserved_max || r.all_escape.is_some());
+                    - u32::from(r.reserved_max || r.all_escape.is_some());
                 out.push_str(&format!(
                     "/// {}\npub const {}: usize = {max};\n\n",
                     r.max_doc, r.max_const
@@ -2400,7 +2427,10 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
         out.push_str("#[cfg_attr(feature = \"defmt\", derive(defmt::Format))]\n");
         out.push_str(&format!("pub struct {} {{\n", def.name));
         for c in def.ctx {
-            out.push_str(&format!("    /// {}\n    pub {}: {},\n", c.doc, c.name, c.ty));
+            out.push_str(&format!(
+                "    /// {}\n    pub {}: {},\n",
+                c.doc, c.name, c.ty
+            ));
         }
         out.push_str(&format!(
             "    /// {}\n    pub {}: {},\n",
@@ -2430,7 +2460,11 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
                     _ => 0,
                 })
                 .sum::<usize>();
-        if lay.regions.iter().all(|r| matches!(r, Region::Fixed { .. })) {
+        if lay
+            .regions
+            .iter()
+            .all(|r| matches!(r, Region::Fixed { .. }))
+        {
             out.push_str(&format!("            {} => {base},\n", a.len_pattern));
         } else {
             let body = bind_subst(&len_regions(ad, &lay), a.binds);
@@ -2458,7 +2492,10 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
     for (ad, a) in &arm_lays {
         let lay = layout(ad);
         let body = bind_subst(&ser_dynamic_body(ad, &lay), a.binds);
-        out.push_str(&format!("            {} => {{\n{body}            }}\n", a.pattern));
+        out.push_str(&format!(
+            "            {} => {{\n{body}            }}\n",
+            a.pattern
+        ));
     }
     out.push_str("        }\n    }\n\n");
 
@@ -2485,10 +2522,7 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
     out.push_str(
         "        if buffer.is_empty() {\n            return Err(ParsingError::Truncated);\n        }\n",
     );
-    out.push_str(&format!(
-        "        match buffer[0] >> {} {{\n",
-        8 - vb.bits
-    ));
+    out.push_str(&format!("        match buffer[0] >> {} {{\n", 8 - vb.bits));
     for (ad, a) in &arm_lays {
         let lay = layout(ad);
         let body = parse_dynamic_body(ad, &lay);

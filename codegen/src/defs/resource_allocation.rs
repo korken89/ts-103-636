@@ -218,11 +218,19 @@ const PAIR_SINGLE: Item = pair(
 );
 const PAIR_DL: Item = pair(
     "dl",
-    &["self.dl.start_subslot", "self.dl.length_type", "self.dl.length"],
+    &[
+        "self.dl.start_subslot",
+        "self.dl.length_type",
+        "self.dl.length",
+    ],
 );
 const PAIR_UL: Item = pair(
     "ul",
-    &["self.ul.start_subslot", "self.ul.length_type", "self.ul.length"],
+    &[
+        "self.ul.start_subslot",
+        "self.ul.length_type",
+        "self.ul.length",
+    ],
 );
 
 pub fn def() -> MessageDef {

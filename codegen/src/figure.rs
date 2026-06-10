@@ -105,11 +105,11 @@ fn render_items(def: &MessageDef, items: &[Item], out: &mut String, legend: &mut
                     out.push_str(&format!("\nPresent iff {flag} is {set}:\n"));
                     out.push_str(&boxed(&flatten(&g.items[..split], legend)));
                     for item in &g.items[split..] {
-                        let Item::Optional(n) = item else { unreachable!() };
+                        let Item::Optional(n) = item else {
+                            unreachable!()
+                        };
                         let nflag = ctrl_fig(items, n.name);
-                        out.push_str(&format!(
-                            "\nPresent iff {flag} and {nflag} are set:\n"
-                        ));
+                        out.push_str(&format!("\nPresent iff {flag} and {nflag} are set:\n"));
                         out.push_str(&boxed(&flatten(n.items, legend)));
                     }
                 }
@@ -124,7 +124,10 @@ fn render_items(def: &MessageDef, items: &[Item], out: &mut String, legend: &mut
                         max - 1
                     )
                 } else if r.reserved_max {
-                    format!("\nRepeated {fig} times (0..={}; {max} reserved):\n", max - 1)
+                    format!(
+                        "\nRepeated {fig} times (0..={}; {max} reserved):\n",
+                        max - 1
+                    )
                 } else if r.bias > 0 {
                     format!("\nRepeated {min}..={max} times ({fig} + {}):\n", r.bias)
                 } else {
@@ -149,7 +152,10 @@ fn render_items(def: &MessageDef, items: &[Item], out: &mut String, legend: &mut
                     v.fig, v.narrow.path
                 ));
                 out.push_str(&boxed(&[seg(v.fig, v.narrow.bits)]));
-                out.push_str(&format!("\n{} when {sel} is set ({}):\n", v.fig, v.wide.path));
+                out.push_str(&format!(
+                    "\n{} when {sel} is set ({}):\n",
+                    v.fig, v.wide.path
+                ));
                 out.push_str(&boxed(&[seg(v.fig, v.wide.bits)]));
                 field_legend(legend, v.fig, v.name);
             }
@@ -185,7 +191,10 @@ fn render_items(def: &MessageDef, items: &[Item], out: &mut String, legend: &mut
                 let max = (1u8 << bits) - 1;
                 let caption = match &cs.all_ones {
                     crate::ir::AllOnes::Reserved => {
-                        format!("\nRepeated {fig} times (0..={}; {max} reserved):\n", max - 1)
+                        format!(
+                            "\nRepeated {fig} times (0..={}; {max} reserved):\n",
+                            max - 1
+                        )
                     }
                     crate::ir::AllOnes::All { .. } => format!(
                         "\nRepeated {fig} times (0..={}; {fig} = {max} means all, no entries):\n",
@@ -203,7 +212,6 @@ fn render_items(def: &MessageDef, items: &[Item], out: &mut String, legend: &mut
         out.push_str("\nAlways present:\n");
         out.push_str(&boxed(&fixed_run));
     }
-
 }
 
 fn seg(label: &str, bits: u8) -> Seg {
@@ -320,7 +328,7 @@ fn boxed(segs: &[Seg]) -> String {
             bits -= in_row;
         }
     }
-    assert!(bit % 8 == 0, "figure run is not byte aligned");
+    assert!(bit.is_multiple_of(8), "figure run is not byte aligned");
 
     // Border between two rows: '+' where either adjacent row has a
     // segment boundary, '-' elsewhere.

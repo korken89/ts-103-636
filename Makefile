@@ -13,27 +13,30 @@ ci: codegen-check fmt lint test no-sw-crypto thumb doc
 
 # Regenerate src/mac/messages/generated/ from codegen/src/defs/.
 codegen:
-	cargo run --manifest-path codegen/Cargo.toml
+	cargo run -p ts-103-636-codegen
 
 # Drift guard: fail if the committed generated files do not match
-# what the definitions produce.
+# what the definitions produce. (The codegen crate's own tests run
+# as part of the workspace `test` target.)
 codegen-check:
-	cargo run --manifest-path codegen/Cargo.toml -- --check
-	cargo test --manifest-path codegen/Cargo.toml
+	cargo run -p ts-103-636-codegen -- --check
 
-# Formatting check (no changes applied).
+# Formatting check over the whole workspace (no changes applied).
 fmt:
-	cargo fmt --check
+	cargo fmt --all --check
 
 # Clippy over every target and feature configuration, warnings fatal.
+# The workspace pass also lints the codegen and fuzz crates.
 lint:
-	cargo clippy --all-targets -- -D warnings
+	cargo clippy --workspace --all-targets -- -D warnings
 	cargo clippy --all-targets --features defmt -- -D warnings
 	cargo clippy --no-default-features -- -D warnings
 
-# Host test suite, with and without the defmt feature.
+# Host test suite: the whole workspace (lib + codegen snapshot test;
+# the fuzz binaries build but carry no tests), then the lib again
+# with the defmt feature.
 test:
-	cargo test
+	cargo test --workspace
 	cargo test --features defmt
 
 # Hardware-crypto configuration: software-crypto disabled, so the

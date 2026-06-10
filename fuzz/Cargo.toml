@@ -11,9 +11,6 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 ts-103-636 = { path = ".." }
 
-# Detach from any parent workspace resolution.
-[workspace]
-
 [[bin]]
 name = "pdu_parse"
 path = "fuzz_targets/pdu_parse.rs"

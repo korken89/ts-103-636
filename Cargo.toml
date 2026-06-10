@@ -18,6 +18,14 @@ exclude = [
     "codegen/",
 ]
 
+# The codegen and fuzz crates are workspace members so that
+# workspace-wide fmt / clippy / test (see the Makefile) cover them;
+# they are never published (`publish = false` + the exclude list
+# above). Plain `cargo build` / `cargo test` still operate on this
+# package only.
+[workspace]
+members = ["codegen", "fuzz"]
+
 [dependencies]
 embedded-io = "0.7"
 heapless = { version = "0.9", default-features = false }

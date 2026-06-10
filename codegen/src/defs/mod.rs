@@ -3,9 +3,9 @@
 //! files side by side with the standard.
 
 mod association_control;
+mod association_release;
 mod association_request;
 mod association_response;
-mod association_release;
 mod broadcast_indication;
 mod cluster_beacon;
 mod group_assignment;
@@ -19,10 +19,10 @@ mod network_beacon;
 mod radio_device_status;
 mod random_access_resource;
 mod rd_capability;
-mod reconfiguration_request;
-mod resource_allocation;
-mod reconfiguration_response;
 mod rd_capability_short;
+mod reconfiguration_request;
+mod reconfiguration_response;
+mod resource_allocation;
 mod route_info;
 mod source_routing;
 
