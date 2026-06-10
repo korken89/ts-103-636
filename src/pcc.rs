@@ -509,6 +509,91 @@ mod tests {
         assert_eq!(parsed, pcc);
     }
 
+    /// Golden vector hand-derived from Table 6.2.1-2 / Figure 6.2.1-2
+    /// and Table 6.2.2-2a; the binary literals below group the digits
+    /// by spec field.
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows PCC field layout"
+    )]
+    fn pcc_type2_f000_golden_vector() {
+        const GOLDEN: [u8; 10] = [
+            0b000_1_0101,  // header format F000 | length in slots | length code 5 (6 slots)
+            0b0101_1010,   // short network id 0x5A
+            0b0001_0010,   // transmitter identity 0x1234 (high)
+            0b0011_0100,   // transmitter identity 0x1234 (low)
+            0b1011_0111,   // transmit power code 1011 (13 dBm) | DF MCS 7
+            0b1010_1011,   // receiver identity 0xABCD (high)
+            0b1100_1101,   // receiver identity 0xABCD (low)
+            0b10_11_1_101, // spatial streams code 2 | DF RV 3 | DF NDI | DF HARQ process 5
+            0b0001_110_1,  // feedback format 1 | fb HARQ process 6 | fb ACK
+            0b0100_1010,   // fb buffer status (<= 128 bytes) | fb CQI code 10 (MCS-9)
+        ];
+        let pcc = PccType2F000 {
+            packet_length_type: PacketLengthType::Slot,
+            packet_length: PacketLength::new(5).unwrap(),
+            short_network_id: NetworkId8::new(0x5A).unwrap(),
+            transmitter_identity: ShortRdId::new(0x1234).unwrap(),
+            transmit_power: TransmitPower::Dbm13,
+            df_mcs: Mcs::new(7).unwrap(),
+            receiver_identity: ShortRdId::new(0xABCD).unwrap(),
+            spatial_streams: 0b10,
+            df_redundancy_version: 0b11,
+            df_new_data_indication: true,
+            df_harq_process_number: 0b101,
+            feedback: Feedback::Format1 {
+                harq_process: HarqProcess::new(6).unwrap(),
+                ack: true,
+                buffer_status: BufferStatus::UpTo128,
+                cqi: Cqi::Mcs(Mcs::new(9).unwrap()),
+            },
+        };
+        assert_eq!(pcc.to_bytes(), GOLDEN);
+        assert_eq!(PccType2F000::from_bytes(&GOLDEN).unwrap(), pcc);
+    }
+
+    /// F001 golden vector: same prefix and feedback as the F000 vector,
+    /// header format 001 and the rv/ndi/harq bits replaced by the
+    /// 6 reserved (zero) bits after the spatial streams code.
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows PCC field layout"
+    )]
+    fn pcc_type2_f001_golden_vector() {
+        const GOLDEN: [u8; 10] = [
+            0b001_1_0101, // header format F001 | length in slots | length code 5 (6 slots)
+            0b0101_1010,  // short network id 0x5A
+            0b0001_0010,  // transmitter identity 0x1234 (high)
+            0b0011_0100,  // transmitter identity 0x1234 (low)
+            0b1011_0111,  // transmit power code 1011 (13 dBm) | DF MCS 7
+            0b1010_1011,  // receiver identity 0xABCD (high)
+            0b1100_1101,  // receiver identity 0xABCD (low)
+            0b10_000000,  // spatial streams code 2 | reserved
+            0b0001_110_1, // feedback format 1 | fb HARQ process 6 | fb ACK
+            0b0100_1010,  // fb buffer status (<= 128 bytes) | fb CQI code 10 (MCS-9)
+        ];
+        let pcc = PccType2F001 {
+            packet_length_type: PacketLengthType::Slot,
+            packet_length: PacketLength::new(5).unwrap(),
+            short_network_id: NetworkId8::new(0x5A).unwrap(),
+            transmitter_identity: ShortRdId::new(0x1234).unwrap(),
+            transmit_power: TransmitPower::Dbm13,
+            df_mcs: Mcs::new(7).unwrap(),
+            receiver_identity: ShortRdId::new(0xABCD).unwrap(),
+            spatial_streams: 0b10,
+            feedback: Feedback::Format1 {
+                harq_process: HarqProcess::new(6).unwrap(),
+                ack: true,
+                buffer_status: BufferStatus::UpTo128,
+                cqi: Cqi::Mcs(Mcs::new(9).unwrap()),
+            },
+        };
+        assert_eq!(pcc.to_bytes(), GOLDEN);
+        assert_eq!(PccType2F001::from_bytes(&GOLDEN).unwrap(), pcc);
+    }
+
     #[test]
     #[allow(
         clippy::unusual_byte_groupings,
