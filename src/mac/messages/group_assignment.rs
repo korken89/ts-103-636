@@ -1,14 +1,12 @@
-//! Group Assignment IE body.
+//! Group Assignment IE body (generated codec re-export).
 //!
-//! ETSI TS 103 636-4, clause §6.4.3.9.
+//! The codec lives in [`generated::group_assignment`](super::generated::group_assignment); the layout
+//! figure is in that module's documentation. The tests below are the
+//! drop-in equivalence oracle and predate the generated codec.
 
-use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
 
-// ---------------------------------------------------------------------------
-// Group Assignment IE body (§6.4.3.9)
-// ---------------------------------------------------------------------------
+pub use super::generated::group_assignment::*;
 
 /// One entry of a Group Assignment body's resource tag tail.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -47,80 +45,6 @@ impl GroupResourceTagEntry {
             Some(t) => t,
             None => unreachable!(),
         }
-    }
-}
-
-/// Owned representation of a Group Assignment IE body.
-#[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
-#[expect(missing_docs, reason = "field names mirror spec-figure column labels")]
-pub struct GroupAssignmentParts<'a> {
-    /// On-wire `Single` bit. `true` = single resource assignment for the
-    /// group member; `false` = multiple resource assignments follow.
-    pub single: bool,
-    pub group_id: GroupId,
-    pub tags: &'a [GroupResourceTagEntry],
-}
-
-impl GroupAssignmentParts<'_> {
-    /// Number of bytes [`Self::serialize`] will write.
-    #[must_use]
-    #[inline]
-    pub const fn encoded_len(&self) -> usize {
-        1 + self.tags.len()
-    }
-
-    /// Serialize into `out`. Returns the number of bytes written.
-    pub fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
-        let len = self.encoded_len();
-        if out.len() < len {
-            return Err(ExcessiveBitsSet);
-        }
-        let single_bit = if self.single { 0x80 } else { 0 };
-        out[0] = single_bit | (self.group_id.as_u8() & 0x7F);
-        let mut i = 0;
-        while i < self.tags.len() {
-            out[1 + i] = self.tags[i].as_raw();
-            i += 1;
-        }
-        Ok(len)
-    }
-
-    /// Parse the bytes as `Self`.
-    pub fn parse(buffer: &[u8]) -> Result<GroupAssignmentParts<'_>, ParsingError> {
-        if buffer.is_empty() {
-            return Err(ParsingError::Truncated);
-        }
-        let b0 = buffer[0];
-        let single = b0 & 0x80 != 0;
-        let group_id = GroupId::new(b0 & 0x7F).ok_or(ParsingError::ReservedValue)?;
-        // SAFETY: GroupResourceTagEntry is #[repr(transparent)] over u8.
-        // Every byte in &buffer[1..] is a valid bit pattern for u8, and we
-        // do not impose any reserved-bit invariant on it (Direct bit + 7
-        // bit Resource Tag covers all 8 bits).
-        let tags: &[GroupResourceTagEntry] = unsafe {
-            core::slice::from_raw_parts(
-                buffer[1..].as_ptr().cast::<GroupResourceTagEntry>(),
-                buffer.len() - 1,
-            )
-        };
-        Ok(GroupAssignmentParts {
-            single,
-            group_id,
-            tags,
-        })
-    }
-}
-
-impl<'a> MessageBody for GroupAssignmentParts<'a> {
-    const IE_TYPE: IEType6bit = IEType6bit::GroupAssignment;
-    #[inline]
-    fn encoded_len(&self) -> usize {
-        Self::encoded_len(self)
-    }
-    #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
-        Self::serialize(self, out)
     }
 }
 

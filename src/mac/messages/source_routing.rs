@@ -1,84 +1,15 @@
-//! Source Routing IE body.
+//! Source Routing IE body (generated codec re-export).
 //!
-//! ETSI TS 103 636-4, clause §6.4.3.16.
+//! The codec lives in [`generated::source_routing`](super::generated::source_routing); the layout
+//! figure is in that module's documentation. The tests below are the
+//! drop-in equivalence oracle and predate the generated codec.
 
-use crate::mac::pdu::MessageBody;
-use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
-
-// ---------------------------------------------------------------------------
-// Source Routing IE body (§6.4.3.16)  -- 6 bytes fixed
-// ---------------------------------------------------------------------------
-
-/// Owned representation of a Source Routing IE body (6 bytes).
-#[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
-#[expect(missing_docs, reason = "field names mirror spec-figure column labels")]
-pub struct SourceRoutingParts {
-    pub source_routing_id: LongRdId,
-    pub hop_limit: Hop,
-    pub hop_count: Hop,
-    pub validity_timer: SourceRoutingValidityTimer,
-}
-
-impl SourceRoutingParts {
-    /// Number of bytes [`Self::serialize`] will write.
-    #[must_use]
-    #[inline]
-    pub const fn encoded_len(&self) -> usize {
-        6
-    }
-
-    /// Serialize into `out`. Returns the number of bytes written.
-    pub fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
-        if out.len() < 6 {
-            return Err(ExcessiveBitsSet);
-        }
-        let id = self.source_routing_id.as_u32().to_be_bytes();
-        out[0] = id[0];
-        out[1] = id[1];
-        out[2] = id[2];
-        out[3] = id[3];
-        out[4] = (self.hop_limit.as_u8() << 4) | (self.hop_count.as_u8() & 0x0F);
-        out[5] = self.validity_timer.as_u8();
-        Ok(6)
-    }
-
-    /// Parse the bytes as `Self`.
-    pub fn parse(buffer: &[u8]) -> Result<Self, ParsingError> {
-        if buffer.len() < 6 {
-            return Err(ParsingError::Truncated);
-        }
-        let id_raw = u32::from_be_bytes([buffer[0], buffer[1], buffer[2], buffer[3]]);
-        let source_routing_id = LongRdId::new(id_raw).ok_or(ParsingError::ReservedValue)?;
-        let hop_limit = Hop::new(buffer[4] >> 4).ok_or(ParsingError::ReservedValue)?;
-        let hop_count = Hop::new(buffer[4] & 0x0F).ok_or(ParsingError::ReservedValue)?;
-        let validity_timer = SourceRoutingValidityTimer::try_from_u8(buffer[5])
-            .ok_or(ParsingError::ReservedValue)?;
-        Ok(Self {
-            source_routing_id,
-            hop_limit,
-            hop_count,
-            validity_timer,
-        })
-    }
-}
-
-impl MessageBody for SourceRoutingParts {
-    const IE_TYPE: IEType6bit = IEType6bit::SourceRouting;
-    #[inline]
-    fn encoded_len(&self) -> usize {
-        Self::encoded_len(self)
-    }
-    #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
-        Self::serialize(self, out)
-    }
-}
+pub use super::generated::source_routing::*;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::*;
     #[test]
     fn source_routing_round_trip() {
         let parts = SourceRoutingParts {

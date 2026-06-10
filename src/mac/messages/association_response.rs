@@ -1,22 +1,16 @@
-//! Association Response message body.
+//! Association Response message body (generated codec re-export).
 //!
-//! ETSI TS 103 636-4, clause §6.4.2.5.
+//! The codec lives in [`generated::association_response`](super::generated::association_response); the layout
+//! figure is in that module's documentation. The enum and its payload
+//! types stay here; the generated module implements their codec. The
+//! tests below are the drop-in equivalence oracle and predate the
+//! generated codec.
 
 use heapless::Vec;
 
-use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
 
-// ---------------------------------------------------------------------------
-// AssociationResponse body (§6.4.2.5)
-// ETSI TS 103 636-4, clause 6.4.2.5, Figure 6.4.2.5-1, Tables 6.4.2.5-1/-2
-// ---------------------------------------------------------------------------
-
-/// Maximum number of flow IDs in a `FlowAcceptance::Specific` list.
-/// The on-wire 3-bit Number of Flows field caps at 6; `0b111` is the
-/// `All` encoding (no Flow ID octets follow).
-pub const MAX_RESPONSE_FLOWS: usize = 6;
+pub use super::generated::association_response::*;
 
 /// Owned representation of an Association Response body. The Reject vs.
 /// Accept split is modeled at the enum level so a reject can never
@@ -81,206 +75,6 @@ pub enum FlowAcceptance {
     /// Specific (0..=6) flow IDs accepted. Empty vec is allowed and
     /// corresponds to on-wire Number of Flows = 0.
     Specific(Vec<FlowId, MAX_RESPONSE_FLOWS>),
-}
-
-impl AssociationResponseParts {
-    /// Number of bytes [`Self::serialize`] will write.
-    #[must_use]
-    #[inline]
-    pub fn encoded_len(&self) -> usize {
-        match self {
-            AssociationResponseParts::Reject { .. } => 2,
-            AssociationResponseParts::Accept(a) => {
-                let mut len = 1;
-                if a.harq_override.is_some() {
-                    len += 2;
-                }
-                len += match &a.flow_acceptance {
-                    FlowAcceptance::All => 0,
-                    FlowAcceptance::Specific(ids) => ids.len(),
-                };
-                if a.group.is_some() {
-                    len += 2;
-                }
-                len
-            }
-        }
-    }
-
-    /// Serialize the body into `out`.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`ExcessiveBitsSet`] if the buffer is too short. The
-    /// `Specific.len() > 6` case is unrepresentable by the heapless
-    /// vector's capacity.
-    pub fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
-        let len = self.encoded_len();
-        if out.len() < len {
-            return Err(ExcessiveBitsSet);
-        }
-
-        match self {
-            AssociationResponseParts::Reject { cause, timer } => {
-                // ACK/NACK = 0, rest of B0 don't-care, written as 0.
-                out[0] = 0;
-                // B1: [Reject Cause (4) | Reject Timer (4)]
-                out[1] = (cause.as_u8() << 4) | timer.as_u8();
-                Ok(2)
-            }
-            AssociationResponseParts::Accept(a) => {
-                let n_flows = match &a.flow_acceptance {
-                    FlowAcceptance::All => 0b111,
-                    FlowAcceptance::Specific(ids) => ids.len() as u8,
-                };
-                // B0:
-                //   ACK/NACK (1) | Reserved (1) | HARQ-mod (1) |
-                //   Number of Flows (3) | Group (1) | Reserved (1)
-                let harq_mod_bit = if a.harq_override.is_some() { 0x20 } else { 0 };
-                let group_bit = if a.group.is_some() { 0x02 } else { 0 };
-                out[0] = 0x80 | harq_mod_bit | (n_flows << 2) | group_bit;
-
-                let mut pos = 1;
-                if let Some(h) = &a.harq_override {
-                    // B1: HARQ Processes RX (3) | MAX HARQ Re-RX (5)
-                    out[pos] = (h.harq_processes_rx.as_u8() << 5) | h.max_harq_re_rx.as_u8();
-                    pos += 1;
-                    // B2: HARQ Processes TX (3) | MAX HARQ Re-TX (5)
-                    out[pos] = (h.harq_processes_tx.as_u8() << 5) | h.max_harq_re_tx.as_u8();
-                    pos += 1;
-                }
-
-                if let FlowAcceptance::Specific(ids) = &a.flow_acceptance {
-                    for fid in ids {
-                        // [Reserved (2) | Flow ID (6)]
-                        out[pos] = fid.as_u8() & 0x3F;
-                        pos += 1;
-                    }
-                }
-
-                if let Some(g) = a.group {
-                    // [Reserved (1) | Group ID (7)]
-                    out[pos] = g.group_id.as_u8() & 0x7F;
-                    pos += 1;
-                    // [Reserved (1) | Resource Tag (7)]
-                    out[pos] = g.resource_tag.as_u8() & 0x7F;
-                    pos += 1;
-                }
-
-                Ok(pos)
-            }
-        }
-    }
-
-    /// Parse an Association Response body.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`ParsingError`] for: short buffer, reserved Reject Cause
-    /// (5..=15), reserved Reject Timer (9..=15), reserved MAX HARQ
-    /// Re-TX/Re-RX (`0b11111`), Flow ID byte with reserved bits set,
-    /// Group ID / Resource Tag byte with reserved bit set, or zero in a
-    /// `NonZero`-backed field.
-    pub fn parse(buffer: &[u8]) -> Result<Self, ParsingError> {
-        if buffer.is_empty() {
-            return Err(ParsingError::Truncated);
-        }
-        let b0 = buffer[0];
-        let ack = b0 & 0x80 != 0;
-        if !ack {
-            // NACK path: need 2 bytes total. Bits 1..=7 of B0 ignored.
-            if buffer.len() < 2 {
-                return Err(ParsingError::Truncated);
-            }
-            let b1 = buffer[1];
-            let cause = RejectCause::try_from_u8(b1 >> 4).ok_or(ParsingError::ReservedValue)?;
-            let timer = RejectTimer::try_from_u8(b1 & 0x0F).ok_or(ParsingError::ReservedValue)?;
-            return Ok(AssociationResponseParts::Reject { cause, timer });
-        }
-
-        let harq_mod_set = b0 & 0x20 != 0;
-        let n_flows = (b0 >> 2) & 0x07;
-        let group_set = b0 & 0x02 != 0;
-
-        let flow_count = if n_flows == 0b111 {
-            0
-        } else {
-            n_flows as usize
-        };
-        let need =
-            1 + if harq_mod_set { 2 } else { 0 } + flow_count + if group_set { 2 } else { 0 };
-        if buffer.len() < need {
-            return Err(ParsingError::Truncated);
-        }
-
-        let mut pos = 1;
-        let harq_override = if harq_mod_set {
-            let h_rx = buffer[pos];
-            pos += 1;
-            let h_tx = buffer[pos];
-            pos += 1;
-            Some(HarqOverride {
-                harq_processes_rx: HarqProcesses::new(h_rx >> 5)
-                    .ok_or(ParsingError::ReservedValue)?,
-                max_harq_re_rx: MaxHarqReTx::new(h_rx & 0x1F).ok_or(ParsingError::ReservedValue)?,
-                harq_processes_tx: HarqProcesses::new(h_tx >> 5)
-                    .ok_or(ParsingError::ReservedValue)?,
-                max_harq_re_tx: MaxHarqReTx::new(h_tx & 0x1F).ok_or(ParsingError::ReservedValue)?,
-            })
-        } else {
-            None
-        };
-
-        let flow_acceptance = if n_flows == 0b111 {
-            FlowAcceptance::All
-        } else {
-            let flow_end = pos + flow_count;
-            let mut flows = Vec::new();
-            // Top 2 bits of each flow octet are reserved: receiver
-            // ignores.
-            for b in &buffer[pos..flow_end] {
-                let fid = FlowId::new(b & 0x3F).ok_or(ParsingError::ReservedValue)?;
-                flows
-                    .push(fid)
-                    .expect("flow_count <= MAX_RESPONSE_FLOWS by 3-bit-field constraint");
-            }
-            pos = flow_end;
-            FlowAcceptance::Specific(flows)
-        };
-
-        let group = if group_set {
-            // The high bit of both octets is reserved: receiver ignores.
-            let g_byte = buffer[pos];
-            let t_byte = buffer[pos + 1];
-            pos += 2;
-            Some(GroupAssignment {
-                group_id: GroupId::new(g_byte & 0x7F).ok_or(ParsingError::ReservedValue)?,
-                resource_tag: ResourceTag::new(t_byte & 0x7F).ok_or(ParsingError::ReservedValue)?,
-            })
-        } else {
-            None
-        };
-
-        debug_assert_eq!(pos, need);
-
-        Ok(AssociationResponseParts::Accept(AssociationAcceptParts {
-            flow_acceptance,
-            harq_override,
-            group,
-        }))
-    }
-}
-
-impl MessageBody for AssociationResponseParts {
-    const IE_TYPE: IEType6bit = IEType6bit::AssociationResponse;
-    #[inline]
-    fn encoded_len(&self) -> usize {
-        Self::encoded_len(self)
-    }
-    #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
-        Self::serialize(self, out)
-    }
 }
 
 #[cfg(test)]

@@ -1,85 +1,15 @@
-//! Association Control IE body.
+//! Association Control IE body (generated codec re-export).
 //!
-//! ETSI TS 103 636-4, clause §6.4.3.18.
+//! The codec lives in [`generated::association_control`](super::generated::association_control); the layout
+//! figure is in that module's documentation. The tests below are the
+//! drop-in equivalence oracle and predate the generated codec.
 
-use crate::mac::pdu::ShortMessageBody;
-use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
-
-// ---------------------------------------------------------------------------
-// Association Control IE body (§6.4.3.18)  -- 1 byte
-// ---------------------------------------------------------------------------
-
-/// Owned representation of an Association Control IE body (1 byte).
-#[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
-#[expect(missing_docs, reason = "field names mirror spec-figure column labels")]
-pub struct AssociationControlParts {
-    /// `CB_M`: `false` = associated RD maintains cluster beacon reception;
-    /// `true` = it does not.
-    pub cb_m: bool,
-    pub dl_data_reception: DlDataReception,
-    pub ul_period: UlPeriod,
-}
-
-impl AssociationControlParts {
-    /// Number of bytes [`Self::serialize`] will write.
-    #[must_use]
-    #[inline]
-    pub const fn encoded_len(&self) -> usize {
-        1
-    }
-
-    /// Serialize into `out`. Returns the number of bytes written.
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
-        if out.is_empty() {
-            return Err(ExcessiveBitsSet);
-        }
-        let cb_m_bit = if self.cb_m { 0x80 } else { 0 };
-        out[0] = cb_m_bit
-            | ((self.dl_data_reception.as_u8() & 0x07) << 4)
-            | (self.ul_period.as_u8() & 0x0F);
-        Ok(1)
-    }
-
-    /// Parse the bytes as `Self`.
-    pub const fn parse(buffer: &[u8]) -> Result<Self, ParsingError> {
-        if buffer.is_empty() {
-            return Err(ParsingError::Truncated);
-        }
-        let b0 = buffer[0];
-        let cb_m = b0 & 0x80 != 0;
-        let dl_data_reception = match DlDataReception::try_from_u8((b0 >> 4) & 0x07) {
-            Some(d) => d,
-            None => return Err(ParsingError::ReservedValue),
-        };
-        let ul_period = match UlPeriod::try_from_u8(b0 & 0x0F) {
-            Some(u) => u,
-            None => return Err(ParsingError::ReservedValue),
-        };
-        Ok(Self {
-            cb_m,
-            dl_data_reception,
-            ul_period,
-        })
-    }
-}
-
-impl ShortMessageBody for AssociationControlParts {
-    const IE_TYPE: ShortIeType = ShortIeType::Len1(IEType5bitLen1::AssociationControl);
-    #[inline]
-    fn encoded_len(&self) -> usize {
-        Self::encoded_len(self)
-    }
-    #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
-        Self::serialize(self, out)
-    }
-}
+pub use super::generated::association_control::*;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::*;
     #[test]
     fn association_control_round_trip() {
         let parts = AssociationControlParts {

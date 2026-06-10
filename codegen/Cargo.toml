@@ -1,0 +1,12 @@
+[package]
+name = "ts-103-636-codegen"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+# Snapshot code generator for src/mac/messages/generated/.
+# Run via `make codegen` / `make codegen-check`.
+
+[dependencies]
+
+[workspace]

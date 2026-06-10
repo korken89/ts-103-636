@@ -15,6 +15,7 @@ exclude = [
     "standards/",
     ".jj/",
     "fuzz/",
+    "codegen/",
 ]
 
 [dependencies]

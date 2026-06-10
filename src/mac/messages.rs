@@ -5,6 +5,8 @@
 //! One file per body section. The public API is re-exported from this
 //! module so existing `crate::mac::messages::Foo` paths keep working.
 
+pub mod generated;
+
 pub mod association_control;
 pub mod association_release;
 pub mod association_request;

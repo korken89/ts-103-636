@@ -1,83 +1,15 @@
-//! RD Capability IE (short form) body.
+//! RD Capability IE (short form) body (generated codec re-export).
 //!
-//! ETSI TS 103 636-4, clause §6.4.3.15.
+//! The codec lives in [`generated::rd_capability_short`](super::generated::rd_capability_short); the layout
+//! figure is in that module's documentation. The tests below are the
+//! drop-in equivalence oracle and predate the generated codec.
 
-use crate::mac::pdu::ShortMessageBody;
-use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
-
-// ---------------------------------------------------------------------------
-// RD Capability short IE body (§6.4.3.15)  -- 1 byte
-// ---------------------------------------------------------------------------
-
-/// Owned representation of a short-form RD Capability IE body (1 byte).
-#[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
-#[expect(missing_docs, reason = "field names mirror spec-figure column labels")]
-pub struct RdCapabilityShortParts {
-    /// `CB_MC`: RD in FT mode supports association without monitoring
-    /// Cluster Beacon messages.
-    pub cb_mc: bool,
-    pub harq_feedback_delay: HarqFeedbackDelay,
-    /// `DWA`: RD in FT mode supports uplink data transmission without
-    /// association.
-    pub dwa: bool,
-}
-
-impl RdCapabilityShortParts {
-    /// Number of bytes [`Self::serialize`] will write.
-    #[must_use]
-    #[inline]
-    pub const fn encoded_len(&self) -> usize {
-        1
-    }
-
-    /// Serialize into `out`. Returns the number of bytes written.
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
-        if out.is_empty() {
-            return Err(ExcessiveBitsSet);
-        }
-        let cb_mc_bit = if self.cb_mc { 0x20 } else { 0 };
-        let dwa_bit = if self.dwa { 0x01 } else { 0 };
-        out[0] = cb_mc_bit | ((self.harq_feedback_delay.subslots() & 0x0F) << 1) | dwa_bit;
-        Ok(1)
-    }
-
-    /// Parse the bytes as `Self`.
-    pub const fn parse(buffer: &[u8]) -> Result<Self, ParsingError> {
-        if buffer.is_empty() {
-            return Err(ParsingError::Truncated);
-        }
-        let b0 = buffer[0];
-        let cb_mc = b0 & 0x20 != 0;
-        let harq_feedback_delay = match HarqFeedbackDelay::new((b0 >> 1) & 0x0F) {
-            Some(d) => d,
-            None => return Err(ParsingError::ReservedValue),
-        };
-        let dwa = b0 & 0x01 != 0;
-        Ok(Self {
-            cb_mc,
-            harq_feedback_delay,
-            dwa,
-        })
-    }
-}
-
-impl ShortMessageBody for RdCapabilityShortParts {
-    const IE_TYPE: ShortIeType = ShortIeType::Len1(IEType5bitLen1::RdCapabilityShort);
-    #[inline]
-    fn encoded_len(&self) -> usize {
-        Self::encoded_len(self)
-    }
-    #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
-        Self::serialize(self, out)
-    }
-}
+pub use super::generated::rd_capability_short::*;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::*;
     #[test]
     fn rd_capability_short_round_trip() {
         let parts = RdCapabilityShortParts {

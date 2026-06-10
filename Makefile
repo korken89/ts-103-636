@@ -7,9 +7,19 @@ THUMB_TARGET ?= thumbv8m.main-none-eabihf
 
 .DEFAULT_GOAL := ci
 
-.PHONY: ci fmt lint test no-sw-crypto thumb doc fuzz-smoke
+.PHONY: ci fmt lint test no-sw-crypto thumb doc fuzz-smoke codegen codegen-check
 
-ci: fmt lint test no-sw-crypto thumb doc
+ci: codegen-check fmt lint test no-sw-crypto thumb doc
+
+# Regenerate src/mac/messages/generated/ from codegen/src/defs/.
+codegen:
+	cargo run --manifest-path codegen/Cargo.toml
+
+# Drift guard: fail if the committed generated files do not match
+# what the definitions produce.
+codegen-check:
+	cargo run --manifest-path codegen/Cargo.toml -- --check
+	cargo test --manifest-path codegen/Cargo.toml
 
 # Formatting check (no changes applied).
 fmt:

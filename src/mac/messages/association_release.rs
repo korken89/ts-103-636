@@ -1,79 +1,15 @@
-//! Association Release message body.
+//! Association Release message body (generated codec re-export).
 //!
-//! ETSI TS 103 636-4, clause §6.4.2.6.
+//! The codec lives in [`generated::association_release`](super::generated::association_release); the layout
+//! figure is in that module's documentation. The tests below are the
+//! drop-in equivalence oracle and predate the generated codec.
 
-use crate::mac::pdu::MessageBody;
-use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
-
-// ---------------------------------------------------------------------------
-// AssociationRelease body (§6.4.2.6)
-// ETSI TS 103 636-4, clause 6.4.2.6, Figure 6.4.2.6-1, Table 6.4.2.6-1
-// ---------------------------------------------------------------------------
-
-/// Owned representation of an Association Release body. Single byte:
-/// [Release Cause (4 bits, ETSI 0..=3) | Reserved (4 bits, ETSI 4..=7)].
-#[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
-#[expect(missing_docs, reason = "field names mirror spec-figure column labels")]
-pub struct AssociationReleaseParts {
-    pub cause: ReleaseCause,
-}
-
-impl AssociationReleaseParts {
-    /// Body length in bytes (always 1).
-    #[must_use]
-    #[inline]
-    pub const fn encoded_len(&self) -> usize {
-        1
-    }
-
-    /// Serialize the body. Always writes exactly one byte.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`ExcessiveBitsSet`] only if `out.is_empty()`.
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
-        if out.is_empty() {
-            return Err(ExcessiveBitsSet);
-        }
-        out[0] = self.cause.as_u8() << 4;
-        Ok(1)
-    }
-
-    /// Parse an Association Release body.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`ParsingError`] for short buffer or a reserved Release
-    /// Cause value (`0b1011`, `0b1110`, `0b1111`).
-    pub const fn parse(buffer: &[u8]) -> Result<Self, ParsingError> {
-        if buffer.is_empty() {
-            return Err(ParsingError::Truncated);
-        }
-        let cause = match ReleaseCause::try_from_u8(buffer[0] >> 4) {
-            Some(c) => c,
-            None => return Err(ParsingError::Truncated),
-        };
-        Ok(Self { cause })
-    }
-}
-
-impl MessageBody for AssociationReleaseParts {
-    const IE_TYPE: IEType6bit = IEType6bit::AssociationRelease;
-    #[inline]
-    fn encoded_len(&self) -> usize {
-        Self::encoded_len(self)
-    }
-    #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
-        Self::serialize(self, out)
-    }
-}
+pub use super::generated::association_release::*;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::*;
     #[test]
     fn association_release_round_trip() {
         let parts = AssociationReleaseParts {
