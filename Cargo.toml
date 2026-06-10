@@ -16,6 +16,7 @@ exclude = [
     ".jj/",
     "fuzz/",
     "codegen/",
+    "verify/",
 ]
 
 # The codegen and fuzz crates are workspace members so that

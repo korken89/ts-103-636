@@ -15,7 +15,7 @@ pub use super::generated::association_response::*;
 /// Owned representation of an Association Response body. The Reject vs.
 /// Accept split is modeled at the enum level so a reject can never
 /// accidentally carry flow / HARQ / group fields, and vice-versa.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[expect(missing_docs, reason = "field names mirror spec-figure column labels")]
 pub enum AssociationResponseParts {
@@ -30,7 +30,7 @@ pub enum AssociationResponseParts {
 }
 
 /// Fields present only on accept.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct AssociationAcceptParts {
     /// Which flows the FT is accepting. `All` corresponds to on-wire
@@ -46,7 +46,7 @@ pub struct AssociationAcceptParts {
 }
 
 /// HARQ configuration override carried in an accepted Association Response.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[expect(missing_docs, reason = "field names mirror spec-figure column labels")]
 pub struct HarqOverride {
@@ -57,7 +57,7 @@ pub struct HarqOverride {
 }
 
 /// Group / resource-tag pair carried in an accepted Association Response.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[expect(missing_docs, reason = "field names mirror spec-figure column labels")]
 pub struct GroupAssignment {
@@ -66,7 +66,7 @@ pub struct GroupAssignment {
 }
 
 /// How many flows the FT is accepting.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum FlowAcceptance {
     /// All flows requested in the Association Request are accepted as-is

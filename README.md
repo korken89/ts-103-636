@@ -42,7 +42,10 @@ coverage-guided libFuzzer targets. Run `make` for the complete check
 suite (generated-code drift check, fmt, clippy, tests, the
 hardware-crypto configuration, nRF9151 target builds, and docs) - it
 is exactly what CI runs. `make fuzz-smoke` runs a short fuzz pass
-over every target (requires `cargo-fuzz`).
+over every target (requires `cargo-fuzz`), and `make verify` proves
+with Kani that every generated parser is panic-free for all inputs
+up to per-message size caps and that parse-serialize-parse is the
+identity on every parseable input (requires `kani-verifier`).
 
 ## Design
 
@@ -244,6 +247,7 @@ covered by the same `make ci` run:
 | `/`        | `ts-103-636`         | The published `#![no_std]` library |
 | `codegen/` | `ts-103-636-codegen` | Snapshot generator for `src/mac/messages/generated/` (`make codegen`, drift-checked in CI) |
 | `fuzz/`    | `ts-103-636-fuzz`    | libFuzzer targets (`make fuzz-smoke`); seeds are committed, the working corpus is not |
+| `verify/`  | `ts-103-636-verify`  | Kani proof harnesses (`make verify`); standalone, not a workspace member |
 
 ## License
 

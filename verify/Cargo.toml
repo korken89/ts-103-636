@@ -1,0 +1,21 @@
+[package]
+name = "ts-103-636-verify"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+# Symbolic verification harnesses. This crate is NOT a workspace
+# member: it only compiles under a verifier that provides the `kani`
+# library.
+#
+#   make verify           (from the repo root)
+#   cd verify && cargo kani
+#
+# Soteria Rust's Kani mode also accepts these harnesses, but as of
+# 0.1.0 its frontend rejects the NonZero-backed identifier types.
+
+[dependencies]
+# No software crypto: the harnesses cover the codecs, not AES.
+ts-103-636 = { path = "..", default-features = false }
+
+[workspace]

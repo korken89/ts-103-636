@@ -1,3 +1,6 @@
 **/target
 *.pdf
 *.log
+*.llbc.json
+verify/Cargo.lock
+.direnv/
