@@ -11,3 +11,28 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: make ci
+
+  # Symbolic verification of the generated codecs (see verify/).
+  # Kani is pinned to the same version the Nix dev shell provides;
+  # the toolchain bundle is cached so warm runs skip the setup.
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      KANI_VERSION: 0.66.0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.kani
+            ~/.cargo/bin/kani
+            ~/.cargo/bin/cargo-kani
+          key: kani-${{ env.KANI_VERSION }}
+      - name: Install Kani
+        run: |
+          if [ ! -d ~/.kani/kani-$KANI_VERSION ]; then
+            cargo install kani-verifier --version $KANI_VERSION --locked
+            cargo kani setup
+          fi
+      - run: make verify

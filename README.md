@@ -45,7 +45,8 @@ is exactly what CI runs. `make fuzz-smoke` runs a short fuzz pass
 over every target (requires `cargo-fuzz`), and `make verify` proves
 with Kani that every generated parser is panic-free for all inputs
 up to per-message size caps and that parse-serialize-parse is the
-identity on every parseable input (requires `kani-verifier`).
+identity on every parseable input. The Nix dev shell (`nix develop`)
+provides the pinned toolchain, `cargo-fuzz`, and Kani.
 
 ## Design
 

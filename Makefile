@@ -62,21 +62,6 @@ doc:
 # you can drop that to get AddressSanitizer too. libFuzzer does not
 # parallelize by itself: FUZZ_JOBS spawns that many worker processes
 # sharing the corpus (default: all cores).
-# Symbolic verification: prove that the generated parsers cannot
-# panic on any input up to the per-message buffer caps, and that
-# parse-serialize-parse is the identity on every parseable input
-# (verify/src/lib.rs). Not part of `make ci`: requires Kani (cargo
-# install kani-verifier && cargo kani setup); on NixOS run under an
-# FHS env such as steam-run with TMPDIR pointing somewhere visible
-# inside the sandbox. The harness list is derived from the generated
-# modules, so a newly added message without a harness fails the run.
-VERIFY_JOBS ?= $(shell nproc)
-VERIFY_HARNESSES := \
-	$(patsubst %.rs,%_codec_safe,$(notdir $(wildcard src/mac/messages/generated/*.rs)))
-verify:
-	cd verify && cargo kani -j $(VERIFY_JOBS) --output-format=terse \
-		$(foreach h,$(VERIFY_HARNESSES),--harness $(h))
-
 FUZZ_TARGETS := pdu_parse message_bodies pcc_parse parse_secure
 FUZZ_SECONDS ?= 30
 FUZZ_JOBS ?= $(shell nproc)
@@ -87,3 +72,18 @@ fuzz-smoke:
 			-max_total_time=$(FUZZ_SECONDS) || exit 1; \
 	done
 	rm -f fuzz-*.log
+
+# Symbolic verification: prove that the generated parsers cannot
+# panic on any input up to the per-message buffer caps, and that
+# parse-serialize-parse is the identity on every parseable input
+# (verify/src/lib.rs). Not part of `make ci`: requires Kani, which
+# the Nix dev shell provides (`nix develop -c make verify`); outside
+# Nix, cargo install kani-verifier && cargo kani setup. The grep
+# guard fails the run if a generated message has no harness.
+VERIFY_JOBS ?= $(shell nproc)
+verify:
+	@for m in $(basename $(notdir $(wildcard src/mac/messages/generated/*.rs))); do \
+		grep -q "$${m}_codec_safe" verify/src/lib.rs \
+			|| { echo "missing harness: $${m}_codec_safe"; exit 1; }; \
+	done
+	cd verify && cargo kani -j $(VERIFY_JOBS) --output-format=terse

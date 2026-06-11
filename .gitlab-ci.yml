@@ -2,3 +2,12 @@ ci:
   image: rust:latest
   script:
     - make ci
+
+# Symbolic verification of the generated codecs (see verify/). Kani
+# is pinned to the same version the Nix dev shell provides.
+verify:
+  image: rust:latest
+  script:
+    - cargo install kani-verifier --version 0.66.0 --locked
+    - cargo kani setup
+    - make verify
