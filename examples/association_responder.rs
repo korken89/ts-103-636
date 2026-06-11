@@ -97,14 +97,14 @@ fn ft_receive_and_respond<'a>(received: &[u8], response_buf: &'a mut [u8]) -> &'
 }
 
 fn main() {
-    let mut request_buf = [0u8; 256];
+    let mut request_buf = [0; 256];
     let request_bytes = pt_build_association_request(&mut request_buf);
     println!(
         "PT -> FT: {} bytes of Association Request",
         request_bytes.len()
     );
 
-    let mut response_buf = [0u8; 256];
+    let mut response_buf = [0; 256];
     let response_bytes = ft_receive_and_respond(request_bytes, &mut response_buf);
     println!(
         "FT -> PT: {} bytes of Association Response",

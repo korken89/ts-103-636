@@ -80,7 +80,7 @@ mod tests {
             next_cluster_channel: None,
             time_to_next: None,
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, parts.encoded_len());
 
@@ -107,7 +107,7 @@ mod tests {
             next_cluster_channel: Some(AbsoluteChannel::new(0x1234).unwrap()),
             time_to_next: Some(0x00001000),
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 4 + 1 + 1 + 2 + 4);
 
@@ -116,7 +116,7 @@ mod tests {
         assert_eq!(again.time_to_next, Some(0x00001000));
 
         // Re-emit and compare bytes
-        let mut buf2 = [0u8; 16];
+        let mut buf2 = [0; 16];
         let n2 = again.serialize(&mut buf2).unwrap();
         assert_eq!(&buf[..n], &buf2[..n2]);
     }
@@ -141,7 +141,7 @@ mod tests {
         assert_eq!(cb_mu1.frame_offset, Some(0x01));
 
         // Round trip in mu=8 keeps the 16-bit encoding.
-        let mut out = [0u8; 16];
+        let mut out = [0; 16];
         let n = cb.serialize(&mut out).unwrap();
         assert_eq!(&out[..n], &buf);
     }
@@ -162,7 +162,7 @@ mod tests {
             next_cluster_channel: None,
             time_to_next: None,
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         assert!(parts.serialize(&mut buf).is_err());
     }
 
@@ -190,7 +190,7 @@ mod tests {
                 next_cluster_channel: None,
                 time_to_next: None,
             };
-            let mut buf = [0u8; 4];
+            let mut buf = [0; 4];
             let n = match parts.serialize(&mut buf) {
                 Ok(n) => n,
                 Err(_) => panic!("buffer is sized for the message"),

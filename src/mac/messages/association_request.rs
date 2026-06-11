@@ -44,7 +44,7 @@ mod tests {
     #[test]
     fn association_request_round_trip_minimal() {
         let parts = ar_minimal();
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, parts.encoded_len());
         assert_eq!(n, 4);
@@ -79,7 +79,7 @@ mod tests {
                 current_cluster_channel: Some(AbsoluteChannel::new(0x0124).unwrap()),
             }),
         };
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         let n = parts.serialize(&mut buf).unwrap();
         // 4 (header) + 2 (flow IDs) + 7 (FT block) + 2 (Current) = 15
         assert_eq!(n, 15);

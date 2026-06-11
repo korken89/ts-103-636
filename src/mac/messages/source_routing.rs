@@ -18,7 +18,7 @@ mod tests {
             hop_count: Hop::new(3).unwrap(),
             validity_timer: SourceRoutingValidityTimer::H1,
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 6);
         let parsed = SourceRoutingParts::parse(&buf[..n]).unwrap();

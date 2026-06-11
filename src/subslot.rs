@@ -264,7 +264,7 @@ pub const fn min_subslots(
         Some(p) if p <= u32::MAX as usize => p as u32,
         _ => return None,
     };
-    let mut n = 1u8;
+    let mut n = 1;
     while n <= constants::MAX_SUBSLOTS {
         if let Some(tbs) = compute_tbs(n, mcs, beta, mu, n_ss)
             && tbs >= payload_bits
@@ -326,8 +326,8 @@ mod tests {
     #[test]
     fn nrf_min_subslots_agrees_with_general_formula() {
         // The module doc promises the two paths agree on the overlap.
-        for mcs in 0..=4u8 {
-            for payload in [1usize, 4, 17, 33, 100, 249, 495, 700] {
+        for mcs in 0..=4 {
+            for payload in [1, 4, 17, 33, 100, 249, 495, 700] {
                 let general = min_subslots(payload, mcsi(mcs), Beta::B1, Mu::M1, 1)
                     .filter(|&n| n <= MAX_SUBSLOTS_NRF9151[mcs as usize]);
                 let nrf = min_subslots_nrf9151(payload, mcsi(mcs));

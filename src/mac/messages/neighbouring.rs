@@ -34,7 +34,7 @@ mod tests {
             snr: None,
             radio_device_class: None,
         };
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 2);
         let parsed = NeighbouringParts::parse(&buf[..n]).unwrap();
@@ -64,7 +64,7 @@ mod tests {
                 beta: RdClassBeta::B12,
             }),
         };
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         let n = parts.serialize(&mut buf).unwrap();
         // 2 + 4 + 2 + 4 + 1 + 1 + 1 = 15
         assert_eq!(n, 15);

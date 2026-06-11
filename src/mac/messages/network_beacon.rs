@@ -23,7 +23,7 @@ mod tests {
             current_cluster_channel: None,
             additional_channels: Vec::new(),
         };
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, parts.encoded_len());
         assert_eq!(n, 8);
@@ -57,7 +57,7 @@ mod tests {
             current_cluster_channel: Some(AbsoluteChannel::new(0x00FE).unwrap()),
             additional_channels,
         };
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 17);
 

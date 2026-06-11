@@ -622,10 +622,10 @@ mod tests {
 
     #[test]
     fn common_header_size() {
-        let data = [0u8; 2];
-        let beacon = [0u8; 7];
-        let unicast = [0u8; 10];
-        let rdb = [0u8; 6];
+        let data = [0; 2];
+        let beacon = [0; 7];
+        let unicast = [0; 10];
+        let rdb = [0; 6];
         assert_eq!(MacCommonHeader::DataMacPdu(DataMacPdu(&data)).size(), 2);
         assert_eq!(MacCommonHeader::Beacon(Beacon(&beacon)).size(), 7);
         assert_eq!(MacCommonHeader::Unicast(Unicast(&unicast)).size(), 10);

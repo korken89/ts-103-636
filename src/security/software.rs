@@ -25,7 +25,7 @@ impl MacCrypto for SoftwareCrypto {
             .expect("AES-128 key length is fixed");
         Mac::update(&mut mac, data);
         let result = Mac::finalize(mac).into_bytes();
-        let mut out = [0u8; 16];
+        let mut out = [0; 16];
         out.copy_from_slice(result.as_slice());
         Ok(out)
     }
@@ -69,7 +69,7 @@ mod tests {
     fn software_compute_then_verify_mic_round_trips() {
         let mut crypto = SoftwareCrypto;
         let key = [0x42u8; 16];
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         for (i, b) in buf[..27].iter_mut().enumerate() {
             *b = i as u8;
         }

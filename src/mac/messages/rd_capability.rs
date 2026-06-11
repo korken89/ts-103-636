@@ -91,7 +91,7 @@ mod tests {
             half_dup: false,
             additional_phy: Vec::new(),
         };
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 7);
 
@@ -127,7 +127,7 @@ mod tests {
             half_dup: false,
             additional_phy,
         };
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 12);
         assert_eq!(
@@ -180,7 +180,7 @@ mod tests {
             half_dup: true,
             additional_phy,
         };
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 7 + 2 * 5);
 
@@ -202,14 +202,14 @@ mod tests {
 
     #[test]
     fn rd_capability_parser_rejects_truncated_fixed_part() {
-        let buf = [0u8; 6];
+        let buf = [0; 6];
         assert!(RdCapabilityParts::parse(&buf).is_err());
     }
 
     #[test]
     fn rd_capability_parser_rejects_truncated_additional_block() {
         // count=1 but only the fixed part present.
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let parts = RdCapabilityParts {
             release: Release::R2,
             group_as: false,
@@ -230,7 +230,7 @@ mod tests {
 
     #[test]
     fn rd_capability_parser_rejects_reserved_release() {
-        let buf = [0u8; 7];
+        let buf = [0; 7];
         assert!(RdCapabilityParts::parse(&buf).is_err());
     }
 

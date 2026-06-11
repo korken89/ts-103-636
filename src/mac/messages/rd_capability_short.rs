@@ -17,7 +17,7 @@ mod tests {
             harq_feedback_delay: HarqFeedbackDelay::new(3).unwrap(),
             dwa: false,
         };
-        let mut buf = [0u8; 4];
+        let mut buf = [0; 4];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1);
         let parsed = RdCapabilityShortParts::parse(&buf).unwrap();
@@ -46,7 +46,7 @@ mod tests {
             harq_feedback_delay: HarqFeedbackDelay::new(0).unwrap(),
             dwa: false,
         };
-        let mut buf = [0u8; 0];
+        let mut buf = [0; 0];
         assert!(parts.serialize(&mut buf).is_err());
     }
 
@@ -57,7 +57,7 @@ mod tests {
             harq_feedback_delay: HarqFeedbackDelay::new(6).unwrap(),
             dwa: true,
         };
-        let mut buf = [0u8; 4];
+        let mut buf = [0; 4];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1);
         let parsed = RdCapabilityShortParts::parse(&buf).unwrap();
@@ -74,7 +74,7 @@ mod tests {
             harq_feedback_delay: HarqFeedbackDelay::new(0).unwrap(),
             dwa: true,
         };
-        let mut buf = [0u8; 4];
+        let mut buf = [0; 4];
         parts.serialize(&mut buf).unwrap();
         assert_eq!(buf[0], 0x01);
         let parsed = RdCapabilityShortParts::parse(&buf).unwrap();
@@ -91,7 +91,7 @@ mod tests {
             harq_feedback_delay: HarqFeedbackDelay::new(0).unwrap(),
             dwa: false,
         };
-        let mut buf = [0u8; 4];
+        let mut buf = [0; 4];
         parts.serialize(&mut buf).unwrap();
         assert_eq!(buf[0], 0x20);
         let parsed = RdCapabilityShortParts::parse(&buf).unwrap();
@@ -108,7 +108,7 @@ mod tests {
             harq_feedback_delay: HarqFeedbackDelay::new(5).unwrap(),
             dwa: true,
         };
-        let mut buf = [0u8; 4];
+        let mut buf = [0; 4];
         parts.serialize(&mut buf).unwrap();
         // 0x20 (CB_MC) | (5 << 1) (HARQ=5 -> 0x0A) | 0x01 (DWA) = 0x2B
         assert_eq!(buf[0], 0x2B);

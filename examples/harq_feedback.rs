@@ -189,15 +189,15 @@ fn ft_on_pcc_event(phy_header: &[u8], ndi: bool) -> (bool, u8) {
 }
 
 fn main() {
-    let payload = [0x42u8; 40];
-    let process = 2u8;
+    let payload = [0x42; 40];
+    let process = 2;
     let mut ndi = true;
-    let mut rv = 0u8;
+    let mut rv = 0;
 
     // ---------------------------------------------------------------
     // Round 1: FT transmits, the PT's PDC CRC fails -> NACK on air.
     // ---------------------------------------------------------------
-    let mut tx_buf = [0u8; 256];
+    let mut tx_buf = [0; 256];
     let tx = ft_build_tx(&mut tx_buf, &payload, process, ndi, rv, Feedback::None);
     println!(
         "FT: TX process {process}, NDI={}, RV={rv}, data_size={} (TBS-exact)",
@@ -210,8 +210,8 @@ fn main() {
     println!("PT: PDC CRC failed -> modem keeps the scheduled NACK");
 
     // The PT's HARQ response carries the feedback in its own PCC.
-    let mut pt_buf = [0u8; 256];
-    let pt_tx = ft_build_tx(&mut pt_buf, &[0u8; 4], 0, true, 0, on_air);
+    let mut pt_buf = [0; 256];
+    let pt_tx = ft_build_tx(&mut pt_buf, &[0; 4], 0, true, 0, on_air);
     (ndi, rv) = ft_on_pcc_event(&pt_tx.phy_header, ndi);
 
     // ---------------------------------------------------------------
@@ -230,7 +230,7 @@ fn main() {
     let on_air = modem_adjusts_feedback(scheduled, true); // PDC CRC ok
     println!("PT: PDC CRC ok -> modem flips the scheduled NACK to ACK");
 
-    let pt_tx = ft_build_tx(&mut pt_buf, &[0u8; 4], 0, true, 0, on_air);
+    let pt_tx = ft_build_tx(&mut pt_buf, &[0; 4], 0, true, 0, on_air);
     (ndi, rv) = ft_on_pcc_event(&pt_tx.phy_header, ndi);
     let _ = (ndi, rv);
 
@@ -244,7 +244,7 @@ fn main() {
         harq_feedback_bitmap: 0b0000_0101, // processes 0 and 2
         cqi: Cqi::Mcs(Mcs::new(3).unwrap()),
     };
-    let pt_tx = ft_build_tx(&mut pt_buf, &[0u8; 4], 1, false, 0, bitmap);
+    let pt_tx = ft_build_tx(&mut pt_buf, &[0; 4], 1, false, 0, bitmap);
     let Pcc::Type2F000(header) = Pcc::parse(&pt_tx.phy_header).unwrap() else {
         unreachable!()
     };
@@ -253,7 +253,7 @@ fn main() {
         ..
     } = header.feedback
     {
-        let acked: heapless::Vec<u8, 8> = (0u8..8)
+        let acked: heapless::Vec<u8, 8> = (0..8)
             .filter(|n| harq_feedback_bitmap & (1 << n) != 0)
             .collect();
         println!("FT: bitmap feedback, ACKed processes {acked:?}");
@@ -263,7 +263,7 @@ fn main() {
         buffer_status: BufferStatus::Empty,
         cqi: None,
     };
-    let pt_tx = ft_build_tx(&mut pt_buf, &[0u8; 4], 1, false, 0, bs_only);
+    let pt_tx = ft_build_tx(&mut pt_buf, &[0; 4], 1, false, 0, bs_only);
     let Pcc::Type2F000(header) = Pcc::parse(&pt_tx.phy_header).unwrap() else {
         unreachable!()
     };

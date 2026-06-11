@@ -31,7 +31,7 @@ mod tests {
             resource_allocation_present: true,
             mcs_or_mimo_feedback: 0x07,
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 4);
         let parsed = BroadcastIndicationParts::parse(&buf[..n]).unwrap();
@@ -56,7 +56,7 @@ mod tests {
             resource_allocation_present: false,
             mcs_or_mimo_feedback: 0,
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 6);
         let parsed = BroadcastIndicationParts::parse(&buf[..n]).unwrap();

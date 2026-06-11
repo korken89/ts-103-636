@@ -15,7 +15,7 @@ mod tests {
         let parts = AssociationReleaseParts {
             cause: ReleaseCause::Mobility,
         };
-        let mut buf = [0u8; 4];
+        let mut buf = [0; 4];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1);
         // B0 high nibble = cause (0b0001), low nibble reserved = 0

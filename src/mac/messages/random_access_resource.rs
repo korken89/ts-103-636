@@ -51,7 +51,7 @@ mod tests {
     #[test]
     fn rach_minimal_mu1_round_trip() {
         let parts = rach_minimal(Mu::M1);
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         // 1 (bitmap) + 1 (ss) + 1 (len) + 2 (max+dd) = 5
         assert_eq!(n, 5);
@@ -84,7 +84,7 @@ mod tests {
         parts.channel_2 = Some(AbsoluteChannel::new(0x0001).unwrap());
         parts.pair.start_subslot = 0x1AB; // 9-bit at mu=8
 
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         let n = parts.serialize(&mut buf).unwrap();
         // 1 (bitmap) + 2 (ss) + 1 (len) + 2 (max+dd) + 2 (repeat) + 1 (sfn) + 2 (ch) + 2 (ch2) = 13
         assert_eq!(n, 13);

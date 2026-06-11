@@ -57,7 +57,7 @@ fn pt_build_data<'a>(buf: &'a mut [u8], psn: SequenceNumber, sample: &SensorSamp
     let ft = LongRdId::new(FT_ID).unwrap();
 
     // Encode the application payload into a small stack buffer.
-    let mut payload = [0u8; SensorSample::ENCODED_LEN];
+    let mut payload = [0; SensorSample::ENCODED_LEN];
     sample.encode(&mut payload);
 
     // Wrap the opaque bytes in an IE. There is no typed Parts struct
@@ -172,7 +172,7 @@ fn main() {
     for (i, sample) in samples.iter().enumerate() {
         // PT -> FT
         let psn = SequenceNumber::new((i + 1) as u16).unwrap();
-        let mut req_buf = [0u8; 64];
+        let mut req_buf = [0; 64];
         let req_bytes = pt_build_data(&mut req_buf, psn, sample);
         println!(
             "PT -> FT: {} bytes carrying ch={} sample={:#06x}",
@@ -182,7 +182,7 @@ fn main() {
         );
 
         // FT -> PT
-        let mut ack_buf = [0u8; 64];
+        let mut ack_buf = [0; 64];
         let app_ack_seq = (i + 1) as u16;
         let ack_bytes = ft_receive_and_ack(req_bytes, &mut ack_buf, psn, app_ack_seq);
         println!(

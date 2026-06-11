@@ -828,7 +828,7 @@ impl<'a> MacPduBuilder<'a, HeaderSecuredAwait> {
         };
         // MAC Security Info IE body is 5 bytes fixed; wrap in an
         // explicit-length 6-bit IE header.
-        let mut body_bytes = [0u8; 5];
+        let mut body_bytes = [0; 5];
         parts
             .serialize(&mut body_bytes)
             .expect("MacSecurityInfoParts always fits in 5 bytes");
@@ -1020,7 +1020,7 @@ mod tests {
         // Byte-level check: pushing a Beacon header through the typed
         // builder produces the same bytes as a hand-constructed Beacon
         // common header.
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         let b = MacPduBuilder::new(&mut buf)
@@ -1031,7 +1031,7 @@ mod tests {
 
     #[test]
     fn builder_push_beacon_round_trips_typed_args() {
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         let b = MacPduBuilder::new(&mut buf)
@@ -1052,7 +1052,7 @@ mod tests {
 
     #[test]
     fn builder_push_unicast() {
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let seq = SequenceNumber::new(0xABC).unwrap();
         let rx = LongRdId::new(0x11223344).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
@@ -1075,7 +1075,7 @@ mod tests {
 
     #[test]
     fn builder_appends_ie() {
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         let payload: &[u8] = &[1, 2, 3, 4, 5];
@@ -1102,8 +1102,8 @@ mod tests {
     fn builder_finish_padded_zero_gap_is_a_no_op() {
         // No bytes to pad: returned slice has the same length as the
         // bare finish_without_security would.
-        let mut buf_a = [0u8; 32];
-        let mut buf_b = [0u8; 32];
+        let mut buf_a = [0; 32];
+        let mut buf_b = [0; 32];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         let bare_len = MacPduBuilder::new(&mut buf_a)
@@ -1122,7 +1122,7 @@ mod tests {
 
     #[test]
     fn builder_finish_padded_one_byte_uses_short_padding() {
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         let bare_len = 8; // 1 header byte + 7 beacon header bytes
@@ -1138,7 +1138,7 @@ mod tests {
 
     #[test]
     fn builder_finish_padded_two_bytes_uses_short_padding_with_payload() {
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         let bare_len = 8;
@@ -1155,7 +1155,7 @@ mod tests {
 
     #[test]
     fn builder_finish_padded_large_gap_uses_8bit_length_padding() {
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         let bare_len = 8;
@@ -1187,7 +1187,7 @@ mod tests {
     fn builder_finish_padded_gap_three_boundary() {
         // gap = 3 is the smallest gap on the 8-bit-length branch:
         // 0x40, length 1, one zero byte.
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         let bare_len = 8;
@@ -1214,7 +1214,7 @@ mod tests {
 
     #[test]
     fn builder_finish_padded_rejects_smaller_than_current() {
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         // Beacon header is 8 bytes already; ask for 4.
@@ -1238,7 +1238,7 @@ mod tests {
             harq_feedback_delay: HarqFeedbackDelay::new(3).unwrap(),
             dwa: false,
         };
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         let written = MacPduBuilder::new(&mut buf)
@@ -1274,7 +1274,7 @@ mod tests {
             mu: Mu::M1,
             kind: ResourceAllocationKind::ReleaseAll,
         };
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         let written = MacPduBuilder::new(&mut buf)
@@ -1309,7 +1309,7 @@ mod tests {
             group_id: GroupId::new(0x01).unwrap(),
             tags: &tags,
         };
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         let written = MacPduBuilder::new(&mut buf)
@@ -1333,7 +1333,7 @@ mod tests {
         // same IE type with the same payload bytes.
         use crate::mac::messages::JoiningInformationParts;
         use crate::types::EndpointProtocol;
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         let endpoints =
@@ -1363,7 +1363,7 @@ mod tests {
 
     #[test]
     fn builder_buffer_full_on_header() {
-        let mut buf = [0u8; 5]; // too small for beacon (8 bytes)
+        let mut buf = [0; 5]; // too small for beacon (8 bytes)
         let net = NetworkId24::new(0x123456).unwrap();
         let tx = LongRdId::new(0xAABBCCDD).unwrap();
         assert!(
@@ -1376,7 +1376,7 @@ mod tests {
     // ---- Message::parse_unverified MIC trailer handling -------------------------------
 
     fn make_unicast_pdu_unsecured(payload_after_common: &[u8]) -> [u8; 64] {
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let pdu_len = {
             let b = MacPduBuilder::new(&mut buf)
                 .push_unicast(
@@ -1486,7 +1486,7 @@ mod tests {
             };
 
             // Build a secured PDU (UsedNoIe).
-            let mut tx_buf = [0u8; 128];
+            let mut tx_buf = [0; 128];
             let payload: &[u8] = &[0xAA, 0xBB, 0xCC, 0xDD];
             let payload_ie =
                 InformationElement::new_6bit_with_length(IEType6bit::UserPlaneDataFlow1, payload)
@@ -1538,7 +1538,7 @@ mod tests {
                 rx: LongRdId::new(0x11223344).unwrap(),
                 hpc: 0x1000,
             };
-            let mut tx_buf = [0u8; 128];
+            let mut tx_buf = [0; 128];
             let payload: &[u8] = &[0xDE, 0xAD];
             let ie =
                 InformationElement::new_6bit_with_length(IEType6bit::UserPlaneDataFlow1, payload)
@@ -1580,7 +1580,7 @@ mod tests {
                 hpc: 0xABCD_1234,
             };
 
-            let mut tx_buf = [0u8; 128];
+            let mut tx_buf = [0; 128];
             let net = NetworkId24::new(0x123456).unwrap();
             let payload_ie = InformationElement::new_6bit_with_length(
                 IEType6bit::ClusterBeacon,
@@ -1644,13 +1644,13 @@ mod tests {
             // A NotUsed PDU flows through the same entry point but is
             // explicitly marked Unsecured.
             let mut crypto = SoftwareCrypto;
-            let keys = [0u8; 16];
+            let keys = [0; 16];
             let ctx = SecurityContext {
                 tx: LongRdId::new(1).unwrap(),
                 rx: LongRdId::new(2).unwrap(),
                 hpc: 0,
             };
-            let mut buf = [0u8; 64];
+            let mut buf = [0; 64];
             let len = MacPduBuilder::new(&mut buf)
                 .push_beacon(NotUsed, NetworkId24::new(0x123456).unwrap(), ctx.tx)
                 .unwrap()
@@ -1671,11 +1671,11 @@ mod tests {
                 rx: LongRdId::new(0x22222222).unwrap(),
                 hpc: 0,
             };
-            let keys = [0u8; 16];
+            let keys = [0; 16];
 
             // Unsecured PDU: parses through the single entry point.
             let mut crypto = NoCrypto;
-            let mut buf = [0u8; 64];
+            let mut buf = [0; 64];
             let len = MacPduBuilder::new(&mut buf)
                 .push_beacon(NotUsed, NetworkId24::new(0x123456).unwrap(), ctx.tx)
                 .unwrap()
@@ -1686,7 +1686,7 @@ mod tests {
 
             // Secured PDU: rejected with a Crypto error, not parsed.
             let mut soft = SoftwareCrypto;
-            let mut tx_buf = [0u8; 64];
+            let mut tx_buf = [0; 64];
             let psn = SequenceNumber::new(3).unwrap();
             let len = MacPduBuilder::new(&mut tx_buf)
                 .push_unicast(UsedNoIe, false, psn, ctx.rx, ctx.tx)
@@ -1710,7 +1710,7 @@ mod tests {
                 hpc: 1,
             };
 
-            let mut tx_buf = [0u8; 64];
+            let mut tx_buf = [0; 64];
             let len = {
                 let b = MacPduBuilder::new(&mut tx_buf)
                     .push_unicast(

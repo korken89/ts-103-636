@@ -98,7 +98,7 @@ provides the pinned toolchain, `cargo-fuzz`, and Kani.
 use ts_103_636::mac::pdu::{MacPduBuilder, NotUsed};
 use ts_103_636::types::{LongRdId, NetworkId24};
 
-let mut buf = [0u8; 64];
+let mut buf = [0; 64];
 let net = NetworkId24::new(0x123456).unwrap();
 let tx  = LongRdId::new(0xAABBCCDD).unwrap();
 
@@ -117,8 +117,8 @@ use ts_103_636::mac::pdu::{MacPduBuilder, Message, UsedNoIe};
 use ts_103_636::security::{SecurityContext, SoftwareCrypto};
 use ts_103_636::types::{LongRdId, SequenceNumber};
 
-let integrity_key = [0u8; 16];
-let cipher_key    = [0u8; 16];
+let integrity_key = [0; 16];
+let cipher_key    = [0; 16];
 
 let tx  = LongRdId::new(0xAABBCCDD).unwrap();
 let rx  = LongRdId::new(0x11223344).unwrap();
@@ -129,7 +129,7 @@ let mut crypto = SoftwareCrypto;
 
 // Sender side: build + cipher + MIC in one call. The builder captures
 // the PSN from `push_unicast` so the IV derivation can't drift.
-let mut tx_buf = [0u8; 256];
+let mut tx_buf = [0; 256];
 let len = MacPduBuilder::new(&mut tx_buf)
     .push_unicast(UsedNoIe, true, psn, rx, tx)
     .unwrap()

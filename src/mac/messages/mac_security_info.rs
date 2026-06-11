@@ -18,7 +18,7 @@ mod tests {
             iv_type: SecurityIvType::ResynchronizingHpc,
             hpc: 0xDEAD_BEEF,
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 5);
         // B0 = version(00) | key_index(10) | iv_type(0001) = 0b0010_0001
@@ -48,7 +48,7 @@ mod tests {
 
     #[test]
     fn mac_security_info_parser_rejects_short_buffer() {
-        let buf = [0u8; 4];
+        let buf = [0; 4];
         assert!(MacSecurityInfoParts::parse(&buf).is_err());
     }
 }

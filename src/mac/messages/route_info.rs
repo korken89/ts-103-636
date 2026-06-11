@@ -17,7 +17,7 @@ mod tests {
             route_cost: RouteCost(42),
             application_sequence_number: ApplicationSequenceNumber(7),
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 6);
         assert_eq!(&buf[..6], &[0xAA, 0xBB, 0xCC, 0xDD, 42, 7]);
@@ -31,13 +31,13 @@ mod tests {
     #[test]
     fn route_info_parser_rejects_zero_sink() {
         // Sink Address = 0 is the reserved value of LongRdId.
-        let buf = [0u8; 6];
+        let buf = [0; 6];
         assert!(RouteInfoParts::parse(&buf).is_err());
     }
 
     #[test]
     fn route_info_parser_rejects_short_buffer() {
-        let buf = [0u8; 5];
+        let buf = [0; 5];
         assert!(RouteInfoParts::parse(&buf).is_err());
     }
 }

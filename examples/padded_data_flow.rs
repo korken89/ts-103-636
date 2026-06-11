@@ -29,7 +29,7 @@ const FT_ID: u32 = 0x2222_BBBB;
 
 /// 3-byte application payload (same as `data_flow.rs`).
 fn sensor_bytes(channel: u8, sample: u16) -> [u8; 3] {
-    let mut out = [0u8; 3];
+    let mut out = [0; 3];
     out[0] = channel;
     out[1..3].copy_from_slice(&sample.to_be_bytes());
     out
@@ -48,7 +48,7 @@ fn main() {
         let psn = SequenceNumber::new(1).unwrap();
 
         // Build without padding first to see the bare length.
-        let mut buf_bare = [0u8; 64];
+        let mut buf_bare = [0; 64];
         let bare_len = MacPduBuilder::new(&mut buf_bare)
             .push_unicast(NotUsed, false, psn, ft, pt)
             .unwrap()
@@ -59,7 +59,7 @@ fn main() {
         println!("Scenario 1 (small gap): bare PDU is {bare_len} bytes");
 
         // Now pad to bare_len + 1.
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let target = bare_len + 1;
         let padded = MacPduBuilder::new(&mut buf)
             .push_unicast(NotUsed, false, psn, ft, pt)
@@ -93,7 +93,7 @@ fn main() {
         let psn = SequenceNumber::new(2).unwrap();
 
         let target = 32;
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         let padded = MacPduBuilder::new(&mut buf)
             .push_unicast(NotUsed, false, psn, ft, pt)
             .unwrap()
@@ -124,7 +124,7 @@ fn main() {
         // Example PHY config: 2 subslots, MCS 1, beta 1, mu 1, single
         // spatial stream. compute_tbs returns the TBS in BITS per ETSI
         // 5.3; the MAC fills (tbs / 8) bytes.
-        let phy_subslots = 2u8;
+        let phy_subslots = 2;
         let phy_mcs = Mcs::new(1).unwrap();
         let phy_beta = Beta::new(1).unwrap();
         let phy_mu = Mu::new(1).unwrap();
@@ -137,8 +137,8 @@ fn main() {
         );
 
         let mut crypto = SoftwareCrypto;
-        let int_key = [0x11u8; 16];
-        let cipher_key = [0x22u8; 16];
+        let int_key = [0x11; 16];
+        let cipher_key = [0x22; 16];
         let psn = SequenceNumber::new(1).unwrap();
         let ctx = SecurityContext {
             tx: LongRdId::new(PT_ID).unwrap(),
@@ -149,7 +149,7 @@ fn main() {
         let ie = InformationElement::new_6bit_with_length(IEType6bit::UserPlaneDataFlow1, &payload)
             .unwrap();
 
-        let mut buf = [0u8; 256];
+        let mut buf = [0; 256];
         let secured = MacPduBuilder::new(&mut buf)
             .push_unicast(UsedNoIe, false, psn, ctx.rx, ctx.tx)
             .unwrap()

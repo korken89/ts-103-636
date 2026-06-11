@@ -457,7 +457,7 @@ mod tests {
         let payload: &[u8] = &[0xDE, 0xAD, 0xBE, 0xEF];
         let ie =
             InformationElement::new_6bit_with_length(IEType6bit::ClusterBeacon, payload).unwrap();
-        let mut buf = [0u8; 64];
+        let mut buf = [0; 64];
         ie.serialize(&mut &mut buf[..]).unwrap();
         let written = &buf[..6];
         let mut rest = written;

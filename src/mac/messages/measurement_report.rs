@@ -19,7 +19,7 @@ mod tests {
             tx_count: Some(0xFF),
             from_rach: true,
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 4);
         let parsed = MeasurementReportParts::parse(&buf[..n]).unwrap();
@@ -51,7 +51,7 @@ mod tests {
             tx_count: Some(0xFF),
             from_rach: false,
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 5);
         let parsed = MeasurementReportParts::parse(&buf[..n]).unwrap();
@@ -72,7 +72,7 @@ mod tests {
             tx_count: None,
             from_rach: false,
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1);
         assert_eq!(buf[0], 0); // Every bitmap bit clear.
@@ -94,7 +94,7 @@ mod tests {
             tx_count: None,
             from_rach: true,
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1);
         assert_eq!(buf[0], 0x01);
@@ -113,7 +113,7 @@ mod tests {
             from_rach: false,
         };
         // encoded_len = 2 (header + snr); buffer has only 1 byte.
-        let mut buf = [0u8; 1];
+        let mut buf = [0; 1];
         assert!(parts.serialize(&mut buf).is_err());
     }
 
@@ -129,7 +129,7 @@ mod tests {
             tx_count: None,
             from_rach: false,
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         snr_only.serialize(&mut buf).unwrap();
         assert_eq!(buf[0], 0x10);
 

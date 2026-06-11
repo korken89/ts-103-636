@@ -79,7 +79,7 @@ fn pt_build_secured_data<'a>(
     let pt = LongRdId::new(PT_ID).unwrap();
     let ft = LongRdId::new(FT_ID).unwrap();
 
-    let mut payload = [0u8; SensorSample::ENCODED_LEN];
+    let mut payload = [0; SensorSample::ENCODED_LEN];
     sample.encode(&mut payload);
 
     let ie = InformationElement::new_6bit_with_length(IEType6bit::UserPlaneDataFlow1, &payload)
@@ -155,7 +155,7 @@ fn main() {
     let pt_psn = SequenceNumber::new(1).unwrap();
 
     // PT -> FT (encrypted)
-    let mut tx_buf = [0u8; 64];
+    let mut tx_buf = [0; 64];
     let secured_len = pt_build_secured_data(
         &mut tx_buf,
         &mut crypto,
@@ -193,8 +193,8 @@ fn main() {
 
     // FT -> PT (encrypted ack on Higher Layer Signalling Flow 1)
     let ack_psn = SequenceNumber::new(1).unwrap();
-    let mut ack_tx_buf = [0u8; 64];
-    let ack_payload: [u8; 2] = 0x0001_u16.to_be_bytes();
+    let mut ack_tx_buf = [0; 64];
+    let ack_payload = 0x0001.to_be_bytes();
     let ack_ie = InformationElement::new_6bit_with_length(
         IEType6bit::HigherLayerSignallingFlow1,
         &ack_payload,

@@ -358,7 +358,7 @@ mod tests {
 
     #[test]
     fn packet_length_units_one_to_sixteen() {
-        for raw in 0u8..16 {
+        for raw in 0..16 {
             let pl = PacketLength::new(raw).unwrap();
             assert_eq!(pl.units(), raw + 1);
         }

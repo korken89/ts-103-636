@@ -62,7 +62,7 @@ mod tests {
             group_id: GroupId::new(0x42).unwrap(),
             tags: &tags,
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 3);
         let parsed = GroupAssignmentParts::parse(&buf[..n]).unwrap();
@@ -88,7 +88,7 @@ mod tests {
             group_id: GroupId::new(0x10).unwrap(),
             tags: &[],
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1);
         let parsed = GroupAssignmentParts::parse(&buf[..n]).unwrap();
@@ -108,7 +108,7 @@ mod tests {
             )],
         };
         // encoded_len = 2 (header + 1 tag); buffer has only 1 byte.
-        let mut buf = [0u8; 1];
+        let mut buf = [0; 1];
         assert!(parts.serialize(&mut buf).is_err());
     }
 
@@ -144,7 +144,7 @@ mod tests {
             group_id: GroupId::new(0x05).unwrap(),
             tags: &[],
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         parts.serialize(&mut buf).unwrap();
         assert_eq!(buf[0], 0x85);
 
@@ -153,7 +153,7 @@ mod tests {
             group_id: GroupId::new(0x05).unwrap(),
             tags: &[],
         };
-        let mut buf2 = [0u8; 8];
+        let mut buf2 = [0; 8];
         parts2.serialize(&mut buf2).unwrap();
         assert_eq!(buf2[0], 0x05);
     }

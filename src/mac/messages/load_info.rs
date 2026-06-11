@@ -22,7 +22,7 @@ mod tests {
             rach_load: None,
             channel_load: None,
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 4);
         let parsed = LoadInfoParts::parse(&buf[..n]).unwrap();
@@ -44,7 +44,7 @@ mod tests {
             rach_load: Some(LoadPercentage(40)),
             channel_load: Some((LoadPercentage(60), LoadPercentage(20))),
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         // 1 (bitmap) + 1 (traffic) + 2 (max 16-bit) + 1 (FT) + 1 (PT) + 1 (RACH) + 2 (channel) = 9
         assert_eq!(n, 9);

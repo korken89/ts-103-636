@@ -17,7 +17,7 @@ fuzz_target!(|data: &[u8]| {
         rx: LongRdId::new(0x2222_2222).unwrap(),
         hpc: 0x1234_5678,
     };
-    let keys = [0u8; 16];
+    let keys = [0; 16];
 
     let mut buf = data.to_vec();
     if let Ok(pdu) = Message::parse(&mut buf, &mut crypto, &keys, &keys, &ctx) {

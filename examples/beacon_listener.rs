@@ -88,8 +88,8 @@ fn pt_observe_beacon(received: &[u8]) -> u8 {
 
 fn main() {
     let mut last_sfn: Option<u8> = None;
-    for sfn in [0u8, 1, 2, 3] {
-        let mut buf = [0u8; 64];
+    for sfn in [0, 1, 2, 3] {
+        let mut buf = [0; 64];
         let bytes = ft_build_cluster_beacon(&mut buf, sfn);
         println!("FT -> air: {} bytes (sfn={})", bytes.len(), sfn);
         let observed = pt_observe_beacon(bytes);

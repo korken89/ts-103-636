@@ -86,7 +86,7 @@ mod tests {
             cause: RejectCause::ShortRdIdConflict,
             timer: RejectTimer::S60,
         };
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 2);
         let parsed = AssociationResponseParts::parse(&buf[..n]).unwrap();
@@ -106,7 +106,7 @@ mod tests {
             harq_override: None,
             group: None,
         });
-        let mut buf = [0u8; 8];
+        let mut buf = [0; 8];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1);
         // B0 = ACK(1) | reserved(0) | harq-mod(0) | n_flows(0b111) | group(0) | reserved(0)
@@ -143,7 +143,7 @@ mod tests {
                 resource_tag: ResourceTag::new(0x21).unwrap(),
             }),
         });
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         // 1 (B0) + 2 (HARQ override) + 2 (flow ids) + 2 (group) = 7
         assert_eq!(n, 7);

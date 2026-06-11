@@ -20,7 +20,7 @@ mod tests {
         ])
         .unwrap();
         let parts = JoiningInformationParts { endpoints };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 7);
 
@@ -36,7 +36,7 @@ mod tests {
         let parts = JoiningInformationParts {
             endpoints: Vec::new(),
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         assert!(parts.serialize(&mut buf).is_err());
     }
 

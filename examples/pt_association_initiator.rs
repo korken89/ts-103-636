@@ -181,18 +181,18 @@ fn pt_confirm_accept(received: &[u8]) {
 
 fn main() {
     // Step 1: FT advertises a Joining Beacon, PT receives it.
-    let mut jb_buf = [0u8; 64];
+    let mut jb_buf = [0; 64];
     let jb_bytes = ft_build_joining_beacon(&mut jb_buf);
     println!("FT -> air: {} bytes of Joining Beacon", jb_bytes.len());
     let cluster = pt_listen_for_joining(jb_bytes);
 
     // Step 2: PT sends an Association Request to the discovered FT.
-    let mut req_buf = [0u8; 64];
+    let mut req_buf = [0; 64];
     let req_bytes = pt_build_association_request(&mut req_buf, &cluster);
     println!("PT -> FT: {} bytes of Association Request", req_bytes.len());
 
     // Step 3: FT processes the request and sends an Accept.
-    let mut resp_buf = [0u8; 64];
+    let mut resp_buf = [0; 64];
     let resp_len = ft_accept(req_bytes, &mut resp_buf);
     println!("FT -> PT: {} bytes of Association Response", resp_len);
 

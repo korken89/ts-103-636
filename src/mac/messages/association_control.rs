@@ -17,7 +17,7 @@ mod tests {
             dl_data_reception: DlDataReception::Ms40,
             ul_period: UlPeriod::H6,
         };
-        let mut buf = [0u8; 4];
+        let mut buf = [0; 4];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1);
         let parsed = AssociationControlParts::parse(&buf).unwrap();

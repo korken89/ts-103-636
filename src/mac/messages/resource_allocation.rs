@@ -92,7 +92,7 @@ mod tests {
             mu: Mu::M1,
             kind: ResourceAllocationKind::ReleaseAll,
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1);
         assert_eq!(buf[0], 0b0000_0000); // alloc type 0b00 in high bits
@@ -114,7 +114,7 @@ mod tests {
                 options: AllocationOptions::default(),
             },
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         // 2 (bitmap) + 1 (start subslot, 8-bit) + 1 (length type+length) = 4
         assert_eq!(n, 4);
@@ -165,7 +165,7 @@ mod tests {
                 },
             },
         };
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         let n = parts.serialize(&mut buf).unwrap();
         // 2 (bitmap) + 3 (DL: 2 ss + 1 len) + 3 (UL) + 2 (recipient) + 2 (repeat) + 1 (sfn) + 2 (channel) + 1 (rlf) = 16
         assert_eq!(n, 16);
@@ -210,7 +210,7 @@ mod tests {
                 options: AllocationOptions::default(),
             },
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         assert!(parts.serialize(&mut buf).is_err());
     }
 

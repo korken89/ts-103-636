@@ -17,7 +17,7 @@ mod tests {
             status: RadioDeviceStatusFlag::MemoryFull,
             duration: RadioDeviceStatusDuration::Ms400,
         };
-        let mut buf = [0u8; 4];
+        let mut buf = [0; 4];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1);
         let parsed = RadioDeviceStatusParts::parse(&buf).unwrap();
@@ -29,7 +29,7 @@ mod tests {
     #[test]
     fn radio_device_status_rejects_reserved_status_flag() {
         // Status flag = 0b00 (reserved).
-        let buf = [0u8; 1];
+        let buf = [0; 1];
         assert!(RadioDeviceStatusParts::parse(&buf).is_err());
     }
 }

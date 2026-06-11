@@ -56,7 +56,7 @@ mod tests {
             radio_resource: RadioResourceChange::NoChange,
             flows: &[],
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1);
         assert_eq!(buf[0], 0);
@@ -88,7 +88,7 @@ mod tests {
             radio_resource: RadioResourceChange::ResourceAllocationIeIncluded,
             flows: &flows,
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         // 1 (B0) + 2 (TX, RX HARQ) + 2 (flow entries) = 5
         assert_eq!(n, 5);
@@ -124,7 +124,7 @@ mod tests {
             radio_resource: RadioResourceChange::NoChange,
             flows: &flows,
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         assert!(parts.serialize(&mut buf).is_err());
     }
 
@@ -144,7 +144,7 @@ mod tests {
             radio_resource: RadioResourceChange::NoChange,
             flow_acceptance: FlowChangeAcceptance::All,
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1);
         // n_flows = 0b111 encoded into bits 4..=2 = 0b00011100.
@@ -164,7 +164,7 @@ mod tests {
             radio_resource: RadioResourceChange::NoChange,
             flow_acceptance: FlowChangeAcceptance::Specific(&flows),
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 2);
         let parsed = ReconfigurationResponseParts::parse(&buf[..n]).unwrap();

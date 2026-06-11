@@ -161,7 +161,7 @@ impl<E> From<crate::ExcessiveBitsSet> for MacSecurityError<E> {
 ///   starts at 0; the CTR mode increments it per block).
 #[must_use]
 pub(crate) fn build_iv(ctx: &SecurityContext, psn: SequenceNumber) -> [u8; 16] {
-    let mut iv = [0u8; 16];
+    let mut iv = [0; 16];
     iv[0..4].copy_from_slice(&ctx.tx.as_u32().to_be_bytes());
     iv[4..8].copy_from_slice(&ctx.rx.as_u32().to_be_bytes());
     iv[8..12].copy_from_slice(&ctx.hpc.to_be_bytes());
@@ -368,7 +368,7 @@ mod tests {
         // Beacon (type=1), security=UsedWithIe (10). The ciphered part
         // starts immediately after the MAC Security Info IE
         // (Table 6.3.2-1).
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         buf[0] = 0x21;
         // Bytes 1..8: 7-byte beacon common header (content irrelevant).
         // Bytes 8..15: MAC Security Info IE, 6-bit type with 8-bit
@@ -384,7 +384,7 @@ mod tests {
         // Unicast (type=2), security=UsedWithIe (10). Clause 5.9.1.3
         // allows plaintext IEs followed by the payload-length-0 MAC
         // Security Info short IE as the cipher-start marker.
-        let mut buf = [0u8; 32];
+        let mut buf = [0; 32];
         buf[0] = 0x22;
         // Bytes 1..11: 10-byte unicast common header.
         // Bytes 11..15: plaintext 6-bit IE (MacExt 01), type 0x01,
@@ -402,7 +402,7 @@ mod tests {
     fn cipher_range_used_with_ie_missing_security_info_errors() {
         // UsedWithIe header but the IE stream ends without a MAC
         // Security Info IE.
-        let mut buf = [0u8; 12];
+        let mut buf = [0; 12];
         buf[0] = 0x22;
         // Byte 11: short Padding IE (head 0xC0), then end of PDU.
         buf[11] = 0xC0;

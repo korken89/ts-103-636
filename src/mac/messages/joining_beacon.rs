@@ -21,7 +21,7 @@ mod tests {
             network_beacon_period: NetworkBeaconPeriod::Ms1000,
             channels,
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 3);
         assert_eq!(buf[0], 0b0000_1100);
@@ -45,7 +45,7 @@ mod tests {
             network_beacon_period: NetworkBeaconPeriod::Ms4000,
             channels,
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         let n = parts.serialize(&mut buf).unwrap();
         assert_eq!(n, 1 + 4 * 2);
         assert_eq!(buf[0], 0b1101_1000);
@@ -64,7 +64,7 @@ mod tests {
             network_beacon_period: NetworkBeaconPeriod::Ms50,
             channels: Vec::new(),
         };
-        let mut buf = [0u8; 16];
+        let mut buf = [0; 16];
         assert!(parts.serialize(&mut buf).is_err());
     }
 

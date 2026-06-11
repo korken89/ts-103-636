@@ -460,7 +460,7 @@ mod tests {
     )]
     fn pcc_type1_rejects_bad_header_format() {
         // Header format = 001 (Type 2) -> Type 1 parser rejects
-        let mut bytes = [0u8; 5];
+        let mut bytes = [0; 5];
         bytes[0] = 0b001_0_0000;
         assert!(PccType1::from_bytes(&bytes).is_err());
     }
@@ -601,7 +601,7 @@ mod tests {
     )]
     fn pcc_type2_f001_header_format_bit() {
         // Header format = 001 (only the high 3 bits of byte 0 matter here)
-        let mut bytes = [0u8; 10];
+        let mut bytes = [0; 10];
         bytes[0] = 0b001_0_0000;
         bytes[1] = 0x01; // short network id
         bytes[2] = 0xAB; // transmitter identity high byte
@@ -700,9 +700,9 @@ mod tests {
 
     #[test]
     fn pcc_enum_rejects_bad_length() {
-        assert!(Pcc::parse(&[0u8; 4]).is_err());
-        assert!(Pcc::parse(&[0u8; 6]).is_err());
-        assert!(Pcc::parse(&[0u8; 11]).is_err());
+        assert!(Pcc::parse(&[0; 4]).is_err());
+        assert!(Pcc::parse(&[0; 6]).is_err());
+        assert!(Pcc::parse(&[0; 11]).is_err());
     }
 
     #[test]
@@ -712,7 +712,7 @@ mod tests {
     )]
     fn pcc_enum_rejects_unknown_type2_header_format() {
         // 10 bytes, header_format = 010 in byte 0
-        let mut bytes = [0u8; 10];
+        let mut bytes = [0; 10];
         bytes[0] = 0b010_0_0000;
         assert!(Pcc::parse(&bytes).is_err());
     }

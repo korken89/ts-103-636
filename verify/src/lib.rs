@@ -43,7 +43,7 @@ macro_rules! codec_safe {
             let len: usize = kani::any();
             kani::assume(len <= buf.len());
             if let Ok(parts) = <$ty>::parse(&buf[..len]) {
-                let mut out = [0u8; $cap];
+                let mut out = [0; $cap];
                 let n = parts.serialize(&mut out).unwrap();
                 assert_eq!(parts.encoded_len(), n);
                 assert_eq!(<$ty>::parse(&out[..n]).unwrap(), parts);
@@ -60,7 +60,7 @@ macro_rules! codec_safe {
             let mu_raw: u8 = kani::any();
             let Some(mu) = Mu::new(mu_raw) else { return };
             if let Ok(parts) = <$ty>::parse(&buf[..len], mu) {
-                let mut out = [0u8; $cap];
+                let mut out = [0; $cap];
                 let n = parts.serialize(&mut out).unwrap();
                 assert_eq!(parts.encoded_len(), n);
                 assert_eq!(<$ty>::parse(&out[..n], mu).unwrap(), parts);

@@ -825,7 +825,7 @@ mod tests {
 
     #[test]
     fn mcs_description_covers_all_indices() {
-        for i in 0u8..12 {
+        for i in 0..12 {
             let m = Mcs::new(i).unwrap();
             assert!(m.description().is_some(), "MCS {} has no description", i);
         }
@@ -834,10 +834,10 @@ mod tests {
 
     #[test]
     fn beta_idx_exhaustive() {
-        for v in [1u8, 2, 4, 8, 12, 16] {
+        for v in [1, 2, 4, 8, 12, 16] {
             assert!(Beta::new(v).is_some());
         }
-        for v in [0u8, 3, 5, 7, 9, 11, 13, 15, 17, 32, 255] {
+        for v in [0, 3, 5, 7, 9, 11, 13, 15, 17, 32, 255] {
             assert!(Beta::new(v).is_none(), "Beta({}) should be invalid", v);
         }
     }
