@@ -141,8 +141,10 @@ impl<E> From<crate::ParsingError> for MacSecurityError<E> {
     }
 }
 
-impl<E> From<crate::ExcessiveBitsSet> for MacSecurityError<E> {
-    fn from(_: crate::ExcessiveBitsSet) -> Self {
+impl<E> From<crate::SerializationError> for MacSecurityError<E> {
+    // The only body serialized on this path is the fixed-layout MAC
+    // Security Info IE, which can only fail on a short buffer.
+    fn from(_: crate::SerializationError) -> Self {
         Self::BufferTooShort
     }
 }

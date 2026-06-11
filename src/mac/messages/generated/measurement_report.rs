@@ -46,7 +46,7 @@
 
 use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of a Measurement Report IE body.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -89,11 +89,11 @@ impl MeasurementReportParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than [`Self::encoded_len`].
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is shorter than [`Self::encoded_len`].
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         let len = self.encoded_len();
         if out.len() < len {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = (if self.from_rach { 0x01 } else { 0 })
             | (if self.snr.is_some() { 0x10 } else { 0 })
@@ -194,7 +194,7 @@ impl MessageBody for MeasurementReportParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

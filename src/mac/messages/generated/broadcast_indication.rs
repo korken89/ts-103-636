@@ -48,7 +48,7 @@
 use crate::mac::messages::broadcast_indication::BroadcastRdId;
 use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of a Broadcast Indication IE body.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -85,11 +85,11 @@ impl BroadcastIndicationParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than [`Self::encoded_len`].
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is shorter than [`Self::encoded_len`].
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         let len = self.encoded_len();
         if out.len() < len {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = ((self.indication_type.as_u8() & 0x07) << 5)
             | (if self.ack_nack { 0x08 } else { 0 })
@@ -198,7 +198,7 @@ impl MessageBody for BroadcastIndicationParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

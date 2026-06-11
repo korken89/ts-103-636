@@ -28,4 +28,4 @@ pub use crate::security::{
     CryptoUnavailable, KEY_LEN, MIC_LEN, MacCrypto, MacSecurityError, NoCrypto, SecurityContext,
 };
 pub use crate::types::*;
-pub use crate::{BufferFull, ExcessiveBitsSet, ParsingError};
+pub use crate::{BufferFull, ExcessiveBitsSet, ParsingError, SerializationError};

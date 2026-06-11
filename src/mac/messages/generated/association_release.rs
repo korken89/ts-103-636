@@ -18,7 +18,7 @@
 
 use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of an Association Release body (1 byte).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -40,11 +40,12 @@ impl AssociationReleaseParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is
+    /// shorter than
     /// 1 byte.
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         if out.is_empty() {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = (self.cause.as_u8() & 0x0F) << 4;
         Ok(1)
@@ -76,7 +77,7 @@ impl MessageBody for AssociationReleaseParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

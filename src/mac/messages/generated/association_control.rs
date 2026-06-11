@@ -20,7 +20,7 @@
 
 use crate::mac::pdu::ShortMessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of an Association Control IE body (1 byte).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,11 +46,12 @@ impl AssociationControlParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is
+    /// shorter than
     /// 1 byte.
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         if out.is_empty() {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = (if self.cb_m { 0x80 } else { 0 })
             | ((self.dl_data_reception.as_u8() & 0x07) << 4)
@@ -92,7 +93,7 @@ impl ShortMessageBody for AssociationControlParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

@@ -84,7 +84,7 @@ use crate::mac::messages::common::AllocationPair;
 use crate::mac::messages::random_access_resource::RachRepeatPolicy;
 use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of a Random Access Resource IE body. Carries the PHY subcarrier scaling factor [`Mu`] alongside the body fields so that [`Self::encoded_len`] and [`Self::serialize`] don't need it as a parameter, which lets this type implement [`crate::mac::pdu::MessageBody`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -142,11 +142,11 @@ impl RandomAccessResourceParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than [`Self::encoded_len`].
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is shorter than [`Self::encoded_len`].
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         let len = self.encoded_len();
         if out.len() < len {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = (((match self.repeat {
             Some(v) => v.mode.as_u8(),
@@ -159,7 +159,7 @@ impl RandomAccessResourceParts {
         let mut pos = 1;
         if self.mu.as_u8() > 4 {
             if self.pair.start_subslot > 0x1FF {
-                return Err(ExcessiveBitsSet);
+                return Err(SerializationError::ValueOutOfRange);
             }
             let raw = self.pair.start_subslot.to_be_bytes();
             out[pos] = raw[0];
@@ -167,7 +167,7 @@ impl RandomAccessResourceParts {
             pos += 2;
         } else {
             if self.pair.start_subslot > 0xFF {
-                return Err(ExcessiveBitsSet);
+                return Err(SerializationError::ValueOutOfRange);
             }
             out[pos] = self.pair.start_subslot as u8;
             pos += 1;
@@ -367,7 +367,7 @@ impl MessageBody for RandomAccessResourceParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

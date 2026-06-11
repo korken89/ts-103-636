@@ -1015,7 +1015,7 @@ fn wide_guard(sw: &Switch, acc: &str, indent: &str) -> String {
         let max = (1u32 << sw.wide_bits) - 1;
         format!(
             "{indent}if {acc} > 0x{max:X} {{\n\
-             {indent}    return Err(ExcessiveBitsSet);\n\
+             {indent}    return Err(SerializationError::ValueOutOfRange);\n\
              {indent}}}\n"
         )
     }
@@ -1079,7 +1079,7 @@ pub fn emit_message(def: &MessageDef) -> String {
         out.push_str(imp);
         out.push('\n');
     }
-    out.push_str("use crate::types::*;\nuse crate::{ExcessiveBitsSet, ParsingError};\n");
+    out.push_str("use crate::types::*;\nuse crate::{ParsingError, SerializationError};\n");
     if has_repeat {
         out.push_str("use heapless::Vec;\n");
     }
@@ -1142,7 +1142,7 @@ pub fn emit_message(def: &MessageDef) -> String {
              \x20   #[inline]\n\
              \x20   fn encoded_len(&self) -> usize {{\n        Self::encoded_len(self)\n    }}\n\
              \x20   #[inline]\n\
-             \x20   fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {{\n\
+             \x20   fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {{\n\
              \x20       Self::serialize(self, out)\n    }}\n}}\n",
             def.name
         ));
@@ -1154,7 +1154,7 @@ pub fn emit_message(def: &MessageDef) -> String {
              \x20   #[inline]\n\
              \x20   fn encoded_len(&self) -> usize {{\n        Self::encoded_len(self)\n    }}\n\
              \x20   #[inline]\n\
-             \x20   fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {{\n\
+             \x20   fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {{\n\
              \x20       Self::serialize(self, out)\n    }}\n}}\n",
             def.name
         ));
@@ -1352,21 +1352,22 @@ fn serialize_fn(def: &MessageDef, lay: &Layout<'_>) -> String {
              \x20   ///\n\
              \x20   /// # Errors\n\
              \x20   ///\n\
-             \x20   /// Returns [`ExcessiveBitsSet`] if `out` is shorter than\n\
+             \x20   /// Returns [`SerializationError::BufferTooShort`] if `out` is\n\
+             \x20   /// shorter than\n\
              \x20   /// {n_bytes} byte{plural}.\n"
         ));
         out.push_str(
             &format!(
-        "    pub {constness}fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {{\n"
+        "    pub {constness}fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {{\n"
     ),
         );
         if n_bytes == 1 {
             out.push_str(
-                "        if out.is_empty() {\n            return Err(ExcessiveBitsSet);\n        }\n",
+                "        if out.is_empty() {\n            return Err(SerializationError::BufferTooShort);\n        }\n",
             );
         } else {
             out.push_str(&format!(
-                "        if out.len() < {n_bytes} {{\n            return Err(ExcessiveBitsSet);\n        }}\n"
+                "        if out.len() < {n_bytes} {{\n            return Err(SerializationError::BufferTooShort);\n        }}\n"
             ));
         }
         for stmt in run_serialize(
@@ -1384,11 +1385,14 @@ fn serialize_fn(def: &MessageDef, lay: &Layout<'_>) -> String {
         return out;
     }
 
-    let mut clauses = vec!["if `out` is shorter than [`Self::encoded_len`]".to_string()];
+    let mut clauses = vec![
+        "[`SerializationError::BufferTooShort`] if `out` is shorter than [`Self::encoded_len`]"
+            .to_string(),
+    ];
     for region in &lay.regions {
         match region {
             Region::Rep(r) if r.bias > 0 => clauses.push(format!(
-                "for an empty `{}` list (the on-wire count is `len - {}`)",
+                "[`SerializationError::ValueOutOfRange`] for an empty `{}` list (the on-wire count is `len - {}`)",
                 r.name, r.bias
             )),
             Region::Opt(g) => {
@@ -1396,7 +1400,7 @@ fn serialize_fn(def: &MessageDef, lay: &Layout<'_>) -> String {
                     && matches!(s.wide, Wide::Ctx(_))
                 {
                     clauses.push(format!(
-                        "if `{}` does not fit the selected narrow on-wire form",
+                        "[`SerializationError::ValueOutOfRange`] if `{}` does not fit the selected narrow on-wire form",
                         g.name
                     ));
                 }
@@ -1405,10 +1409,10 @@ fn serialize_fn(def: &MessageDef, lay: &Layout<'_>) -> String {
                 let max = (1u32 << count_bits(&lay.ctrls, cs.name)) - 2;
                 match &cs.all_ones {
                     AllOnes::Reserved => {
-                        clauses.push(format!("if `{}` holds more than {max} entries", cs.name))
+                        clauses.push(format!("[`SerializationError::ValueOutOfRange`] if `{}` holds more than {max} entries", cs.name))
                     }
                     AllOnes::All { specific, .. } => clauses.push(format!(
-                        "if a `{specific}` value of `{}` holds more than {max} entries",
+                        "[`SerializationError::ValueOutOfRange`] if a `{specific}` value of `{}` holds more than {max} entries",
                         cs.name
                     )),
                 }
@@ -1422,13 +1426,10 @@ fn serialize_fn(def: &MessageDef, lay: &Layout<'_>) -> String {
          \x20   /// # Errors\n\
          \x20   ///\n",
     );
-    out.push_str(&format!(
-        "    /// Returns [`ExcessiveBitsSet`] {}.\n",
-        clauses.join(", or ")
-    ));
+    out.push_str(&format!("    /// Returns {}.\n", clauses.join(", or ")));
     out.push_str(
         &format!(
-        "    pub {constness}fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {{\n"
+        "    pub {constness}fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {{\n"
     ),
     );
     out.push_str(&ser_dynamic_body(def, lay));
@@ -1459,7 +1460,7 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
             };
             out.push_str(&format!(
                 "        if {guard} {{\n\
-                 \x20           return Err(ExcessiveBitsSet);\n\
+                 \x20           return Err(SerializationError::ValueOutOfRange);\n\
                  \x20       }}\n"
             ));
         }
@@ -1468,7 +1469,7 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
             match &cs.all_ones {
                 AllOnes::Reserved => out.push_str(&format!(
                     "        if self.{}.len() > {max} {{\n\
-                     \x20           return Err(ExcessiveBitsSet);\n\
+                     \x20           return Err(SerializationError::ValueOutOfRange);\n\
                      \x20       }}\n",
                     cs.name
                 )),
@@ -1476,7 +1477,7 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                     "        if let {specific}(f) = self.{}\n\
                      \x20           && f.len() > {max}\n\
                      \x20       {{\n\
-                     \x20           return Err(ExcessiveBitsSet);\n\
+                     \x20           return Err(SerializationError::ValueOutOfRange);\n\
                      \x20       }}\n",
                     cs.name
                 )),
@@ -1485,7 +1486,7 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
     }
     out.push_str(
         "        let len = self.encoded_len();\n\
-         \x20       if out.len() < len {\n            return Err(ExcessiveBitsSet);\n        }\n",
+         \x20       if out.len() < len {\n            return Err(SerializationError::BufferTooShort);\n        }\n",
     );
     for stmt in run_serialize(
         def,
@@ -1530,7 +1531,7 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                          \x20               pos += 2;\n\
                          \x20           } else {\n\
                          \x20               if v > 0xFF {\n\
-                         \x20                   return Err(ExcessiveBitsSet);\n\
+                         \x20                   return Err(SerializationError::ValueOutOfRange);\n\
                          \x20               }\n\
                          \x20               out[pos] = v as u8;\n\
                          \x20               pos += 1;\n\
@@ -1635,7 +1636,7 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                              \x20           pos += 2;\n\
                              \x20       }} else {{\n\
                              \x20           if self.{name} > 0xFF {{\n\
-                             \x20               return Err(ExcessiveBitsSet);\n\
+                             \x20               return Err(SerializationError::ValueOutOfRange);\n\
                              \x20           }}\n\
                              \x20           out[pos] = self.{name} as u8;\n\
                              \x20           pos += 1;\n\
@@ -1698,7 +1699,7 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
                          \x20           pos += 2;\n\
                          \x20       }} else {{\n\
                          \x20           if {acc} > 0x{nmax:X} {{\n\
-                         \x20               return Err(ExcessiveBitsSet);\n\
+                         \x20               return Err(SerializationError::ValueOutOfRange);\n\
                          \x20           }}\n\
                          \x20           out[pos] = {acc} as u8;\n\
                          \x20           pos += 1;\n\
@@ -2391,7 +2392,7 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
         out.push_str(imp);
         out.push('\n');
     }
-    out.push_str("use crate::types::*;\nuse crate::{ExcessiveBitsSet, ParsingError};\n");
+    out.push_str("use crate::types::*;\nuse crate::{ParsingError, SerializationError};\n");
     if has_repeat {
         out.push_str("use heapless::Vec;\n");
     }
@@ -2475,11 +2476,13 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
          \x20   ///\n\
          \x20   /// # Errors\n\
          \x20   ///\n\
-         \x20   /// Returns [`ExcessiveBitsSet`] if the buffer is too short or a\n\
-         \x20   /// field cannot be encoded in its on-wire form.\n",
+         \x20   /// Returns [`SerializationError::BufferTooShort`] if `out` is\n\
+         \x20   /// shorter than [`Self::encoded_len`] and\n\
+         \x20   /// [`SerializationError::ValueOutOfRange`] if a field cannot be\n\
+         \x20   /// encoded in its on-wire form.\n",
     );
     out.push_str(&format!(
-        "    pub {constness}fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {{\n\
+        "    pub {constness}fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {{\n\
          \x20       match {scrutinee} {{\n"
     ));
     for (ad, a) in &arm_lays {
@@ -2544,7 +2547,7 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
              \x20   #[inline]\n\
              \x20   fn encoded_len(&self) -> usize {{\n        Self::encoded_len(self)\n    }}\n\
              \x20   #[inline]\n\
-             \x20   fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {{\n\
+             \x20   fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {{\n\
              \x20       Self::serialize(self, out)\n    }}\n}}\n",
             def.name
         ));
@@ -2556,7 +2559,7 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
              \x20   #[inline]\n\
              \x20   fn encoded_len(&self) -> usize {{\n        Self::encoded_len(self)\n    }}\n\
              \x20   #[inline]\n\
-             \x20   fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {{\n\
+             \x20   fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {{\n\
              \x20       Self::serialize(self, out)\n    }}\n}}\n",
             def.name
         ));

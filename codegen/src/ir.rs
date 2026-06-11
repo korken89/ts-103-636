@@ -339,8 +339,8 @@ pub enum Wide {
     ValueOverflow,
     /// Wide iff this context expression holds. `{name}` placeholders
     /// are replaced with the ctx parameter access. Serializing a
-    /// value that overflows the narrow form is an ExcessiveBitsSet
-    /// error.
+    /// value that overflows the narrow form is a
+    /// SerializationError::ValueOutOfRange error.
     Ctx(&'static str),
 }
 

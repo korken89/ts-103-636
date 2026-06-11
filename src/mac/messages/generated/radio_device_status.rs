@@ -20,7 +20,7 @@
 
 use crate::mac::pdu::ShortMessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of a Radio Device Status IE body (1 byte).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,11 +46,12 @@ impl RadioDeviceStatusParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is
+    /// shorter than
     /// 1 byte.
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         if out.is_empty() {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = (if self.association_needed { 0x40 } else { 0 })
             | ((self.status.as_u8() & 0x03) << 4)
@@ -92,7 +93,7 @@ impl ShortMessageBody for RadioDeviceStatusParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

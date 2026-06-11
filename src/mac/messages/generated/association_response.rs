@@ -61,7 +61,7 @@ use crate::mac::messages::association_response::GroupAssignment;
 use crate::mac::messages::association_response::HarqOverride;
 use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 use heapless::Vec;
 
 /// Maximum number of flow IDs in a `FlowAcceptance::Specific` list. The on-wire 3-bit Number of Flows field caps at 6; `0b111` is the `All` encoding (no Flow ID octets follow).
@@ -95,14 +95,16 @@ impl AssociationResponseParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if the buffer is too short or a
-    /// field cannot be encoded in its on-wire form.
-    pub fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is
+    /// shorter than [`Self::encoded_len`] and
+    /// [`SerializationError::ValueOutOfRange`] if a field cannot be
+    /// encoded in its on-wire form.
+    pub fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         match self {
             AssociationResponseParts::Reject { cause, timer } => {
                 let len = self.encoded_len();
                 if out.len() < len {
-                    return Err(ExcessiveBitsSet);
+                    return Err(SerializationError::BufferTooShort);
                 }
                 out[0] = 0x00;
                 out[1] = ((cause.as_u8() & 0x0F) << 4) | (timer.as_u8() & 0x0F);
@@ -111,7 +113,7 @@ impl AssociationResponseParts {
             AssociationResponseParts::Accept(a) => {
                 let len = self.encoded_len();
                 if out.len() < len {
-                    return Err(ExcessiveBitsSet);
+                    return Err(SerializationError::BufferTooShort);
                 }
                 out[0] = (0x80)
                     | (if a.harq_override.is_some() { 0x20 } else { 0 })
@@ -259,7 +261,7 @@ impl MessageBody for AssociationResponseParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

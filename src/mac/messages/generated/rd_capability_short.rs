@@ -20,7 +20,7 @@
 
 use crate::mac::pdu::ShortMessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of a short-form RD Capability IE body (1 byte).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,11 +46,12 @@ impl RdCapabilityShortParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is
+    /// shorter than
     /// 1 byte.
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         if out.is_empty() {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = (if self.cb_mc { 0x20 } else { 0 })
             | ((self.harq_feedback_delay.subslots() & 0x0F) << 1)
@@ -90,7 +91,7 @@ impl ShortMessageBody for RdCapabilityShortParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

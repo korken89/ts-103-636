@@ -18,7 +18,7 @@ use ts_103_636::types::Mu;
 ///
 /// - `parse` cannot panic;
 /// - every successfully parsed value serializes without panic and
-///   without `ExcessiveBitsSet`, to exactly its stated
+///   without `SerializationError`, to exactly its stated
 ///   `encoded_len`;
 /// - re-parsing the serialized bytes yields the identical value
 ///   (parse-serialize-parse identity).

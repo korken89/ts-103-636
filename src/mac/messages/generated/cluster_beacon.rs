@@ -73,7 +73,7 @@
 
 use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of a Cluster Beacon body.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -130,11 +130,11 @@ impl ClusterBeaconParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than [`Self::encoded_len`], or if `frame_offset` does not fit the selected narrow on-wire form.
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is shorter than [`Self::encoded_len`], or [`SerializationError::ValueOutOfRange`] if `frame_offset` does not fit the selected narrow on-wire form.
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         let len = self.encoded_len();
         if out.len() < len {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = self.sfn.0;
         out[1] = ((matches!(self.power_const, PowerConst::Constrained) as u8 & 0x01) << 3)
@@ -168,7 +168,7 @@ impl ClusterBeaconParts {
                 pos += 2;
             } else {
                 if v > 0xFF {
-                    return Err(ExcessiveBitsSet);
+                    return Err(SerializationError::ValueOutOfRange);
                 }
                 out[pos] = v as u8;
                 pos += 1;
@@ -318,7 +318,7 @@ impl MessageBody for ClusterBeaconParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

@@ -26,7 +26,7 @@
 use crate::mac::messages::group_assignment::GroupResourceTagEntry;
 use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of a Group Assignment IE body.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -54,11 +54,11 @@ impl GroupAssignmentParts<'_> {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than [`Self::encoded_len`].
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is shorter than [`Self::encoded_len`].
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         let len = self.encoded_len();
         if out.len() < len {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = (if self.single { 0x80 } else { 0 }) | (self.group_id.as_u8() & 0x7F);
         let mut pos = 1;
@@ -108,7 +108,7 @@ impl<'a> MessageBody for GroupAssignmentParts<'a> {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

@@ -31,7 +31,7 @@
 
 use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of a Source Routing IE body (6 bytes).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -59,11 +59,12 @@ impl SourceRoutingParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is
+    /// shorter than
     /// 6 bytes.
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         if out.len() < 6 {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         let raw = self.source_routing_id.as_u32().to_be_bytes();
         out[0] = raw[0];
@@ -117,7 +118,7 @@ impl MessageBody for SourceRoutingParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

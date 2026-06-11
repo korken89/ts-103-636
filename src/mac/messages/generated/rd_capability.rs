@@ -71,7 +71,7 @@ use crate::mac::messages::rd_capability::AdditionalPhyCapability;
 use crate::mac::messages::rd_capability::PhyCapability;
 use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 use heapless::Vec;
 
 /// Maximum number of additional PHY capability blocks (3-bit count field).
@@ -121,11 +121,11 @@ impl RdCapabilityParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than [`Self::encoded_len`].
-    pub fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is shorter than [`Self::encoded_len`].
+    pub fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         let len = self.encoded_len();
         if out.len() < len {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = (self.release.as_u8() & 0x1F) | ((self.additional_phy.len() as u8 & 0x07) << 5);
         out[1] = (if self.group_as { 0x20 } else { 0 })
@@ -313,7 +313,7 @@ impl MessageBody for RdCapabilityParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

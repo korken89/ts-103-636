@@ -16,6 +16,19 @@ pub mod types;
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ExcessiveBitsSet;
 
+/// Error returned by message-body serialization.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub enum SerializationError {
+    /// `out` is shorter than the encoded length of the value.
+    BufferTooShort,
+    /// A value cannot be represented in its on-wire field: a list
+    /// longer than its count field allows, an empty list where the
+    /// count encoding starts at one, or a value that does not fit a
+    /// context-selected narrow form.
+    ValueOutOfRange,
+}
+
 /// Error returned when parsed data violates the specification.
 ///
 /// Fieldless (1 byte, no offsets): the kind alone is usually enough to

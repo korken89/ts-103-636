@@ -28,7 +28,7 @@
 //! * HPC = hpc
 
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of a MAC Security Info IE body (5 bytes fixed).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -56,11 +56,12 @@ impl MacSecurityInfoParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is
+    /// shorter than
     /// 5 bytes.
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         if out.len() < 5 {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = ((self.version.as_u8() & 0x03) << 6)
             | ((self.key_index.as_u8() & 0x03) << 4)

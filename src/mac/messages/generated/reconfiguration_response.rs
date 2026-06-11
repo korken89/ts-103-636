@@ -44,7 +44,7 @@ use crate::mac::messages::reconfiguration::FlowChangeAcceptance;
 use crate::mac::messages::reconfiguration::HarqConfig;
 use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of a Reconfiguration Response body (clause 6.4.2.8).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -85,16 +85,16 @@ impl ReconfigurationResponseParts<'_> {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than [`Self::encoded_len`], or if a `FlowChangeAcceptance::Specific` value of `flow_acceptance` holds more than 6 entries.
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is shorter than [`Self::encoded_len`], or [`SerializationError::ValueOutOfRange`] if a `FlowChangeAcceptance::Specific` value of `flow_acceptance` holds more than 6 entries.
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         if let FlowChangeAcceptance::Specific(f) = self.flow_acceptance
             && f.len() > 6
         {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::ValueOutOfRange);
         }
         let len = self.encoded_len();
         if out.len() < len {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = (if self.rd_capability_changed { 0x20 } else { 0 })
             | (self.radio_resource.as_u8() & 0x03)
@@ -207,7 +207,7 @@ impl<'a> MessageBody for ReconfigurationResponseParts<'a> {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

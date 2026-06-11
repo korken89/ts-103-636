@@ -252,7 +252,7 @@ use crate::mac::messages::resource_allocation::RepeatPolicy;
 use crate::mac::messages::resource_allocation::ResourceAllocationKind;
 use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 
 /// Owned representation of a Resource Allocation IE body. Wraps a [`ResourceAllocationKind`] together with the PHY subcarrier scaling factor [`Mu`] that determines the wire encoding of the start subslot (8 vs. 9 bit). Bundling `mu` into the body removes it from the `encoded_len` / `serialize` / `parse` signatures and lets this type implement [`crate::mac::pdu::MessageBody`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -339,14 +339,16 @@ impl ResourceAllocationParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if the buffer is too short or a
-    /// field cannot be encoded in its on-wire form.
-    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is
+    /// shorter than [`Self::encoded_len`] and
+    /// [`SerializationError::ValueOutOfRange`] if a field cannot be
+    /// encoded in its on-wire form.
+    pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         match self.kind {
             ResourceAllocationKind::ReleaseAll => {
                 let len = self.encoded_len();
                 if out.len() < len {
-                    return Err(ExcessiveBitsSet);
+                    return Err(SerializationError::BufferTooShort);
                 }
                 out[0] = 0x00;
                 Ok(1)
@@ -354,7 +356,7 @@ impl ResourceAllocationParts {
             ResourceAllocationKind::Downlink { pair, options } => {
                 let len = self.encoded_len();
                 if out.len() < len {
-                    return Err(ExcessiveBitsSet);
+                    return Err(SerializationError::BufferTooShort);
                 }
                 out[0] = (if options.add { 0x20 } else { 0 })
                     | (0x40)
@@ -374,7 +376,7 @@ impl ResourceAllocationParts {
                 let mut pos = 2;
                 if self.mu.as_u8() > 4 {
                     if pair.start_subslot > 0x1FF {
-                        return Err(ExcessiveBitsSet);
+                        return Err(SerializationError::ValueOutOfRange);
                     }
                     let raw = pair.start_subslot.to_be_bytes();
                     out[pos] = raw[0];
@@ -382,7 +384,7 @@ impl ResourceAllocationParts {
                     pos += 2;
                 } else {
                     if pair.start_subslot > 0xFF {
-                        return Err(ExcessiveBitsSet);
+                        return Err(SerializationError::ValueOutOfRange);
                     }
                     out[pos] = pair.start_subslot as u8;
                     pos += 1;
@@ -420,7 +422,7 @@ impl ResourceAllocationParts {
             ResourceAllocationKind::Uplink { pair, options } => {
                 let len = self.encoded_len();
                 if out.len() < len {
-                    return Err(ExcessiveBitsSet);
+                    return Err(SerializationError::BufferTooShort);
                 }
                 out[0] = (if options.add { 0x20 } else { 0 })
                     | (0x80)
@@ -440,7 +442,7 @@ impl ResourceAllocationParts {
                 let mut pos = 2;
                 if self.mu.as_u8() > 4 {
                     if pair.start_subslot > 0x1FF {
-                        return Err(ExcessiveBitsSet);
+                        return Err(SerializationError::ValueOutOfRange);
                     }
                     let raw = pair.start_subslot.to_be_bytes();
                     out[pos] = raw[0];
@@ -448,7 +450,7 @@ impl ResourceAllocationParts {
                     pos += 2;
                 } else {
                     if pair.start_subslot > 0xFF {
-                        return Err(ExcessiveBitsSet);
+                        return Err(SerializationError::ValueOutOfRange);
                     }
                     out[pos] = pair.start_subslot as u8;
                     pos += 1;
@@ -486,7 +488,7 @@ impl ResourceAllocationParts {
             ResourceAllocationKind::Both { dl, ul, options } => {
                 let len = self.encoded_len();
                 if out.len() < len {
-                    return Err(ExcessiveBitsSet);
+                    return Err(SerializationError::BufferTooShort);
                 }
                 out[0] = (if options.add { 0x20 } else { 0 })
                     | (0xC0)
@@ -506,7 +508,7 @@ impl ResourceAllocationParts {
                 let mut pos = 2;
                 if self.mu.as_u8() > 4 {
                     if dl.start_subslot > 0x1FF {
-                        return Err(ExcessiveBitsSet);
+                        return Err(SerializationError::ValueOutOfRange);
                     }
                     let raw = dl.start_subslot.to_be_bytes();
                     out[pos] = raw[0];
@@ -514,7 +516,7 @@ impl ResourceAllocationParts {
                     pos += 2;
                 } else {
                     if dl.start_subslot > 0xFF {
-                        return Err(ExcessiveBitsSet);
+                        return Err(SerializationError::ValueOutOfRange);
                     }
                     out[pos] = dl.start_subslot as u8;
                     pos += 1;
@@ -524,7 +526,7 @@ impl ResourceAllocationParts {
                 pos += 1;
                 if self.mu.as_u8() > 4 {
                     if ul.start_subslot > 0x1FF {
-                        return Err(ExcessiveBitsSet);
+                        return Err(SerializationError::ValueOutOfRange);
                     }
                     let raw = ul.start_subslot.to_be_bytes();
                     out[pos] = raw[0];
@@ -532,7 +534,7 @@ impl ResourceAllocationParts {
                     pos += 2;
                 } else {
                     if ul.start_subslot > 0xFF {
-                        return Err(ExcessiveBitsSet);
+                        return Err(SerializationError::ValueOutOfRange);
                     }
                     out[pos] = ul.start_subslot as u8;
                     pos += 1;
@@ -1049,7 +1051,7 @@ impl MessageBody for ResourceAllocationParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }

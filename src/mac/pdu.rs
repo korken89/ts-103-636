@@ -41,10 +41,11 @@ pub trait MessageBody {
     ///
     /// # Errors
     ///
-    /// May return [`crate::ExcessiveBitsSet`] if `out` is too short. By
-    /// construction (the typed wrappers and `heapless::Vec` capacities)
-    /// no other errors are possible.
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, crate::ExcessiveBitsSet>;
+    /// Returns [`SerializationError::BufferTooShort`](crate::SerializationError::BufferTooShort)
+    /// if `out` is too short, or
+    /// [`ValueOutOfRange`](crate::SerializationError::ValueOutOfRange)
+    /// when a list or value cannot be encoded in its on-wire field.
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, crate::SerializationError>;
 }
 
 /// A typed MAC message body carried by a 5-bit "Short IE" (MAC_Ext = 11).
@@ -64,9 +65,10 @@ pub trait ShortMessageBody {
     ///
     /// # Errors
     ///
-    /// Returns [`crate::ExcessiveBitsSet`] if `out` is too short. By
-    /// construction no other errors are possible.
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, crate::ExcessiveBitsSet>;
+    /// Returns [`SerializationError::BufferTooShort`](crate::SerializationError::BufferTooShort)
+    /// if `out` is too short. By construction no other errors are
+    /// possible.
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, crate::SerializationError>;
 }
 
 /// Write `gap` bytes of Padding IEs at `pos` in `buf`, using the

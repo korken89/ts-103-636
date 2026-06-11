@@ -27,7 +27,7 @@
 
 use crate::mac::pdu::MessageBody;
 use crate::types::*;
-use crate::{ExcessiveBitsSet, ParsingError};
+use crate::{ParsingError, SerializationError};
 use heapless::Vec;
 
 /// Maximum number of Joining Beacon channels (on-wire 2-bit count + 1 = 4).
@@ -57,14 +57,14 @@ impl JoiningBeaconParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than [`Self::encoded_len`], or for an empty `channels` list (the on-wire count is `len - 1`).
-    pub fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    /// Returns [`SerializationError::BufferTooShort`] if `out` is shorter than [`Self::encoded_len`], or [`SerializationError::ValueOutOfRange`] for an empty `channels` list (the on-wire count is `len - 1`).
+    pub fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         if self.channels.is_empty() {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::ValueOutOfRange);
         }
         let len = self.encoded_len();
         if out.len() < len {
-            return Err(ExcessiveBitsSet);
+            return Err(SerializationError::BufferTooShort);
         }
         out[0] = ((self.network_beacon_period.as_u8() & 0x0F) << 2)
             | (((self.channels.len() as u8 - 1) & 0x03) << 6);
@@ -125,7 +125,7 @@ impl MessageBody for JoiningBeaconParts {
         Self::encoded_len(self)
     }
     #[inline]
-    fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
+    fn serialize(&self, out: &mut [u8]) -> Result<usize, SerializationError> {
         Self::serialize(self, out)
     }
 }
