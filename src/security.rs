@@ -179,6 +179,16 @@ pub(crate) fn build_iv(ctx: &SecurityContext, psn: SequenceNumber) -> [u8; 16] {
 /// stream is walked until the MAC Security Info IE is found; the spec
 /// allows plaintext IEs to precede it (clause 5.9.1.3, "payload
 /// length 0 option").
+/// Verification-only export of [`cipher_range`] so the Kani
+/// harnesses in `verify/` can prove the IE-prefix walk in isolation.
+/// Compiled only under `cargo kani` (`--cfg kani`).
+#[cfg(kani)]
+pub fn cipher_range_for_verification(
+    buffer: &[u8],
+) -> Result<Option<Range<usize>>, CipherRangeError> {
+    cipher_range(buffer)
+}
+
 pub(crate) fn cipher_range(buffer: &[u8]) -> Result<Option<Range<usize>>, CipherRangeError> {
     let head_byte = *buffer.first().ok_or(CipherRangeError::BufferTooShort)?;
     let head = MacHeaderType(head_byte);

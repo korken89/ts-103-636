@@ -16,3 +16,7 @@ edition = "2024"
 ts-103-636 = { path = "..", default-features = false }
 
 [workspace]
+
+[features]
+# Enables the monolithic Message::parse framing proof (~8 min solve).
+slow-proofs = []

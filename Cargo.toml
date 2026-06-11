@@ -19,6 +19,11 @@ exclude = [
     "verify/",
 ]
 
+# `cfg(kani)` guards the verification-only exports consumed by the
+# verify/ harness crate; cargo kani sets it for the whole crate graph.
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(kani)"] }
+
 # The codegen and fuzz crates are workspace members so that
 # workspace-wide fmt / clippy / test (see the Makefile) cover them;
 # they are never published (`publish = false` + the exclude list
