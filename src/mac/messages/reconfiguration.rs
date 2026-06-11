@@ -43,6 +43,195 @@ mod tests {
     use super::*;
     // FlowAction is already imported at the top of the test module.
 
+    // -----------------------------------------------------------------------
+    // Golden vectors - hand-derived from ETSI TS 103 636-4 clause 6.4.2.7
+    // Figure 6.4.2.7-1.
+    //
+    // B0 layout (MSB first): TX(b7)|RX(b6)|RDC(b5)|N[2:0](b4..b2)|RR[1:0](b1..b0)
+    // HARQ byte: HARQ_Proc[2:0](b7..b5) | MAX_HARQ_Re[4:0](b4..b0)
+    // FlowEntry byte: Setup/Release(b7) | Reserved(b6) | FlowID[5:0](b5..b0)
+    // -----------------------------------------------------------------------
+
+    /// Clause 6.4.2.7, minimal: no TX/RX HARQ, 0 flows, RD cap = 0,
+    /// Radio Resource = No Change. Single byte, all zeros.
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows reconfiguration-request field layout"
+    )]
+    fn golden_vector_minimal_reconfiguration_request() {
+        const GOLDEN: [u8; 1] = [
+            0b0_0_0_000_00, // TX=0 RX=0 RDC=0 N=000 RR=NoChange(00)
+        ];
+        let parts = ReconfigurationRequestParts {
+            tx_harq: None,
+            rx_harq: None,
+            rd_capability_changed: false,
+            radio_resource: RadioResourceChange::NoChange,
+            flows: &[],
+        };
+        let mut buf = [0u8; 16];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        assert_eq!(ReconfigurationRequestParts::parse(&GOLDEN).unwrap(), parts);
+    }
+
+    /// Clause 6.4.2.7, full: TX+RX HARQ both set, RD cap set, 6 flow
+    /// entries, Radio Resource = ResourceAllocationIeIncluded.
+    ///
+    /// B0 = TX(1)|RX(1)|RDC(1)|N=110|RR=11 = 0b11111011 = 0xFB
+    /// TX HARQ: processes=5 (0b101), max_re=13 (0b01101) -> (5<<5)|13 = 0b10101101 = 0xAD
+    /// RX HARQ: processes=2 (0b010), max_re=7  (0b00111) -> (2<<5)|7  = 0b01000111 = 0x47
+    /// FlowEntry byte: S/R(b7)|Rsv(b6)|FlowID[5:0](b5..b0)
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows reconfiguration-request field layout"
+    )]
+    fn golden_vector_full_reconfiguration_request() {
+        const GOLDEN: [u8; 9] = [
+            0b1_1_1_110_11, // TX=1 RX=1 RDC=1 N=110(6) RR=ResourceAllocationIeIncluded(11)
+            0b101_01101,    // TX HARQ: processes=5(101) max_re=13(01101)
+            0b010_00111,    // RX HARQ: processes=2(010) max_re=7(00111)
+            0b0_0_001010,   // flow[0]: SetupOrReconfigure(0) rsv=0 FlowID=0x0A
+            0b1_0_010100,   // flow[1]: Release(1) rsv=0 FlowID=0x14
+            0b0_0_000001,   // flow[2]: SetupOrReconfigure(0) rsv=0 FlowID=0x01
+            0b1_0_000010,   // flow[3]: Release(1) rsv=0 FlowID=0x02
+            0b0_0_000011,   // flow[4]: SetupOrReconfigure(0) rsv=0 FlowID=0x03
+            0b1_0_000101,   // flow[5]: Release(1) rsv=0 FlowID=0x05
+        ];
+        let flows = [
+            FlowEntry::new(FlowAction::SetupOrReconfigure, FlowId::new(0x0A).unwrap()),
+            FlowEntry::new(FlowAction::Release, FlowId::new(0x14).unwrap()),
+            FlowEntry::new(FlowAction::SetupOrReconfigure, FlowId::new(0x01).unwrap()),
+            FlowEntry::new(FlowAction::Release, FlowId::new(0x02).unwrap()),
+            FlowEntry::new(FlowAction::SetupOrReconfigure, FlowId::new(0x03).unwrap()),
+            FlowEntry::new(FlowAction::Release, FlowId::new(0x05).unwrap()),
+        ];
+        let parts = ReconfigurationRequestParts {
+            tx_harq: Some(HarqConfig {
+                processes: HarqProcesses::new(5).unwrap(),
+                max_re: MaxHarqReTx::new(13).unwrap(),
+            }),
+            rx_harq: Some(HarqConfig {
+                processes: HarqProcesses::new(2).unwrap(),
+                max_re: MaxHarqReTx::new(7).unwrap(),
+            }),
+            rd_capability_changed: true,
+            radio_resource: RadioResourceChange::ResourceAllocationIeIncluded,
+            flows: &flows,
+        };
+        let mut buf = [0u8; 16];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        assert_eq!(ReconfigurationRequestParts::parse(&GOLDEN).unwrap(), parts);
+    }
+
+    // -----------------------------------------------------------------------
+    // Golden vectors - hand-derived from ETSI TS 103 636-4 clause 6.4.2.8
+    // Figure 6.4.2.8-1.
+    //
+    // B0 layout identical to Request. N field meaning differs: N=111 means
+    // "All flows accepted" (no flow bytes follow); N=0..=6 means that many
+    // specific flow-acceptance entries.
+    // -----------------------------------------------------------------------
+
+    /// Clause 6.4.2.8, minimal: Specific(&[]) acceptance (N=000), no HARQ,
+    /// no RD cap, Radio Resource = No Change. Single byte, all zeros.
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows reconfiguration-response field layout"
+    )]
+    fn golden_vector_minimal_reconfiguration_response() {
+        const GOLDEN: [u8; 1] = [
+            0b0_0_0_000_00, // TX=0 RX=0 RDC=0 N=000(Specific 0) RR=NoChange(00)
+        ];
+        let parts = ReconfigurationResponseParts {
+            tx_harq: None,
+            rx_harq: None,
+            rd_capability_changed: false,
+            radio_resource: RadioResourceChange::NoChange,
+            flow_acceptance: FlowChangeAcceptance::Specific(&[]),
+        };
+        let mut buf = [0u8; 16];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        let parsed = ReconfigurationResponseParts::parse(&GOLDEN).unwrap();
+        assert_eq!(parsed.tx_harq, parts.tx_harq);
+        assert_eq!(parsed.rx_harq, parts.rx_harq);
+        assert_eq!(parsed.rd_capability_changed, parts.rd_capability_changed);
+        assert_eq!(parsed.radio_resource, parts.radio_resource);
+        assert!(
+            matches!(parsed.flow_acceptance, FlowChangeAcceptance::Specific(s) if s.is_empty())
+        );
+    }
+
+    /// Clause 6.4.2.8, full: TX+RX HARQ rejected, RD cap set, 6 specific
+    /// flow entries accepted, Radio Resource = ResourceAllocationIeIncluded.
+    ///
+    /// B0 identical to the Request full vector (0xFB): TX/RX/RDC flags all
+    /// set, N=110(6 flows), RR=11.
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows reconfiguration-response field layout"
+    )]
+    fn golden_vector_full_reconfiguration_response() {
+        const GOLDEN: [u8; 9] = [
+            0b1_1_1_110_11, // TX=1 RX=1 RDC=1 N=110(6 flows) RR=ResourceAllocationIeIncluded(11)
+            0b101_01101,    // TX HARQ: processes=5(101) max_re=13(01101) - alternative config
+            0b010_00111,    // RX HARQ: processes=2(010) max_re=7(00111)
+            0b0_0_001010,   // flow[0]: SetupOrReconfigure(0) rsv=0 FlowID=0x0A
+            0b1_0_010100,   // flow[1]: Release(1) rsv=0 FlowID=0x14
+            0b0_0_000001,   // flow[2]: SetupOrReconfigure(0) rsv=0 FlowID=0x01
+            0b1_0_000010,   // flow[3]: Release(1) rsv=0 FlowID=0x02
+            0b0_0_000011,   // flow[4]: SetupOrReconfigure(0) rsv=0 FlowID=0x03
+            0b1_0_000101,   // flow[5]: Release(1) rsv=0 FlowID=0x05
+        ];
+        let flows = [
+            FlowEntry::new(FlowAction::SetupOrReconfigure, FlowId::new(0x0A).unwrap()),
+            FlowEntry::new(FlowAction::Release, FlowId::new(0x14).unwrap()),
+            FlowEntry::new(FlowAction::SetupOrReconfigure, FlowId::new(0x01).unwrap()),
+            FlowEntry::new(FlowAction::Release, FlowId::new(0x02).unwrap()),
+            FlowEntry::new(FlowAction::SetupOrReconfigure, FlowId::new(0x03).unwrap()),
+            FlowEntry::new(FlowAction::Release, FlowId::new(0x05).unwrap()),
+        ];
+        let parts = ReconfigurationResponseParts {
+            tx_harq: Some(HarqConfig {
+                processes: HarqProcesses::new(5).unwrap(),
+                max_re: MaxHarqReTx::new(13).unwrap(),
+            }),
+            rx_harq: Some(HarqConfig {
+                processes: HarqProcesses::new(2).unwrap(),
+                max_re: MaxHarqReTx::new(7).unwrap(),
+            }),
+            rd_capability_changed: true,
+            radio_resource: RadioResourceChange::ResourceAllocationIeIncluded,
+            flow_acceptance: FlowChangeAcceptance::Specific(&flows),
+        };
+        let mut buf = [0u8; 16];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        let parsed = ReconfigurationResponseParts::parse(&GOLDEN).unwrap();
+        assert_eq!(parsed.tx_harq, parts.tx_harq);
+        assert_eq!(parsed.rx_harq, parts.rx_harq);
+        assert_eq!(parsed.rd_capability_changed, parts.rd_capability_changed);
+        assert_eq!(parsed.radio_resource, parts.radio_resource);
+        let accepted = match parsed.flow_acceptance {
+            FlowChangeAcceptance::Specific(s) => s,
+            _ => panic!("expected Specific"),
+        };
+        assert_eq!(accepted.len(), 6);
+        for (got, want) in accepted.iter().zip(flows.iter()) {
+            assert_eq!(got.as_raw(), want.as_raw());
+        }
+    }
+
     fn fe(action: FlowAction, raw: u8) -> FlowEntry {
         FlowEntry::new(action, FlowId::new(raw).unwrap())
     }

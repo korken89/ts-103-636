@@ -86,6 +86,123 @@ pub enum ResourceAllocationKind {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // -----------------------------------------------------------------------
+    // Golden vectors - hand-derived from ETSI TS 103 636-4 clause 6.4.3.3,
+    // Figure 6.4.3.3-1, Table 6.4.3.3-1.
+    //
+    // B0 layout: AT[1:0](b7..b6)|Add(b5)|ID(b4)|RPT[2:0](b3..b1)|SFN(b0)
+    // B1 layout: CH(b7)|RLF(b6)|Reserved[5:0]
+    // Start subslot: 8-bit when mu <= 4; 9-bit (in 2 bytes, high bit of
+    //   first byte is the MSB of the 9-bit value) when mu > 4.
+    // Length byte: LT(b7)|Length[6:0](b6..b0)
+    // -----------------------------------------------------------------------
+
+    /// Clause 6.4.3.3, minimal: Allocation Type = 00 (Release All) with
+    /// Mu::M1. Exactly one byte (the AT bits; all other fields absent).
+    /// Table 6.4.3.3-1: "No other fields are present in this IE."
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows resource-allocation field layout"
+    )]
+    fn golden_vector_minimal_resource_allocation() {
+        const GOLDEN: [u8; 1] = [
+            0b00_0_0_000_0, // AT=00(ReleaseAll); remaining bits don't care per spec
+        ];
+        let parts = ResourceAllocationParts {
+            mu: Mu::M1,
+            kind: ResourceAllocationKind::ReleaseAll,
+        };
+        let mut buf = [0u8; 4];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        assert_eq!(
+            ResourceAllocationParts::parse(&GOLDEN, Mu::M1).unwrap(),
+            parts
+        );
+    }
+
+    /// Clause 6.4.3.3, full: AT=11(Both DL+UL) with Mu::M8 (mu > 4,
+    /// so start subslot is 9-bit, encoded in 2 bytes). All optional fields
+    /// present: Add=1, ID=1 (recipient), RPT=001 (PerFrame), SFN=1,
+    /// CH=1, RLF=1.
+    ///
+    /// B0 = AT(11)|Add(1)|ID(1)|RPT(001)|SFN(1)
+    ///    = 0b11_1_1_001_1 = 0xF3
+    /// B1 = CH(1)|RLF(1)|Rsv = 0b1100_0000 = 0xC0
+    /// DL start_subslot = 0x015A (342, 9-bit, to_be: [0x01, 0x5A])
+    /// DL length byte = LT=1(Slot)|Length=20 = (1<<7)|20 = 0x80|0x14 = 0x94
+    /// UL start_subslot = 0x00B4 (180, 9-bit, to_be: [0x00, 0xB4])
+    /// UL length byte = LT=0(Subslot)|Length=10 = 0x0A
+    /// recipient = 0xBEEF -> [0xBE, 0xEF]
+    /// repetition = 3 (0x03), validity = 50 (0x32)
+    /// sfn_value = 0x7E
+    /// channel = 0x1234 (13-bit, as_u16()=0x1234, wire [0x12, 0x34])
+    /// resource_failure_timer = Ms500 (0b0110), wire: v.as_u8() & 0x0F = 0x06
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows resource-allocation field layout"
+    )]
+    fn golden_vector_full_resource_allocation() {
+        const GOLDEN: [u8; 16] = [
+            0b11_1_1_001_1, // AT=11(Both) Add=1 ID=1(recipient) RPT=001(PerFrame) SFN=1
+            0b11_000000,    // CH=1(channel) RLF=1(rlf_timer) Reserved=0
+            0x01,           // DL start_subslot[8..1] (9-bit, MSB of 0x015A)
+            0x5A,           // DL start_subslot[7..0]
+            0x94,           // DL length_type=1(Slot) length=20 -> (1<<7)|20 = 0x94
+            0x00,           // UL start_subslot[8..1] (9-bit, MSB of 0x00B4)
+            0xB4,           // UL start_subslot[7..0]
+            0x0A,           // UL length_type=0(Subslot) length=10 -> 0x0A
+            0xBE,           // recipient ShortRdId 0xBEEF high byte
+            0xEF,           // recipient ShortRdId 0xBEEF low byte
+            0x03,           // repetition = 3 (next-next frame after this one)
+            0x32,           // validity = 50 frames
+            0x7E,           // sfn_value = 0x7E
+            0x12,           // channel 0x1234 (13-bit) high byte
+            0x34,           // channel 0x1234 low byte
+            0x06,           // resource_failure_timer Ms500(0b0110); Table 6.4.3.3-2 code 0110=500ms
+        ];
+        let parts = ResourceAllocationParts {
+            // mu=8 (M8) > 4 -> 9-bit start-subslot field (two bytes on wire)
+            mu: Mu::M8,
+            kind: ResourceAllocationKind::Both {
+                dl: AllocationPair {
+                    start_subslot: 0x015A,
+                    length_type: PacketLengthType::Slot,
+                    length: RaLength::new(20).unwrap(),
+                },
+                ul: AllocationPair {
+                    start_subslot: 0x00B4,
+                    length_type: PacketLengthType::Subslot,
+                    length: RaLength::new(10).unwrap(),
+                },
+                options: AllocationOptions {
+                    add: true,
+                    recipient: Some(ShortRdId::new(0xBEEF).unwrap()),
+                    repeat: Some(RepeatPolicy {
+                        mode: RepeatMode::PerFrame, // Table 6.4.3.3-1 code 001
+                        repetition: Repetition::new(3).unwrap(),
+                        validity: Validity(50),
+                    }),
+                    sfn_value: Some(0x7E),
+                    channel: Some(AbsoluteChannel::new(0x1234).unwrap()),
+                    resource_failure_timer: Some(DectScheduledResourceFailure::Ms500),
+                },
+            },
+        };
+        let mut buf = [0u8; 24];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        assert_eq!(
+            ResourceAllocationParts::parse(&GOLDEN, Mu::M8).unwrap(),
+            parts
+        );
+    }
+
     #[test]
     fn resource_allocation_release_all_round_trip() {
         let parts = ResourceAllocationParts {

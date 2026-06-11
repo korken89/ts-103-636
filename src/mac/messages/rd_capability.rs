@@ -45,6 +45,191 @@ pub struct AdditionalPhyCapability {
 mod tests {
     use super::*;
     use heapless::Vec;
+
+    /// Hand-derived PhyCapability used in both golden vectors.
+    ///
+    /// Encoding of the 4 capability octets (Figure 6.4.3.5-1 rows 4-7):
+    ///   byte 0 (rd_power_class | max_nss_for_rx | rx_for_tx_diversity):
+    ///     rd_power_class = ClassIII = code 0b010 -> bits 6-4
+    ///     max_nss_for_rx = N2 = code 0b01 -> bits 3-2
+    ///     rx_for_tx_diversity = N1 = code 0b00 -> bits 1-0
+    ///     -> (0b010 << 4) | (0b01 << 2) | 0b00 = 0x20 | 0x04 = 0x24
+    ///   byte 1 (rx_gain | max_mcs):
+    ///     rx_gain = Db2 = code 6 = 0b0110 -> bits 7-4
+    ///     max_mcs = 7 -> bits 3-0
+    ///     -> (6 << 4) | 7 = 0x67
+    ///   byte 2 (soft_buffer_size | num_harq_processes | reserved):
+    ///     soft_buffer_size = Bytes512000 = code 6 -> bits 7-4
+    ///     num_harq_processes = P8 = code 0b11 -> bits 3-2
+    ///     -> (6 << 4) | (0b11 << 2) = 0x60 | 0x0C = 0x6C
+    ///   byte 3 (harq_feedback_delay in base) = 6 subslots -> (6 << 4) = 0x60,
+    ///           plus d_delay/half_dup flags (base-only octet)
+    fn golden_phy() -> PhyCapability {
+        PhyCapability {
+            rd_power_class: RdPowerClass::ClassIII, // code 0b010
+            max_nss_for_rx: Nss::N2,                // code 0b01
+            rx_for_tx_diversity: Nss::N1,           // code 0b00
+            rx_gain: RxGain::Db2,                   // code 6
+            max_mcs: Mcs::new(7).unwrap(),
+            soft_buffer_size: SoftBufferSize::Bytes512000, // code 6
+            num_harq_processes: NumHarqProcesses::P8,      // code 0b11
+            harq_feedback_delay: HarqFeedbackDelay::new(6).unwrap(), // 6 subslots
+        }
+    }
+
+    /// Golden vector (minimal) hand-derived from Figure 6.4.3.5-1 / Table 6.4.3.5-1.
+    ///
+    /// No additional PHY blocks.  7 bytes total.
+    ///
+    ///   byte 0: N=0 (bits7-5=000) | release=R3 (code 3 = 0b00011)
+    ///     -> 0x03
+    ///   byte 1: R(3b)=0 | GA=0 | PG=1 | OM=FtOnly(0b01) | M=0 | S=0
+    ///     paging bit4=1 -> 0x10; OperatingModes::FtOnly = 0b01 -> (0b01 << 2) = 0x04
+    ///     -> 0x14
+    ///   byte 2: mac_security=Mode1Supported(0b001) | dlc_service_type=Type1(0b001) | R(2b)=0
+    ///     -> (0b001 << 5) | (0b001 << 2) = 0x20 | 0x04 = 0x24
+    ///   byte 3: capability core octet 0 = 0x24  (as derived above)
+    ///   byte 4: capability core octet 1 = 0x67
+    ///   byte 5: capability core octet 2 = 0x6C
+    ///   byte 6: harq_fb_delay=6 | d_delay=1 | half_dup=0 | R(2b)=0
+    ///     -> (6 << 4) | 0x08 = 0x68
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows RD Capability IE field layout"
+    )]
+    fn golden_vector_minimal() {
+        const GOLDEN: [u8; 7] = [
+            0b000_00011,      // N=0 | release=R3 (code 3)
+            0b000_0_1_01_0_0, // R(3b)|GA=0|PG=1|OM=FtOnly(01)|M=0|S=0 = 0x14
+            0b001_001_00,     // mac_security=Mode1(001) | dlc_type=Type1(001) | R(2b)
+            0b0_010_01_00,    // R|rd_power_class=ClassIII(010)|max_nss=N2(01)|rxtx_div=N1(00)
+            0b0110_0111,      // rx_gain=Db2(6) | max_mcs=7
+            0b0110_11_00,     // soft_buf=Bytes512000(6) | harq_proc=P8(11) | R(2b)
+            0b0110_1_0_00,    // harq_fb_delay=6 | d_delay=1 | half_dup=0 | R(2b)
+        ];
+        let parts = RdCapabilityParts {
+            release: Release::R3, // code 3
+            group_as: false,
+            paging: true,
+            operating_modes: OperatingModes::FtOnly, // code 0b01
+            mesh: false,
+            schedul: false,
+            mac_security: MacSecuritySupport::Mode1Supported, // code 0b001
+            dlc_service_type: DlcServiceType::Type1,          // code 0b001
+            base_phy: golden_phy(),
+            d_delay: true,
+            half_dup: false,
+            additional_phy: Vec::new(),
+        };
+        let mut buf = [0u8; 64];
+        assert_eq!(parts.serialize(&mut buf).unwrap(), GOLDEN.len());
+        assert_eq!(buf[..GOLDEN.len()], GOLDEN);
+        assert_eq!(RdCapabilityParts::parse(&GOLDEN).unwrap(), parts);
+    }
+
+    /// Golden vector (full) hand-derived from Figure 6.4.3.5-1 / Table 6.4.3.5-1.
+    ///
+    /// MAX_ADDITIONAL_PHY = 7 additional 5-octet blocks.  7 + 7*5 = 42 bytes total.
+    ///
+    /// Each additional block: mu=M2(code 1) | beta=B16(code 5) | same phy as base.
+    ///   octet 0: (mu_code << 5) | (beta_code << 1) = (1 << 5) | (5 << 1) = 0x20 | 0x0A = 0x2A
+    ///   octet 1: 0x24  (same as base_phy byte 3)
+    ///   octet 2: 0x67  (same as base_phy byte 4)
+    ///   octet 3: 0x6C  (same as base_phy byte 5)
+    ///   octet 4: harq_feedback_delay only (no d_delay/half_dup in additional block):
+    ///            (6 << 4) = 0x60
+    ///
+    /// Fixed header byte 0: N=7 (bits7-5=0b111), release=R3 -> (7<<5)|3 = 0xE3
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows RD Capability IE field layout"
+    )]
+    fn golden_vector_full() {
+        // Additional block repeated 7 times (MAX_ADDITIONAL_PHY).
+        // mu=M2 code=1, beta=B16 code=5.
+        const ADD: [u8; 5] = [
+            0b001_0101_0,  // mu=M2(code 1)|beta=B16(code 5)|R=0 = 0x2A
+            0b0_010_01_00, // R|ClassIII(010)|N2(01)|N1(00) = 0x24
+            0b0110_0111,   // rx_gain=Db2(6)|max_mcs=7 = 0x67
+            0b0110_11_00,  // soft_buf=512000(6)|P8(11)|R(2b) = 0x6C
+            0b0110_0000,   // harq_fb_delay=6 (no d_delay/half_dup in additional block) = 0x60
+        ];
+        const GOLDEN: [u8; 42] = [
+            0b111_00011,      // N=7 | release=R3 (code 3) -> 0xE3
+            0b000_0_1_01_0_0, // same byte1 as minimal = 0x14
+            0b001_001_00,     // same byte2 as minimal = 0x24
+            0b0_010_01_00,    // same byte3
+            0b0110_0111,      // same byte4
+            0b0110_11_00,     // same byte5
+            0b0110_1_0_00,    // same byte6 = 0x68
+            // 7 additional blocks:
+            ADD[0],
+            ADD[1],
+            ADD[2],
+            ADD[3],
+            ADD[4], // block 0
+            ADD[0],
+            ADD[1],
+            ADD[2],
+            ADD[3],
+            ADD[4], // block 1
+            ADD[0],
+            ADD[1],
+            ADD[2],
+            ADD[3],
+            ADD[4], // block 2
+            ADD[0],
+            ADD[1],
+            ADD[2],
+            ADD[3],
+            ADD[4], // block 3
+            ADD[0],
+            ADD[1],
+            ADD[2],
+            ADD[3],
+            ADD[4], // block 4
+            ADD[0],
+            ADD[1],
+            ADD[2],
+            ADD[3],
+            ADD[4], // block 5
+            ADD[0],
+            ADD[1],
+            ADD[2],
+            ADD[3],
+            ADD[4], // block 6
+        ];
+        let one_block = AdditionalPhyCapability {
+            mu: RdClassMu::M2,      // code 1 (Table 6.4.3.5-1)
+            beta: RdClassBeta::B16, // code 5 (Table 6.4.3.5-1)
+            phy: golden_phy(),
+        };
+        let mut additional_phy = Vec::new();
+        for _ in 0..MAX_ADDITIONAL_PHY {
+            additional_phy.push(one_block).unwrap();
+        }
+        let parts = RdCapabilityParts {
+            release: Release::R3,
+            group_as: false,
+            paging: true,
+            operating_modes: OperatingModes::FtOnly,
+            mesh: false,
+            schedul: false,
+            mac_security: MacSecuritySupport::Mode1Supported,
+            dlc_service_type: DlcServiceType::Type1,
+            base_phy: golden_phy(),
+            d_delay: true,
+            half_dup: false,
+            additional_phy,
+        };
+        let mut buf = [0u8; 64];
+        assert_eq!(parts.serialize(&mut buf).unwrap(), GOLDEN.len());
+        assert_eq!(buf[..GOLDEN.len()], GOLDEN);
+        assert_eq!(RdCapabilityParts::parse(&GOLDEN).unwrap(), parts);
+    }
+
     fn sample_phy() -> PhyCapability {
         PhyCapability {
             rd_power_class: RdPowerClass::ClassII,

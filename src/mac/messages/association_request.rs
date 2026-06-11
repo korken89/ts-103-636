@@ -148,4 +148,140 @@ mod tests {
         ];
         assert!(AssociationRequestParts::parse(&buf).is_err());
     }
+
+    /// Golden vector (minimal) hand-derived from Figure 6.4.2.4-1 and Tables 6.4.2.4-1/-2.
+    ///
+    /// No flows, no FT-mode block -> 4 bytes.
+    ///
+    /// Chosen values:
+    ///   Setup Cause = Mobility (code 0b010, Table 6.4.2.4-2)
+    ///   Power Const = Constrained (1)
+    ///   Number of Flows = 0 (no flow IDs)
+    ///   FT mode = absent (0)
+    ///   Current = absent (0) -> byte 1 = 0x00
+    ///   HARQ Processes TX = 3 (0b011)
+    ///   MAX HARQ Re-TX = 5 (0b00101)
+    ///   HARQ Processes RX = 4 (0b100)
+    ///   MAX HARQ Re-RX = 7 (0b00111)
+    ///
+    /// Byte 0: [Setup Cause(3) | N Flows(3) | PC(1) | FT(1)]
+    ///   = (0b010 << 5) | (0b000 << 2) | (1 << 1) | 0
+    ///   = 0x40 | 0x00 | 0x02 | 0x00 = 0x42
+    /// Byte 1: 0x00 (Current=0, reserved)
+    /// Byte 2: [HARQ TX(3) | MAX Re-TX(5)] = (0b011 << 5) | 0b00101 = 0x65
+    /// Byte 3: [HARQ RX(3) | MAX Re-RX(5)] = (0b100 << 5) | 0b00111 = 0x87
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows field layout"
+    )]
+    fn golden_vector_minimal() {
+        const GOLDEN: [u8; 4] = [
+            0b010_000_1_0, // Setup Cause=Mobility(010) | N Flows=0(000) | PC=Constrained(1) | FT=0
+            0b0_0000000,   // Current=0 | Reserved
+            0b011_00101,   // HARQ TX=3 | MAX Re-TX=5
+            0b100_00111,   // HARQ RX=4 | MAX Re-RX=7
+        ];
+        let parts = AssociationRequestParts {
+            setup_cause: SetupCause::Mobility,
+            power_const: PowerConst::Constrained,
+            harq_processes_tx: HarqProcesses::new(3).unwrap(),
+            max_harq_re_tx: MaxHarqReTx::new(5).unwrap(),
+            harq_processes_rx: HarqProcesses::new(4).unwrap(),
+            max_harq_re_rx: MaxHarqReTx::new(7).unwrap(),
+            flow_ids: Vec::new(),
+            ft_mode: None,
+        };
+        let mut buf = [0u8; 4];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        assert_eq!(AssociationRequestParts::parse(&GOLDEN).unwrap(), parts);
+    }
+
+    /// Golden vector (full) hand-derived from Figure 6.4.2.4-1 and Tables 6.4.2.4-1/-2.
+    ///
+    /// Maximum flows (6), FT-mode block with Current Cluster Channel present
+    /// -> 4 + 6 + 7 + 2 = 19 bytes.
+    ///
+    /// Chosen values:
+    ///   Setup Cause = ReassociationAfterError (code 0b011, Table 6.4.2.4-2)
+    ///   Power Const = Unconstrained (0)
+    ///   Number of Flows = 6 (MAX_REQUEST_FLOWS)
+    ///   FT mode = present (1), Current = present (1)
+    ///   HARQ TX=3, MAX Re-TX=5, HARQ RX=4, MAX Re-RX=7 (same as minimal)
+    ///   Flow IDs: 0x01, 0x02, 0x03, 0x0A, 0x15, 0x20
+    ///   Network Beacon Period = Ms2000 (code 5, Table 6.4.2.2-1)
+    ///   Cluster Beacon Period = Ms4000 (code 7, Table 6.4.2.2-1)
+    ///   Next Cluster Channel = AbsoluteChannel(0x1234)
+    ///   Time To Next = 0xDEAD_BEEF
+    ///   Current Cluster Channel = AbsoluteChannel(0x0567)
+    ///
+    /// Byte 0: (0b011 << 5) | (0b110 << 2) | (0 << 1) | 1 = 0x60 | 0x18 | 0 | 1 = 0x79
+    /// Byte 1: Current=1, ft_mode present -> 0x80
+    /// Byte 2: 0x65 (same HARQ TX)
+    /// Byte 3: 0x87 (same HARQ RX)
+    /// Bytes 4-9: flow IDs (low 6 bits each)
+    /// Byte 10: NB Period(4)|CB Period(4) = (5<<4)|7 = 0x57
+    /// Bytes 11-12: next_cluster_channel 0x1234 -> [0x12, 0x34]
+    /// Bytes 13-16: time_to_next 0xDEAD_BEEF -> [0xDE, 0xAD, 0xBE, 0xEF]
+    /// Bytes 17-18: current_cluster_channel 0x0567 -> [0x05, 0x67]
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows field layout"
+    )]
+    fn golden_vector_full() {
+        const GOLDEN: [u8; 19] = [
+            0b011_110_0_1, // Setup Cause=ReassocErr(011)|N Flows=6(110)|PC=Uncons(0)|FT=1
+            0b1_0000000,   // Current=1 | Reserved (ft_mode + current_cluster_channel present)
+            0b011_00101,   // HARQ TX=3 | MAX Re-TX=5
+            0b100_00111,   // HARQ RX=4 | MAX Re-RX=7
+            0x01,          // Flow ID 0 = 0x01
+            0x02,          // Flow ID 1 = 0x02
+            0x03,          // Flow ID 2 = 0x03
+            0x0A,          // Flow ID 3 = 0x0A
+            0x15,          // Flow ID 4 = 0x15
+            0x20,          // Flow ID 5 = 0x20
+            0b0101_0111,   // NB Period=Ms2000(5) | CB Period=Ms4000(7)
+            0x12,          // Next Cluster Channel high byte (0x1234 & 0x1FFF)
+            0x34,          // Next Cluster Channel low byte
+            0xDE,          // Time To Next byte 0 (0xDEAD_BEEF)
+            0xAD,          // Time To Next byte 1
+            0xBE,          // Time To Next byte 2
+            0xEF,          // Time To Next byte 3
+            0x05,          // Current Cluster Channel high byte (0x0567 & 0x1FFF)
+            0x67,          // Current Cluster Channel low byte
+        ];
+        let flow_ids = Vec::from_slice(&[
+            FlowId::new(0x01).unwrap(),
+            FlowId::new(0x02).unwrap(),
+            FlowId::new(0x03).unwrap(),
+            FlowId::new(0x0A).unwrap(),
+            FlowId::new(0x15).unwrap(),
+            FlowId::new(0x20).unwrap(),
+        ])
+        .unwrap();
+        let parts = AssociationRequestParts {
+            setup_cause: SetupCause::ReassociationAfterError,
+            power_const: PowerConst::Unconstrained,
+            harq_processes_tx: HarqProcesses::new(3).unwrap(),
+            max_harq_re_tx: MaxHarqReTx::new(5).unwrap(),
+            harq_processes_rx: HarqProcesses::new(4).unwrap(),
+            max_harq_re_rx: MaxHarqReTx::new(7).unwrap(),
+            flow_ids,
+            ft_mode: Some(FtModeFields {
+                network_beacon_period: NetworkBeaconPeriod::Ms2000,
+                cluster_beacon_period: ClusterBeaconPeriod::Ms4000,
+                next_cluster_channel: AbsoluteChannel::new(0x1234).unwrap(),
+                time_to_next: 0xDEAD_BEEF,
+                current_cluster_channel: Some(AbsoluteChannel::new(0x0567).unwrap()),
+            }),
+        };
+        let mut buf = [0u8; 19];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        assert_eq!(AssociationRequestParts::parse(&GOLDEN).unwrap(), parts);
+    }
 }

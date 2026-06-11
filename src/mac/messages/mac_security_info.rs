@@ -51,4 +51,40 @@ mod tests {
         let buf = [0; 4];
         assert!(MacSecurityInfoParts::parse(&buf).is_err());
     }
+
+    // -------------------------------------------------------------------
+    // Figure 6.4.3.1-1 hand-derived golden vector (fixed 5-byte layout)
+    // B0: bits 7:6 = Version (2b) | bits 5:4 = Key Index (2b) | bits 3:0 = IV Type (4b)
+    // B1-B4: HPC (32-bit big-endian Hyper Packet Counter)
+    // -------------------------------------------------------------------
+
+    /// Golden vector: Version=Mode1 (0b00), KeyIndex=3 (0b11),
+    /// IvType=ResynchronizingHpc (0b0001, Table 6.4.3.1-2),
+    /// HPC=0x1234_5678.
+    /// Total: 5 bytes.
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows IE field layout per Figure 6.4.3.1-1"
+    )]
+    fn golden_vector() {
+        const GOLDEN: [u8; 5] = [
+            0b00_11_0001, // Version=0b00 (Mode 1) | KeyIndex=0b11 (3) | IvType=0b0001 (ResynchronizingHpc)
+            0x12,         // HPC byte 0 (MSB)
+            0x34,         // HPC byte 1
+            0x56,         // HPC byte 2
+            0x78,         // HPC byte 3 (LSB)
+        ];
+        let parts = MacSecurityInfoParts {
+            version: SecurityVersion::Mode1,             // Table 6.4.3.1-1: 0b00
+            key_index: KeyIndex::new(3).unwrap(),        // 0b11
+            iv_type: SecurityIvType::ResynchronizingHpc, // Table 6.4.3.1-2: 0b0001
+            hpc: 0x1234_5678,
+        };
+        let mut buf = [0u8; 8];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        assert_eq!(MacSecurityInfoParts::parse(&GOLDEN).unwrap(), parts);
+    }
 }

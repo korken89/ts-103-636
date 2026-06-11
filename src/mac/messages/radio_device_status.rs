@@ -10,6 +10,36 @@ pub use super::generated::radio_device_status::*;
 mod tests {
     use super::*;
     use crate::types::*;
+
+    /// Golden vector hand-derived from Figure 6.4.3.13-1 / Table 6.4.3.13-1.
+    ///
+    /// Byte layout (8 bits):
+    ///   bit 7: reserved = 0
+    ///   bit 6: Association = 1  (re-association needed)
+    ///   bits 5-4: Status = 0b10 (NormalOperation, Table 6.4.3.13-1)
+    ///   bits 3-0: Duration = 0b0110 = 6 (Ms1000, Table 6.4.3.13-1)
+    ///
+    ///   byte0 = 0_1_10_0110 = 0x66
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows Radio Device Status field layout"
+    )]
+    fn golden_vector() {
+        const GOLDEN: [u8; 1] = [
+            0b0_1_10_0110, // reserved(0) | assoc=1 | status=NormalOperation | duration=Ms1000
+        ];
+        let parts = RadioDeviceStatusParts {
+            association_needed: true,
+            status: RadioDeviceStatusFlag::NormalOperation, // code 0b10 (Table 6.4.3.13-1)
+            duration: RadioDeviceStatusDuration::Ms1000,    // code 6 (Table 6.4.3.13-1)
+        };
+        let mut buf = [0u8; 4];
+        assert_eq!(parts.serialize(&mut buf).unwrap(), GOLDEN.len());
+        assert_eq!(buf[..GOLDEN.len()], GOLDEN);
+        assert_eq!(RadioDeviceStatusParts::parse(&GOLDEN).unwrap(), parts);
+    }
+
     #[test]
     fn radio_device_status_round_trip() {
         let parts = RadioDeviceStatusParts {

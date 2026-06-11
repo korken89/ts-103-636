@@ -37,7 +37,10 @@ Spec coverage is broad and round-trip-tested:
   in without touching the layout code
 
 Every message keeps its inline unit tests (`cargo test` runs the full
-suite on the host), and the parsers are additionally fuzzed with
+suite on the host), every message body and PCC format also has golden
+vectors hand-derived from the spec figures - written as binary
+literals grouped by field, with a minimal and a fully-loaded vector
+for variable layouts - and the parsers are additionally fuzzed with
 coverage-guided libFuzzer targets. Run `make` for the complete check
 suite (generated-code drift check, fmt, clippy, tests, the
 hardware-crypto configuration, nRF9151 target builds, and docs) - it

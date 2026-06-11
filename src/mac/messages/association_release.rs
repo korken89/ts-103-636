@@ -44,4 +44,31 @@ mod tests {
         let parsed = AssociationReleaseParts::parse(&buf).unwrap();
         assert_eq!(parsed.cause, ReleaseCause::Mobility);
     }
+
+    /// Golden vector hand-derived from Figure 6.4.2.6-1 and Table 6.4.2.6-1.
+    ///
+    /// Chosen value:
+    ///   Release Cause = SecurityError (code 7 = 0b0111, Table 6.4.2.6-1)
+    ///
+    /// Byte 0 = [Release Cause(4) | Reserved(4)]
+    ///        = [0111 | 0000]
+    ///        = 0b0111_0000 = 0x70
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows field layout"
+    )]
+    fn golden_vector() {
+        const GOLDEN: [u8; 1] = [
+            0b0111_0000, // Release Cause = SecurityError(7) | Reserved = 0
+        ];
+        let parts = AssociationReleaseParts {
+            cause: ReleaseCause::SecurityError,
+        };
+        let mut buf = [0u8; 1];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        assert_eq!(AssociationReleaseParts::parse(&GOLDEN).unwrap(), parts);
+    }
 }

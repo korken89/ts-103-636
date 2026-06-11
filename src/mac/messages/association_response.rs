@@ -183,4 +183,107 @@ mod tests {
         let buf = [0x00, 0b0000_1001];
         assert!(AssociationResponseParts::parse(&buf).is_err());
     }
+
+    /// Golden vector (minimal) hand-derived from Figure 6.4.2.5-1 and Tables 6.4.2.5-1/-2.
+    ///
+    /// Minimal = Reject variant (ACK/NACK=0), 2 bytes.
+    ///
+    /// Chosen values:
+    ///   Reject Cause = NonSecuredNotAccepted (code 3 = 0b0011, Table 6.4.2.5-2)
+    ///   Reject Timer = S120 (code 5 = 0b0101, Table 6.4.2.5-2)
+    ///
+    /// Byte 0: ACK/NACK=0, reserved bits = 0x00
+    /// Byte 1: [Reject Cause(4) | Reject Timer(4)]
+    ///       = [0011 | 0101] = 0b0011_0101 = 0x35
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows field layout"
+    )]
+    fn golden_vector_minimal() {
+        const GOLDEN: [u8; 2] = [
+            0b0_0000000, // ACK/NACK=0 (Reject) | Reserved
+            0b0011_0101, // Reject Cause=NonSecuredNotAccepted(3) | Reject Timer=S120(5)
+        ];
+        let parts = AssociationResponseParts::Reject {
+            cause: RejectCause::NonSecuredNotAccepted,
+            timer: RejectTimer::S120,
+        };
+        let mut buf = [0u8; 2];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        assert_eq!(AssociationResponseParts::parse(&GOLDEN).unwrap(), parts);
+    }
+
+    /// Golden vector (full) hand-derived from Figure 6.4.2.5-1 and Table 6.4.2.5-1.
+    ///
+    /// Full = Accept with all optional fields:
+    ///   HARQ override (HM=1), 6 specific flow IDs, Group (G=1).
+    ///   Total: 1 + 2 + 6 + 2 = 11 bytes.
+    ///
+    /// Chosen values:
+    ///   ACK/NACK = 1 (Accept)
+    ///   HM = 1 (HARQ override present)
+    ///   Number of Flows = 6 (MAX_RESPONSE_FLOWS; Specific list)
+    ///   Group = 1 (Group ID + Resource Tag present)
+    ///   HARQ RX = 2, MAX Re-RX = 5
+    ///   HARQ TX = 3, MAX Re-TX = 10
+    ///   Flow IDs: 0x01, 0x02, 0x03, 0x0A, 0x15, 0x20
+    ///   Group ID = 0x55, Resource Tag = 0x2A
+    ///
+    /// Byte 0: ACK=1 | R=0 | HM=1 | N=6(0b110) | G=1 | R=0
+    ///   = 0x80 | 0x20 | (6<<2) | 0x02 = 0x80 | 0x20 | 0x18 | 0x02 = 0xBA
+    /// Byte 1: [HARQ RX (3 bits) | MAX Re-RX (5 bits)] = (0b010 << 5) | 0b00101 = 0x45
+    /// Byte 2: [HARQ TX (3 bits) | MAX Re-TX (5 bits)] = (0b011 << 5) | 0b01010 = 0x6A
+    /// Bytes 3-8: Flow IDs (low 6 bits each)
+    /// Byte 9: Group ID = 0x55 (7 bits)
+    /// Byte 10: Resource Tag = 0x2A (7 bits)
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows field layout"
+    )]
+    fn golden_vector_full() {
+        const GOLDEN: [u8; 11] = [
+            0b1_0_1_110_1_0, // ACK=1 | R=0 | HM=1 | N=6(110) | G=1 | R=0
+            0b010_00101,     // HARQ RX=2 | MAX Re-RX=5
+            0b011_01010,     // HARQ TX=3 | MAX Re-TX=10
+            0x01,            // Flow ID 0 = 0x01
+            0x02,            // Flow ID 1 = 0x02
+            0x03,            // Flow ID 2 = 0x03
+            0x0A,            // Flow ID 3 = 0x0A
+            0x15,            // Flow ID 4 = 0x15
+            0x20,            // Flow ID 5 = 0x20
+            0x55,            // Group ID = 0x55 (7-bit)
+            0x2A,            // Resource Tag = 0x2A (7-bit)
+        ];
+        let flows = Vec::from_slice(&[
+            FlowId::new(0x01).unwrap(),
+            FlowId::new(0x02).unwrap(),
+            FlowId::new(0x03).unwrap(),
+            FlowId::new(0x0A).unwrap(),
+            FlowId::new(0x15).unwrap(),
+            FlowId::new(0x20).unwrap(),
+        ])
+        .unwrap();
+        let parts = AssociationResponseParts::Accept(AssociationAcceptParts {
+            flow_acceptance: FlowAcceptance::Specific(flows),
+            harq_override: Some(HarqOverride {
+                harq_processes_rx: HarqProcesses::new(2).unwrap(),
+                max_harq_re_rx: MaxHarqReTx::new(5).unwrap(),
+                harq_processes_tx: HarqProcesses::new(3).unwrap(),
+                max_harq_re_tx: MaxHarqReTx::new(10).unwrap(),
+            }),
+            group: Some(GroupAssignment {
+                group_id: GroupId::new(0x55).unwrap(),
+                resource_tag: ResourceTag::new(0x2A).unwrap(),
+            }),
+        });
+        let mut buf = [0u8; 11];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        assert_eq!(AssociationResponseParts::parse(&GOLDEN).unwrap(), parts);
+    }
 }

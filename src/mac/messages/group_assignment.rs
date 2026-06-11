@@ -157,4 +157,69 @@ mod tests {
         parts2.serialize(&mut buf2).unwrap();
         assert_eq!(buf2[0], 0x05);
     }
+
+    // -------------------------------------------------------------------
+    // Figure 6.4.3.9-1 hand-derived golden vectors
+    // B0: bit 7 = Single, bits 6:0 = Group ID
+    // Bn: bit 7 = Direct, bits 6:0 = Resource Tag
+    // -------------------------------------------------------------------
+
+    /// Minimal golden vector: Single=1, GroupId=0x1A, no tag entries.
+    /// Total: 1 byte.
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows IE field layout per Figure 6.4.3.9-1"
+    )]
+    fn golden_vector_minimal() {
+        const GOLDEN: [u8; 1] = [
+            0b1_0011010, // Single=1 | GroupId=0x1A
+        ];
+        let parts = GroupAssignmentParts {
+            single: true,
+            group_id: GroupId::new(0x1A).unwrap(),
+            tags: &[],
+        };
+        let mut buf = [0u8; 16];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        let parsed = GroupAssignmentParts::parse(&GOLDEN).unwrap();
+        assert_eq!(parsed, parts);
+    }
+
+    /// Full golden vector: Single=0, GroupId=0x35, three tag entries.
+    /// Tag 0: Direct=0, Tag=0x12  (not inverted, tag=18)
+    /// Tag 1: Direct=1, Tag=0x2B  (inverted, tag=43)
+    /// Tag 2: Direct=0, Tag=0x7F  (broadcast tag, Table 6.4.3.9-1)
+    /// Total: 4 bytes.
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows IE field layout per Figure 6.4.3.9-1"
+    )]
+    fn golden_vector_full() {
+        const GOLDEN: [u8; 4] = [
+            0b0_0110101, // Single=0 | GroupId=0x35
+            0b0_0010010, // Direct=0 | Resource Tag=0x12  (Table 6.4.3.9-1: direction per RA IE)
+            0b1_0101011, // Direct=1 | Resource Tag=0x2B  (direction inverted)
+            0b0_1111111, // Direct=0 | Resource Tag=0x7F  (broadcast for all group members)
+        ];
+        let tags = [
+            GroupResourceTagEntry::new(false, ResourceTag::new(0x12).unwrap()),
+            GroupResourceTagEntry::new(true, ResourceTag::new(0x2B).unwrap()),
+            GroupResourceTagEntry::new(false, ResourceTag::new(0x7F).unwrap()),
+        ];
+        let parts = GroupAssignmentParts {
+            single: false,
+            group_id: GroupId::new(0x35).unwrap(),
+            tags: &tags,
+        };
+        let mut buf = [0u8; 16];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        let parsed = GroupAssignmentParts::parse(&GOLDEN).unwrap();
+        assert_eq!(parsed, parts);
+    }
 }

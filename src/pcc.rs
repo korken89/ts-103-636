@@ -509,6 +509,34 @@ mod tests {
         assert_eq!(parsed, pcc);
     }
 
+    /// Golden vector hand-derived from Table 6.2.1-1 / Figure 6.2.1-1
+    /// and Table 6.2.1-3a; the binary literals below group the digits
+    /// by spec field.
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows PCC field layout"
+    )]
+    fn pcc_type1_golden_vector() {
+        const GOLDEN: [u8; 5] = [
+            0b000_0_1001, // header format 000 | length in subslots | length code 9 (10 subslots)
+            0b1010_0101,  // short network id 0xA5
+            0b0000_1111,  // transmitter identity 0x0F3C (high)
+            0b0011_1100,  // transmitter identity 0x0F3C (low)
+            0b0111_0_100, // transmit power code 0111 (0 dBm) | reserved | DF MCS 4
+        ];
+        let pcc = PccType1 {
+            packet_length_type: PacketLengthType::Subslot,
+            packet_length: PacketLength::new(9).unwrap(),
+            short_network_id: NetworkId8::new(0xA5).unwrap(),
+            transmitter_identity: ShortRdId::new(0x0F3C).unwrap(),
+            transmit_power: TransmitPower::Dbm0,
+            df_mcs: Mcs::new(4).unwrap(),
+        };
+        assert_eq!(pcc.to_bytes().unwrap(), GOLDEN);
+        assert_eq!(PccType1::from_bytes(&GOLDEN).unwrap(), pcc);
+    }
+
     /// Golden vector hand-derived from Table 6.2.1-2 / Figure 6.2.1-2
     /// and Table 6.2.2-2a; the binary literals below group the digits
     /// by spec field.

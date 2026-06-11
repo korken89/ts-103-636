@@ -10,6 +10,36 @@ pub use super::generated::rd_capability_short::*;
 mod tests {
     use super::*;
     use crate::types::*;
+
+    /// Golden vector hand-derived from Figure 6.4.3.15-1 / Table 6.4.3.15-1.
+    ///
+    /// Byte layout (8 bits):
+    ///   bits 7-6: reserved = 0b00
+    ///   bit 5:    CB_MC = 1  (supports association without Cluster Beacon monitoring)
+    ///   bits 4-1: HARQ feedback delay = 4 subslots (0b0100 -> shifted to bits4-1 = 0b1000 = 0x08)
+    ///   bit 0:    DWA = 1  (supports uplink data without association)
+    ///
+    ///   byte0 = 00_1_0100_1 = 0b0010_1001 = 0x29
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows RD Capability Short field layout"
+    )]
+    fn golden_vector() {
+        const GOLDEN: [u8; 1] = [
+            0b00_1_0100_1, // reserved(00) | CB_MC=1 | HARQ_delay=4 subslots | DWA=1
+        ];
+        let parts = RdCapabilityShortParts {
+            cb_mc: true,
+            harq_feedback_delay: HarqFeedbackDelay::new(4).unwrap(), // 4 subslots
+            dwa: true,
+        };
+        let mut buf = [0u8; 4];
+        assert_eq!(parts.serialize(&mut buf).unwrap(), GOLDEN.len());
+        assert_eq!(buf[..GOLDEN.len()], GOLDEN);
+        assert_eq!(RdCapabilityShortParts::parse(&GOLDEN).unwrap(), parts);
+    }
+
     #[test]
     fn rd_capability_short_round_trip() {
         let parts = RdCapabilityShortParts {

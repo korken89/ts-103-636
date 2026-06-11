@@ -171,4 +171,67 @@ mod tests {
         let buf = [0x18u8, 0xAA];
         assert!(MeasurementReportParts::parse(&buf).is_err());
     }
+
+    // -------------------------------------------------------------------
+    // Figure 6.4.3.12-1 hand-derived golden vectors
+    // B0: bits 7:5 = Reserved(0) | bit4=SNR | bit3=RSSI-2 | bit2=RSSI-1
+    //     bit1=TX count | bit0=RACH
+    // Optional bytes follow in SNR, RSSI-2, RSSI-1, TX count order.
+    // -------------------------------------------------------------------
+
+    /// Minimal golden vector: all optional measurement fields absent,
+    /// from_rach=false (measurement from scheduled resources).
+    /// Total: 1 byte.
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows IE field layout per Figure 6.4.3.12-1"
+    )]
+    fn golden_vector_minimal() {
+        const GOLDEN: [u8; 1] = [
+            0b000_0_0_0_0_0, // Reserved | SNR=0 | RSSI2=0 | RSSI1=0 | TX=0 | RACH=0
+        ];
+        let parts = MeasurementReportParts {
+            from_rach: false,
+            snr: None,
+            rssi_2: None,
+            rssi_1: None,
+            tx_count: None,
+        };
+        let mut buf = [0u8; 8];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        assert_eq!(MeasurementReportParts::parse(&GOLDEN).unwrap(), parts);
+    }
+
+    /// Full golden vector: all optional fields present, from_rach=true
+    /// (Table 6.4.3.12-1: measurement from Random Access response).
+    /// Total: 5 bytes.
+    #[test]
+    #[allow(
+        clippy::unusual_byte_groupings,
+        reason = "binary grouping shows IE field layout per Figure 6.4.3.12-1"
+    )]
+    fn golden_vector_full() {
+        const GOLDEN: [u8; 5] = [
+            0b000_1_1_1_1_1, // Reserved | SNR=1 | RSSI2=1 | RSSI1=1 | TX=1 | RACH=1
+            0xA5,            // SNR result = 0xA5 (Table 6.4.3.12-1, coded per TS 103 636-2)
+            0x7B,            // RSSI-2 result = 0x7B
+            0x3C,            // RSSI-1 result = 0x3C
+            0x0A,            // TX Count result = 10 attempts
+        ];
+        let parts = MeasurementReportParts {
+            from_rach: true,                      // bit 0: RACH=1
+            snr: Some(SnrMeasurement(0xA5)),      // bit 4
+            rssi_2: Some(Rssi2Measurement(0x7B)), // bit 3
+            rssi_1: Some(Rssi1Measurement(0x3C)), // bit 2
+            tx_count: Some(0x0A),                 // bit 1
+        };
+        let mut buf = [0u8; 8];
+        let n = parts.serialize(&mut buf).unwrap();
+        assert_eq!(n, GOLDEN.len());
+        assert_eq!(buf[..n], GOLDEN);
+        assert_eq!(MeasurementReportParts::parse(&GOLDEN).unwrap(), parts);
+    }
 }
