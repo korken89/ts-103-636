@@ -10,9 +10,6 @@ edition = "2024"
 #
 #   make verify           (from the repo root)
 #   cd verify && cargo kani
-#
-# Soteria Rust's Kani mode also accepts these harnesses, but as of
-# 0.1.0 its frontend rejects the NonZero-backed identifier types.
 
 [dependencies]
 # No software crypto: the harnesses cover the codecs, not AES.

@@ -130,7 +130,7 @@ impl ClusterBeaconParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if the buffer is too short, or if `frame_offset` does not fit the selected narrow on-wire form.
+    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than [`Self::encoded_len`], or if `frame_offset` does not fit the selected narrow on-wire form.
     pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
         let len = self.encoded_len();
         if out.len() < len {

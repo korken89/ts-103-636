@@ -485,7 +485,7 @@ mod tests {
 
     #[test]
     fn hophop_golden_vector() {
-        // From hophop test_parse_ie_stream (mac_ie.rs lines 502-505):
+        // IE stream golden vector from the hophop project:
         // IE 0: head=0x49 (8-bit len, Cluster Beacon), len=5, payload 5 bytes
         // IE 1: head=0x53 (8-bit len, Random Access Resource), len=7, payload 7 bytes
         // IE 2: head=0x40 (8-bit len, Padding), len=24, payload 24 zero bytes

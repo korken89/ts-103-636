@@ -28,7 +28,7 @@ pub const N_SYM_SUBSLOT: u8 = 5;
 
 /// Number of OFDM symbols per slot indexed by subcarrier scaling factor mu.
 ///
-/// ETSI TS 103 636-3, Table 4.3-1 (or equivalent - verify when reading PHY spec).
+/// ETSI TS 103 636-3, clause 4.4 (frame structure).
 pub const N_SYM_SLOT: [u8; 4] = [10, 20, 40, 80];
 
 /// Number of subslots per slot indexed by subcarrier scaling factor mu.
@@ -47,7 +47,7 @@ pub const N_FFT: [u16; 6] = [64, 128, 256, 512, 768, 1024];
 pub const N_CP: [u16; 6] = [8, 16, 32, 64, 96, 128];
 
 /// Number of PCC resource elements (always 98 occupied subcarriers).
-/// ETSI TS 103 636-3, clause 6.1.2 (verify).
+/// ETSI TS 103 636-3, clause 5.2.4.
 pub const N_PCC_RE: u16 = 98;
 
 // ---------------------------------------------------------------------------

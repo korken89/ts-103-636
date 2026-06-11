@@ -81,7 +81,7 @@ impl ReconfigurationRequestParts<'_> {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if the buffer is too short.
+    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than [`Self::encoded_len`], or if `flows` holds more than 6 entries.
     pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
         if self.flows.len() > 6 {
             return Err(ExcessiveBitsSet);

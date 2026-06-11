@@ -116,7 +116,7 @@ impl AssociationRequestParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if the buffer is too short.
+    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than [`Self::encoded_len`].
     pub fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
         let len = self.encoded_len();
         if out.len() < len {

@@ -27,7 +27,6 @@ pub fn def() -> MessageDef {
         }],
         field_groups: &[],
         items: &[
-            // Byte 0: bitmap.
             Item::Reserved { bits: 3 },
             Item::ModeTag(ModeTag {
                 of: "repeat",
@@ -49,7 +48,6 @@ pub fn def() -> MessageDef {
                 of: "channel_2",
                 fig: "CH2",
             },
-            // Start subslot + length pair (mu-dependent width).
             Item::Inline(Group {
                 name: "pair",
                 doc: "Start subslot + Length type + Length (same encoding as a \
@@ -101,7 +99,6 @@ pub fn def() -> MessageDef {
                     ],
                 }),
             }),
-            // MAX RACH length byte.
             Item::Field(Field {
                 name: "max_length_type",
                 fig: Some("MLT"),
@@ -135,7 +132,6 @@ pub fn def() -> MessageDef {
                 },
                 doc: "Minimum contention window exponent.",
             }),
-            // DECT delay byte.
             Item::Field(Field {
                 name: "dect_delay",
                 fig: Some("DD"),
@@ -168,7 +164,6 @@ pub fn def() -> MessageDef {
                 },
                 doc: "Maximum contention window exponent.",
             }),
-            // Optional regions.
             Item::Optional(Group {
                 name: "repeat",
                 doc: "`Some(..)` iff the on-wire Repeat field is 0b01 or 0b10.",

@@ -9,11 +9,6 @@
 //! Kani, one harness per core.
 //!
 //! Run with Kani (`make verify`, or `cd verify && cargo kani`).
-//! The harnesses also work under Soteria Rust's Kani mode
-//! (`soteria-rust exec --kani verify/`), but as of soteria 0.1.0 its
-//! frontend rejects the `Option<NonZero<_>>`-niche layouts our
-//! identifier types use, and its path enumeration blows up on the
-//! larger parsers.
 
 use ts_103_636::mac::messages::*;
 use ts_103_636::types::Mu;

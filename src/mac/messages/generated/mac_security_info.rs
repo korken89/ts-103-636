@@ -56,7 +56,8 @@ impl MacSecurityInfoParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if the buffer is too short.
+    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than
+    /// 5 bytes.
     pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
         if out.len() < 5 {
             return Err(ExcessiveBitsSet);

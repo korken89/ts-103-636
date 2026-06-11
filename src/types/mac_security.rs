@@ -17,7 +17,6 @@ pub enum SecurityVersion {
 
 impl SecurityVersion {
     /// Raw 2-bit field value (`const`).
-    /// Raw u8 value carrying the spec encoding.
     #[must_use]
     #[inline]
     pub const fn as_u8(self) -> u8 {
@@ -26,7 +25,6 @@ impl SecurityVersion {
 
     /// Parse from the raw 2-bit field. Returns `None` for reserved values
     /// `0b01`, `0b10`, `0b11` (`const`).
-    /// Construct from a raw u8. Returns `None` for reserved values.
     #[must_use]
     #[inline]
     pub const fn try_from_u8(value: u8) -> Option<Self> {
@@ -42,11 +40,6 @@ impl From<SecurityVersion> for u8 {
         value.as_u8()
     }
 }
-
-// ---------------------------------------------------------------------------
-// KeyIndex - 2-bit MAC Security key index
-// ETSI TS 103 636-4, clause 6.4.3.1
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // KeyIndex
@@ -83,16 +76,12 @@ impl From<KeyIndex> for u8 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// SecurityIvType - 4-bit Mode 1 Security IV Type
-// ETSI TS 103 636-4, clause 6.4.3.1, Table 6.4.3.1-2
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // SecurityIvType
 // =========================================================================
 
-/// 4-bit Security IV Type for Mode 1 (Table 6.4.3.1-2). Reserved values
+/// 4-bit Security IV Type for Mode 1 (Table 6.4.3.1-2).
+/// ETSI TS 103 636-4, clause 6.4.3.1, Table 6.4.3.1-2. Reserved values
 /// `0b0011..=0b1111` are not representable; the constructor returns
 /// `None` and the parser returns [`crate::ParsingError`] for them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -109,7 +98,6 @@ pub enum SecurityIvType {
 
 impl SecurityIvType {
     /// Raw 4-bit field value (`const`).
-    /// Raw u8 value carrying the spec encoding.
     #[must_use]
     #[inline]
     pub const fn as_u8(self) -> u8 {
@@ -118,7 +106,6 @@ impl SecurityIvType {
 
     /// Parse from the raw 4-bit field. Returns `None` for reserved values
     /// `0b0011..=0b1111` (`const`).
-    /// Construct from a raw u8. Returns `None` for reserved values.
     #[must_use]
     #[inline]
     pub const fn try_from_u8(value: u8) -> Option<Self> {
@@ -136,8 +123,3 @@ impl From<SecurityIvType> for u8 {
         value.as_u8()
     }
 }
-
-// ---------------------------------------------------------------------------
-// ReleaseCause - 4-bit Association Release Cause
-// ETSI TS 103 636-4, clause 6.4.2.6, Table 6.4.2.6-1
-// ---------------------------------------------------------------------------

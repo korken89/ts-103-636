@@ -26,7 +26,6 @@ pub enum SetupCause {
 
 impl SetupCause {
     /// Raw 3-bit field value (`const`).
-    /// Raw u8 value carrying the spec encoding.
     #[must_use]
     #[inline]
     pub const fn as_u8(self) -> u8 {
@@ -35,7 +34,6 @@ impl SetupCause {
 
     /// Parse from a raw 3-bit field. Returns `None` for the reserved value
     /// `0b111` (`const`).
-    /// Construct from a raw u8. Returns `None` for reserved values.
     #[must_use]
     #[inline]
     pub const fn try_from_u8(value: u8) -> Option<Self> {
@@ -57,11 +55,6 @@ impl From<SetupCause> for u8 {
         value.as_u8()
     }
 }
-
-// ---------------------------------------------------------------------------
-// HarqProcesses - 3-bit HARQ process count field
-// ETSI TS 103 636-4, clause 6.4.2.4, Table 6.4.2.4-1
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // HarqProcesses
@@ -99,11 +92,6 @@ impl From<HarqProcesses> for u8 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// RejectCause - 4-bit Association Reject Cause
-// ETSI TS 103 636-4, clause 6.4.2.5, Table 6.4.2.5-2
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // RejectCause
 // =========================================================================
@@ -125,7 +113,6 @@ pub enum RejectCause {
 
 impl RejectCause {
     /// Raw 4-bit field value (`const`).
-    /// Raw u8 value carrying the spec encoding.
     #[must_use]
     #[inline]
     pub const fn as_u8(self) -> u8 {
@@ -134,7 +121,6 @@ impl RejectCause {
 
     /// Parse from a raw 4-bit field. Returns `None` for reserved values
     /// 5..=15 (`const`).
-    /// Construct from a raw u8. Returns `None` for reserved values.
     #[must_use]
     #[inline]
     pub const fn try_from_u8(value: u8) -> Option<Self> {
@@ -154,11 +140,6 @@ impl From<RejectCause> for u8 {
         value.as_u8()
     }
 }
-
-// ---------------------------------------------------------------------------
-// RejectTimer - 4-bit Reject Timer
-// ETSI TS 103 636-4, clause 6.4.2.5, Table 6.4.2.5-2
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // RejectTimer
@@ -184,7 +165,6 @@ pub enum RejectTimer {
 
 impl RejectTimer {
     /// Raw 4-bit field value (`const`).
-    /// Raw u8 value carrying the spec encoding.
     #[must_use]
     #[inline]
     pub const fn as_u8(self) -> u8 {
@@ -193,7 +173,6 @@ impl RejectTimer {
 
     /// Parse from a raw 4-bit field. Returns `None` for reserved values
     /// 9..=15 (`const`).
-    /// Construct from a raw u8. Returns `None` for reserved values.
     #[must_use]
     #[inline]
     pub const fn try_from_u8(value: u8) -> Option<Self> {
@@ -234,11 +213,6 @@ impl From<RejectTimer> for u8 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Sfn - 8-bit System Frame Number (Cluster Beacon)
-// ETSI TS 103 636-4, clause 6.4.2.3
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // ReleaseCause
 // =========================================================================
@@ -269,7 +243,6 @@ pub enum ReleaseCause {
 
 impl ReleaseCause {
     /// Raw 4-bit field value (`const`).
-    /// Raw u8 value carrying the spec encoding.
     #[must_use]
     #[inline]
     pub const fn as_u8(self) -> u8 {
@@ -278,7 +251,6 @@ impl ReleaseCause {
 
     /// Parse from a raw 4-bit field. Returns `None` for reserved values
     /// `0b1011`, `0b1110`, `0b1111` (`const`).
-    /// Construct from a raw u8. Returns `None` for reserved values.
     #[must_use]
     #[inline]
     pub const fn try_from_u8(value: u8) -> Option<Self> {
@@ -306,11 +278,6 @@ impl From<ReleaseCause> for u8 {
         value.as_u8()
     }
 }
-
-// ---------------------------------------------------------------------------
-// GroupId - 7-bit Group ID
-// ETSI TS 103 636-4, clause 6.4.2.5, Table 6.4.2.5-1
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // MaxHarqReTx
@@ -351,10 +318,6 @@ impl From<MaxHarqReTx> for u8 {
         value.0
     }
 }
-
-// ---------------------------------------------------------------------------
-// Broadcast Indication IE enums (§6.4.3.7)
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // Release

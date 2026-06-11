@@ -56,12 +56,10 @@ thumb:
 doc:
 	RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
 
-# Short fuzz pass over every target (not part of `make ci`: run it
-# locally or from a scheduled CI job). Requires cargo-fuzz. On stable
-# toolchains the sanitizer must be disabled (-s none); with nightly
-# you can drop that to get AddressSanitizer too. libFuzzer does not
-# parallelize by itself: FUZZ_JOBS spawns that many worker processes
-# sharing the corpus (default: all cores).
+# Short fuzz pass over every target (not part of `make ci`). Requires
+# cargo-fuzz; -s none because AddressSanitizer needs nightly and the
+# pinned toolchain is stable. FUZZ_JOBS spawns that many libFuzzer
+# workers sharing the corpus (default: all cores).
 FUZZ_TARGETS := pdu_parse message_bodies pcc_parse parse_secure
 FUZZ_SECONDS ?= 30
 FUZZ_JOBS ?= $(shell nproc)
@@ -73,13 +71,11 @@ fuzz-smoke:
 	done
 	rm -f fuzz-*.log
 
-# Symbolic verification: prove that the generated parsers cannot
-# panic on any input up to the per-message buffer caps, and that
-# parse-serialize-parse is the identity on every parseable input
-# (verify/src/lib.rs). Not part of `make ci`: requires Kani, which
-# the Nix dev shell provides (`nix develop -c make verify`); outside
-# Nix, cargo install kani-verifier && cargo kani setup. The grep
-# guard fails the run if a generated message has no harness.
+# Symbolic verification (not part of `make ci`): parse never panics
+# and parse-serialize-parse is the identity, per message, up to the
+# buffer caps in verify/src/lib.rs. Requires Kani (the Nix dev shell
+# provides it). The grep guard fails the run if a generated message
+# has no harness.
 VERIFY_JOBS ?= $(shell nproc)
 verify:
 	@for m in $(basename $(notdir $(wildcard src/mac/messages/generated/*.rs))); do \

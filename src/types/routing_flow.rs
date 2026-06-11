@@ -13,11 +13,6 @@ use super::ie_types::IEType6bit;
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RouteCost(pub u8);
 
-// ---------------------------------------------------------------------------
-// ApplicationSequenceNumber - 8-bit Route Info app sequence number
-// ETSI TS 103 636-4, clause 6.4.3.2
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // ApplicationSequenceNumber
 // =========================================================================
@@ -26,15 +21,10 @@ pub struct RouteCost(pub u8);
 /// sender increments this when the application data has changed; mesh
 /// receivers use it to detect that they need to re-fetch from their
 /// next hop. The full `u8` range 0..=255 is valid on the wire, so the
-/// inner field is public.
+/// inner field is public. ETSI TS 103 636-4, clause 6.4.3.2.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ApplicationSequenceNumber(pub u8);
-
-// ---------------------------------------------------------------------------
-// SecurityVersion - 2-bit MAC Security version field
-// ETSI TS 103 636-4, clause 6.4.3.1, Table 6.4.3.1-1
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // GroupId
@@ -71,11 +61,6 @@ impl From<GroupId> for u8 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// ResourceTag - 7-bit Resource Tag
-// ETSI TS 103 636-4, clause 6.4.2.5, Table 6.4.2.5-1
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // ResourceTag
 // =========================================================================
@@ -110,11 +95,6 @@ impl From<ResourceTag> for u8 {
         value.0
     }
 }
-
-// ---------------------------------------------------------------------------
-// MaxHarqReTx - 5-bit MAX HARQ Re-TX / Re-RX field
-// ETSI TS 103 636-4, clause 6.4.2.4, Table 6.4.2.4-1
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // Hop
@@ -246,10 +226,6 @@ impl SourceRoutingValidityTimer {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Association Control IE enums (§6.4.3.18)
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // FlowAction
 // =========================================================================
@@ -282,11 +258,6 @@ impl FlowAction {
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// FlowEntry - packed Setup/Release + Flow ID byte
-// ETSI TS 103 636-4, clauses 6.4.2.7 / 6.4.2.8
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // FlowEntry
@@ -348,17 +319,13 @@ impl FlowEntry {
     }
 }
 
-// ---------------------------------------------------------------------------
-// RadioResourceChange - 2-bit Radio Resource field
-// ETSI TS 103 636-4, clauses 6.4.2.7 / 6.4.2.8
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // RadioResourceChange
 // =========================================================================
 
 /// 2-bit Radio Resource field carried in Reconfiguration Request /
 /// Response. All four encodings are defined; no reserved value.
+/// ETSI TS 103 636-4, clauses 6.4.2.7, 6.4.2.8.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
@@ -373,7 +340,6 @@ pub enum RadioResourceChange {
 
 impl RadioResourceChange {
     /// Raw 2-bit field value (`const`).
-    /// Raw u8 value carrying the spec encoding.
     #[must_use]
     #[inline]
     pub const fn as_u8(self) -> u8 {
@@ -382,7 +348,6 @@ impl RadioResourceChange {
 
     /// Parse from the raw 2-bit field. All four values are defined, so
     /// this only returns `None` for inputs that exceed 2 bits (`const`).
-    /// Construct from a raw u8. Returns `None` for reserved values.
     #[must_use]
     #[inline]
     pub const fn try_from_u8(value: u8) -> Option<Self> {
@@ -402,11 +367,6 @@ impl From<RadioResourceChange> for u8 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// FlowId - 6-bit Flow ID
-// ETSI TS 103 636-4, clauses 6.4.2.4 / 6.4.2.5 (refers to Table 6.3.4-2)
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // FlowId
 // =========================================================================
@@ -415,7 +375,7 @@ impl From<RadioResourceChange> for u8 {
 /// [IE type table](crate::types::IEType6bit), so the on-wire encoding is
 /// the same as a 6-bit IE type. Values 0..=63 are accepted; semantically
 /// only the user-plane and higher-layer-signalling IE type values are
-/// meaningful.
+/// meaningful. ETSI TS 103 636-4, clauses 6.4.2.4, 6.4.2.5.
 ///
 /// `#[repr(transparent)]` so a slice of bytes that have all been
 /// validated to fit in 6 bits can be reinterpreted as `&[FlowId]`.
@@ -456,8 +416,3 @@ impl From<FlowId> for u8 {
         value.0
     }
 }
-
-// ---------------------------------------------------------------------------
-// MacSecurity - 2-bit MAC Security field
-// ETSI TS 103 636-4, clause 6.3.2, Table 6.3.2-1
-// ---------------------------------------------------------------------------

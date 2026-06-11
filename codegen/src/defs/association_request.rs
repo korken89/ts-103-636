@@ -15,7 +15,6 @@ pub fn def() -> MessageDef {
         ctx: &[],
         field_groups: &[],
         items: &[
-            // Byte 0.
             Item::Field(Field {
                 name: "setup_cause",
                 fig: Some("Setup Cause"),
@@ -47,13 +46,11 @@ pub fn def() -> MessageDef {
                 of: "ft_mode",
                 fig: "FT",
             },
-            // Byte 1.
             Item::PresenceFlag {
                 of: "ft_mode.current_cluster_channel",
                 fig: "CC",
             },
             Item::Reserved { bits: 7 },
-            // Byte 2.
             Item::Field(Field {
                 name: "harq_processes_tx",
                 fig: Some("HARQ TX"),
@@ -76,7 +73,6 @@ pub fn def() -> MessageDef {
                 },
                 doc: "Maximum HARQ retransmissions.",
             }),
-            // Byte 3.
             Item::Field(Field {
                 name: "harq_processes_rx",
                 fig: Some("HARQ RX"),
@@ -99,7 +95,6 @@ pub fn def() -> MessageDef {
                 },
                 doc: "Maximum HARQ re-receptions.",
             }),
-            // Flow ID octets.
             Item::Repeat(Repeat {
                 name: "flow_ids",
                 doc: "0..=6 flow IDs. The on-wire `Number of Flows` field is \
@@ -127,7 +122,6 @@ pub fn def() -> MessageDef {
                           on-wire 3-bit Number of Flows field caps at 6 (`0b111` is \
                           reserved).",
             }),
-            // FT-mode block.
             Item::Optional(Group {
                 name: "ft_mode",
                 doc: "FT-mode-specific fields. `Some(..)` iff the on-wire FT mode \

@@ -54,10 +54,13 @@ provides the pinned toolchain, `cargo-fuzz`, and Kani.
   `src/mac/messages/generated/` is emitted by the `codegen/` crate
   from a declarative layout definition (`codegen/src/defs/`, one file
   per message, written row-by-row against the spec figures). The
-  output is committed and human-readable - direct indexing with
-  static offsets, in the same shape as handwritten code - and each
-  generated module's documentation carries an ASCII wire-layout
-  figure for side-by-side review with the standard. `make codegen`
+  extraction of the standard's layouts into these definitions was
+  AI-assisted; every definition cites its spec clause and figure, and
+  each generated module's documentation carries an ASCII wire-layout
+  figure precisely so the layouts can be audited against the standard
+  side by side. The output is committed and human-readable - direct
+  indexing with static offsets, in the same shape as handwritten
+  code. `make codegen`
   regenerates; CI fails if the committed output drifts from the
   definitions. Support types with behavior (enums like
   `ResourceAllocationKind`, composites like `PhyCapability`) stay

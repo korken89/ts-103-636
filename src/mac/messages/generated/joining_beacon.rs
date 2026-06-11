@@ -57,7 +57,7 @@ impl JoiningBeaconParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if the buffer is too short, or for an empty `channels` list (the on-wire count is `len - 1`).
+    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than [`Self::encoded_len`], or for an empty `channels` list (the on-wire count is `len - 1`).
     pub fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
         if self.channels.is_empty() {
             return Err(ExcessiveBitsSet);

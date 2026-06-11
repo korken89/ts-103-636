@@ -21,10 +21,6 @@ use crate::mac::ie::{AnyIeType, InformationElement};
 use crate::types::{
     IEType5bitLen0, IEType6bit, LongRdId, MacSecurity, SequenceNumber, ShortIeType,
 };
-// PSN is never stored on `SecurityContext`: the builder captures it
-// from the common-header push and the parser reads it from the
-// received common header, keeping build/parse PSN consistent by
-// construction.
 
 /// Length of the MAC security trailer (MIC) in bytes when Mode 1
 /// security is applied. See §5.9.1.2 / Figure 6.3.1-1.

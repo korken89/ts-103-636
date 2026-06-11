@@ -9,18 +9,19 @@
 //!
 //! ```text
 //!   PccType1 (40 bits, Format 000):        PccType2 F000 (80 bits):
-//!   +-------+---+-------+------+           +-------+---+-------+------+
-//!   |  hdr  |plt| pkt_l | snid |           |  hdr  |plt| pkt_l | snid |
-//!   |  3b   |1b |  4b   |  8b  |           |  3b   |1b |  4b   |  8b  |
-//!   +-------+---+-------+------+           +-------+---+-------+------+
-//!   |          tx_id (16b)        |         |          tx_id (16b)        |
-//!   +--------------+--------------+         +--------------+--------------+
-//!   | tx_power |rsv|  df_mcs (3b) |         | tx_power |     df_mcs (4b) |
-//!   |   4b     |1b |              |         |   4b     |                 |
-//!   +----------+---+--------------+         +----------+-----------------+
-//!                                            |  rx_id (16b)              |
-//!                                            |  ss(2) rv(2) ndi(1) hp(3) |
-//!                                            |  fb_fmt(4)  fb_info(12)  |
+//!   +-------+-----+-------+------+         +-------+---+-------+------+
+//!   |  hdr  | plt | pkt_l | snid |         |  hdr  |plt| pkt_l | snid |
+//!   |  3b   | 1b  |  4b   |  8b  |         |  3b   |1b |  4b   |  8b  |
+//!   +-------+-----+-------+------+         +-------+---+-------+------+
+//!   |         tx_id (16b)        |         |        tx_id (16b)       |
+//!   +--------------+-------------+         +----------+---------------+
+//!   | tx_power |rsv| df_mcs (3b) |         | tx_power |  df_mcs (4b)  |
+//!   |   4b     |1b |             |         |   4b     |               |
+//!   +----------+---+-------------+         +----------+---------------+
+//!                                          | rx_id (16b)              |
+//!                                          | ss(2) rv(2) ndi(1) hp(3) |
+//!                                          | fb_fmt(4)  fb_info(12)   |
+//!                                          +----------+---------------+
 //! ```
 //!
 //! PccType2 F001 (Table 6.2.1-2a) is identical to F000 except that the
@@ -301,10 +302,9 @@ impl PccType2F001 {
 // Pcc - top-level enum that dispatches on header_format and length
 // ---------------------------------------------------------------------------
 
-/// Top-level Physical Control Field. Mirrors the nrfxlib
-/// `nrf_modem_dect_phy_pcc_event` discriminator: 5 bytes -> Type 1,
-/// 10 bytes -> Type 2 (with the header_format bits selecting F000 vs
-/// F001).
+/// Top-level Physical Control Field: a 5-byte PCC is Type 1, a
+/// 10-byte one is Type 2 with the header-format bits selecting F000
+/// vs F001 (the two sizes nrfxlib's PCC reception event delivers).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Pcc {
@@ -381,7 +381,7 @@ pub enum PccBytes {
 }
 
 impl PccBytes {
-    /// Total number of bytes.
+    /// 5 for Type 1, 10 for Type 2.
     #[expect(
         clippy::len_without_is_empty,
         reason = "byte buffers are never empty here"

@@ -53,11 +53,6 @@ impl From<Repetition> for u8 {
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Validity(pub u8);
 
-// ---------------------------------------------------------------------------
-// RouteCost - 8-bit Route Info route cost
-// ETSI TS 103 636-4, clause 6.4.3.2
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // AllocationType
 // =========================================================================
@@ -99,11 +94,6 @@ impl AllocationType {
     }
 }
 
-// ---------------------------------------------------------------------------
-// RepeatMode - 3-bit Resource Allocation Repeat field, excluding "Single"
-// ETSI TS 103 636-4, clause 6.4.3.3, Table 6.4.3.3-1
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // RepeatMode
 // =========================================================================
@@ -112,7 +102,7 @@ impl AllocationType {
 /// ("Single, no repeat") is represented by the absence of a
 /// [`RepeatMode`] in the parent structure; this enum only carries the
 /// repeating variants. Reserved values 0b101..=0b111 are not
-/// representable.
+/// representable. ETSI TS 103 636-4, clause 6.4.3.3, Table 6.4.3.3-1.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
@@ -135,7 +125,6 @@ impl RepeatMode {
     /// Parse from the raw 3-bit field. Returns `None` for `0b000`
     /// (Single, no repeat: the caller should represent this by `None`
     /// at the policy level) and for reserved values `0b101..=0b111`.
-    /// Construct from a raw u8. Returns `None` for reserved values.
     #[must_use]
     #[inline]
     pub const fn try_from_u8(value: u8) -> Option<Self> {
@@ -148,11 +137,6 @@ impl RepeatMode {
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// DectScheduledResourceFailure - 4-bit timer code
-// ETSI TS 103 636-4, clause 6.4.3.3, Table 6.4.3.3-2
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // DectScheduledResourceFailure
@@ -223,11 +207,6 @@ impl DectScheduledResourceFailure {
     }
 }
 
-// ---------------------------------------------------------------------------
-// RaLength - 7-bit Resource Allocation Length field
-// ETSI TS 103 636-4, clause 6.4.3.3 (and 6.4.3.4 by reference)
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // RaLength
 // =========================================================================
@@ -235,6 +214,7 @@ impl DectScheduledResourceFailure {
 /// 7-bit Length field of a Resource Allocation IE / Random Access
 /// Resource IE. Unit (subslot vs slot) is indicated by the accompanying
 /// [`crate::types::PacketLengthType`]. Valid values 0..=127.
+/// ETSI TS 103 636-4, clause 6.4.3.3 (and 6.4.3.4 by reference).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RaLength(u8);
@@ -264,11 +244,6 @@ impl From<RaLength> for u8 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// RachRepeatMode - 2-bit Repeat field of the Random Access Resource IE
-// ETSI TS 103 636-4, clause 6.4.3.4, Table 6.4.3.4-1
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // RachRepeatMode
 // =========================================================================
@@ -277,6 +252,7 @@ impl From<RaLength> for u8 {
 /// `0b00` ("Single, no repeat") is represented by the absence of a
 /// repeat policy in the parent structure; this enum only carries the
 /// repeating variants. The reserved value `0b11` is not representable.
+/// ETSI TS 103 636-4, clause 6.4.3.4, Table 6.4.3.4-1.
 ///
 /// Note: this is a *different* field from the 3-bit
 /// [`RepeatMode`] used by the Resource Allocation IE (§6.4.3.3) -
@@ -301,7 +277,6 @@ impl RachRepeatMode {
 
     /// Parse from the raw 2-bit field. Returns `None` for `0b00` (Single)
     /// and the reserved `0b11`.
-    /// Construct from a raw u8. Returns `None` for reserved values.
     #[must_use]
     #[inline]
     pub const fn try_from_u8(value: u8) -> Option<Self> {
@@ -313,18 +288,14 @@ impl RachRepeatMode {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Cwsig - 3-bit CW_MIN / CW_MAX scaling field
-// ETSI TS 103 636-4, clause 6.4.3.4
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // Cwsig
 // =========================================================================
 
 /// 3-bit contention-window scaling field used by both `Cwmin_sig` and
 /// `Cwmax_sig`. Valid range 0..=7. The actual CW values are
-/// `CW_MIN = 8 × value` and `CW_MAX = 256 × value`.
+/// `CW_MIN = 8 x value` and `CW_MAX = 256 x value`.
+/// ETSI TS 103 636-4, clause 6.4.3.4.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Cwsig(u8);
@@ -354,17 +325,13 @@ impl From<Cwsig> for u8 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// ResponseWindow - 4-bit response window field with value+1 semantics
-// ETSI TS 103 636-4, clause 6.4.3.4
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // ResponseWindow
 // =========================================================================
 
 /// 4-bit response window field. The actual window length is
 /// `value + 1` subslots, so [`Self::subslots`] returns 1..=16.
+/// ETSI TS 103 636-4, clause 6.4.3.4.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ResponseWindow(u8);
@@ -400,17 +367,12 @@ impl From<ResponseWindow> for u8 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// MaxRachLength - 4-bit MAX RACH Length field
-// ETSI TS 103 636-4, clause 6.4.3.4
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // MaxRachLength
 // =========================================================================
 
 /// 4-bit MAX RACH Length field. Raw 0..=15 (the spec does not specify
-/// value+1 semantics).
+/// value+1 semantics). ETSI TS 103 636-4, clause 6.4.3.4.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct MaxRachLength(u8);
@@ -439,8 +401,3 @@ impl From<MaxRachLength> for u8 {
         value.0
     }
 }
-
-// ---------------------------------------------------------------------------
-// FlowAction - 1-bit Setup/Release indicator in a FlowEntry
-// ETSI TS 103 636-4, clauses 6.4.2.7 / 6.4.2.8 (Reconfiguration messages)
-// ---------------------------------------------------------------------------

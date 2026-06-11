@@ -243,14 +243,9 @@ pub const fn compute_tbs(subslot_count: u8, mcs: Mcs, beta: Beta, mu: Mu, n_ss: 
     Some(tbs_bits)
 }
 
-/// Smallest subslot count that can carry `payload_bytes` bytes for the
-/// given PHY configuration.
-///
-/// # Status
-///
-/// See [`compute_tbs`]. Iterates 1..=MAX_SUBSLOTS and returns the first
-/// whose (un-quantized) TBS meets the payload. Returns `None` if the
-/// payload does not fit.
+/// Smallest subslot count whose [`compute_tbs`] fits `payload_bytes`
+/// bytes, or `None` if the payload does not fit within
+/// `MAX_SUBSLOTS`.
 pub const fn min_subslots(
     payload_bytes: usize,
     mcs: Mcs,

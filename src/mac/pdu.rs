@@ -550,7 +550,8 @@ impl SecurityMode for UsedWithIe {
 
 /// Typestate builder that writes a MAC PDU into a caller-provided
 /// buffer. The state parameter (default [`NoHeader`]) tracks which
-/// operations are valid at the type level - see the module docs.
+/// operations are valid at the type level - each state type documents
+/// what it permits.
 pub struct MacPduBuilder<'a, State = NoHeader> {
     buf: &'a mut [u8],
     pos: usize,
@@ -778,7 +779,7 @@ impl<'a> MacPduBuilder<'a, HeaderUnsecured> {
     /// Finalize an unsecured PDU at exactly `target_len` bytes by
     /// appending Padding IEs to fill any gap. Picks the smallest
     /// encoding that matches the remaining gap (5-bit Short Padding for
-    /// 1 or 2 bytes; 6-bit `NoLength` Padding for ≥3 bytes).
+    /// 1 or 2 bytes; 6-bit Padding with an 8-bit length for >= 3 bytes).
     ///
     /// Useful when the PHY layer's transport block size (see
     /// [`crate::subslot::compute_tbs`]) requires the PDU to be a
@@ -826,16 +827,13 @@ impl<'a> MacPduBuilder<'a, HeaderSecuredAwait> {
             // Placeholder: patched with ctx.hpc by finish_with_security.
             hpc: 0,
         };
-        // MAC Security Info IE body is 5 bytes fixed; wrap in an
-        // explicit-length 6-bit IE header.
         let mut body_bytes = [0; 5];
         parts
             .serialize(&mut body_bytes)
             .expect("MacSecurityInfoParts always fits in 5 bytes");
         let ie = InformationElement::new_6bit_with_length(IEType6bit::MacSecurityInfo, &body_bytes)
             .expect("5 bytes fits in u16 length");
-        // IE layout: head (1) + 8-bit length (1) + body, where the
-        // body is [version/key/iv byte, HPC (4 bytes BE)].
+        // HPC at +3: IE head (1) + 8-bit length (1) + version/key/iv (1).
         let hpc_offset = self.pos + 3;
         self.pos = write_ie(self.buf, self.pos, &ie)?;
         let cipher_start = self.pos;

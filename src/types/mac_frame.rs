@@ -50,11 +50,6 @@ impl From<MacExt> for u8 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// MacHeaderTypeKind - 4-bit MAC Header Type field
-// ETSI TS 103 636-4, clause 6.3.2, Table 6.3.2-2
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // MacHeaderTypeKind
 // =========================================================================
@@ -103,11 +98,6 @@ impl From<MacHeaderTypeKind> for u8 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// HeaderFormat - 3-bit Header Format field of a PCC
-// ETSI TS 103 636-4, clause 6.2.1
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // HeaderFormat
 // =========================================================================
@@ -150,17 +140,13 @@ impl From<HeaderFormat> for u8 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// SequenceNumber - 12-bit sequence number
-// ETSI TS 103 636-4, clauses 6.3.3.1, 6.3.3.3, 6.3.3.4 (Figures *-1).
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // SequenceNumber
 // =========================================================================
 
 /// 12-bit sequence number carried by Data MAC PDU, Unicast, and RD
-/// Broadcast common headers.
+/// Broadcast common headers. ETSI TS 103 636-4, clauses 6.3.3.1, 6.3.3.3,
+/// 6.3.3.4.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SequenceNumber(u16);
@@ -194,11 +180,6 @@ impl From<SequenceNumber> for u16 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// SetupCause - 3-bit Association Setup Cause
-// ETSI TS 103 636-4, clause 6.4.2.4, Table 6.4.2.4-2
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // MacSecurity
 // =========================================================================
@@ -220,7 +201,6 @@ pub enum MacSecurity {
 
 impl MacSecurity {
     /// Raw 2-bit field value (`const`).
-    /// Raw u8 value carrying the spec encoding.
     #[must_use]
     #[inline]
     pub const fn as_u8(self) -> u8 {
@@ -229,7 +209,6 @@ impl MacSecurity {
 
     /// Parse from the raw 2-bit field, returning `None` for the reserved
     /// value 0b11 (`const`).
-    /// Construct from a raw u8. Returns `None` for reserved values.
     #[must_use]
     #[inline]
     pub const fn try_from_u8(value: u8) -> Option<Self> {
@@ -248,16 +227,12 @@ impl From<MacSecurity> for u8 {
     }
 }
 
-// ---------------------------------------------------------------------------
-// PacketLengthType
-// ETSI TS 103 636-4, clause 6.2.1, Tables 6.2.1-1 / 6.2.1-2 / 6.2.1-2a
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // PacketLengthType
 // =========================================================================
 
 /// Indicates whether [`PacketLength`] counts subslots or slots.
+/// ETSI TS 103 636-4, clause 6.2.1, Tables 6.2.1-1, 6.2.1-2, 6.2.1-2a.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[expect(missing_docs, reason = "variant names encode the spec entry")]
 pub enum PacketLengthType {
@@ -292,11 +267,6 @@ impl defmt::Format for PacketLengthType {
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// PacketLength - signalled packet length (value+1 semantics)
-// ETSI TS 103 636-4, clause 6.2.1
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // PacketLength
@@ -346,11 +316,6 @@ impl defmt::Format for PacketLength {
         defmt::write!(f, "{}", self.units());
     }
 }
-
-// ---------------------------------------------------------------------------
-// NetworkId24 - most significant 24 bits of a Network ID
-// ETSI TS 103 636-4, clause 4.2.3.1
-// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {

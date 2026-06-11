@@ -40,7 +40,8 @@ impl AssociationReleaseParts {
     ///
     /// # Errors
     ///
-    /// Returns [`ExcessiveBitsSet`] if the buffer is too short.
+    /// Returns [`ExcessiveBitsSet`] if `out` is shorter than
+    /// 1 byte.
     pub const fn serialize(&self, out: &mut [u8]) -> Result<usize, ExcessiveBitsSet> {
         if out.is_empty() {
             return Err(ExcessiveBitsSet);

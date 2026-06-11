@@ -115,8 +115,6 @@ impl defmt::Format for MacHeaderType {
 /// +---+---+---+---+---+---+---+---+ +---+---+---+---+---+---+---+---+
 /// |  Spare  |Reset| Sequence Number | |         Sequence Number       |
 /// +---------+-----+-----------------+ +-------------------------------+
-/// |              Spare                |
-/// +-----------------------------------+
 /// ```
 #[derive(Clone, Copy)]
 pub struct DataMacPdu<'a>(pub &'a [u8; 2]);

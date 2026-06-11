@@ -52,9 +52,7 @@ struct Layout<'a> {
 
 /// How a field sits in its byte run.
 enum Kind {
-    /// < 8 bits inside one byte.
     SubByte,
-    /// 8/16/32 bits, byte aligned.
     Word,
     /// 9..=15 bits ending on a byte boundary, sharing its two bytes
     /// only with reserved bits.
@@ -1071,7 +1069,6 @@ pub fn emit_message(def: &MessageDef) -> String {
     }
     out.push('\n');
 
-    // Imports.
     if def.ie_type.is_some() {
         out.push_str("use crate::mac::pdu::MessageBody;\n");
     }
@@ -1088,7 +1085,6 @@ pub fn emit_message(def: &MessageDef) -> String {
     }
     out.push('\n');
 
-    // Capacity consts.
     for region in &lay.regions {
         if let Region::Rep(r) = region {
             let (_, bits) = find_count(&lay.ctrls, r.name);
@@ -1101,7 +1097,6 @@ pub fn emit_message(def: &MessageDef) -> String {
         }
     }
 
-    // Struct.
     out.push_str(&format!("/// {}\n", def.doc));
     if has_repeat {
         out.push_str("#[derive(Debug, Clone, PartialEq, Eq)]\n");
@@ -1126,7 +1121,6 @@ pub fn emit_message(def: &MessageDef) -> String {
     }
     out.push_str("}\n\n");
 
-    // Inherent impl.
     let impl_lt = if lt.is_empty() { "" } else { "<'_>" };
     out.push_str(&format!("impl {}{impl_lt} {{\n", def.name));
     out.push_str(&encoded_len_fn(def, &lay, has_repeat));
@@ -1136,7 +1130,6 @@ pub fn emit_message(def: &MessageDef) -> String {
     out.push_str(&parse_fn(def, &lay));
     out.push_str("}\n");
 
-    // Trait impls.
     if let Some(v) = def.ie_type {
         let (tr_intro, tr_args) = if lt.is_empty() {
             ("", "")
@@ -1353,13 +1346,14 @@ fn serialize_fn(def: &MessageDef, lay: &Layout<'_>) -> String {
     };
 
     if lay.regions.is_empty() {
+        let plural = if n_bytes == 1 { "" } else { "s" };
         out.push_str(&format!(
-            "    /// Serialize the body. Writes exactly {n_bytes} byte{}.\n\
+            "    /// Serialize the body. Writes exactly {n_bytes} byte{plural}.\n\
              \x20   ///\n\
              \x20   /// # Errors\n\
              \x20   ///\n\
-             \x20   /// Returns [`ExcessiveBitsSet`] if the buffer is too short.\n",
-            if n_bytes == 1 { "" } else { "s" }
+             \x20   /// Returns [`ExcessiveBitsSet`] if `out` is shorter than\n\
+             \x20   /// {n_bytes} byte{plural}.\n"
         ));
         out.push_str(
             &format!(
@@ -1390,8 +1384,7 @@ fn serialize_fn(def: &MessageDef, lay: &Layout<'_>) -> String {
         return out;
     }
 
-    // Error doc.
-    let mut clauses = vec!["if the buffer is too short".to_string()];
+    let mut clauses = vec!["if `out` is shorter than [`Self::encoded_len`]".to_string()];
     for region in &lay.regions {
         match region {
             Region::Rep(r) if r.bias > 0 => clauses.push(format!(
@@ -1406,6 +1399,18 @@ fn serialize_fn(def: &MessageDef, lay: &Layout<'_>) -> String {
                         "if `{}` does not fit the selected narrow on-wire form",
                         g.name
                     ));
+                }
+            }
+            Region::CSlice(cs) => {
+                let max = (1u32 << count_bits(&lay.ctrls, cs.name)) - 2;
+                match &cs.all_ones {
+                    AllOnes::Reserved => {
+                        clauses.push(format!("if `{}` holds more than {max} entries", cs.name))
+                    }
+                    AllOnes::All { specific, .. } => clauses.push(format!(
+                        "if a `{specific}` value of `{}` holds more than {max} entries",
+                        cs.name
+                    )),
                 }
             }
             _ => {}
@@ -1743,9 +1748,6 @@ fn ser_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
 fn parse_fn(def: &MessageDef, lay: &Layout<'_>) -> String {
     let mut out = String::new();
     let fallible = any_fallible(def);
-    // heapless::Vec push is not const fn; everything else the
-    // emitter produces is, so repeat-free codecs work at compile
-    // time.
     let constness = if lay.regions.iter().any(|r| matches!(r, Region::Rep(_))) {
         ""
     } else {
@@ -1812,7 +1814,6 @@ fn parse_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
             "        if buffer.len() < {n_bytes} {{\n            return Err(ParsingError::Truncated);\n        }}\n"
         ));
     }
-    // Locals for prefix bytes containing sub-byte fields or controls.
     let mut local_bytes: Vec<usize> = lay
         .prefix
         .iter()
@@ -1830,7 +1831,6 @@ fn parse_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
     for k in local_bytes {
         out.push_str(&format!("        let b{k} = buffer[{k}];\n"));
     }
-    // Control lets.
     for c in &lay.ctrls {
         match c {
             Ctrl::Flag { of, bit } => {
@@ -1933,7 +1933,6 @@ fn parse_dynamic_body(def: &MessageDef, lay: &Layout<'_>) -> String {
             }
         }
     }
-    // Prefix fields.
     for s in &lay.prefix {
         out.push_str(&parse_stmt(def, s, false, true, "        "));
     }
@@ -2350,7 +2349,6 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
             .any(|r| matches!(r, Region::Rep(_)))
     });
     let constness = if has_repeat { "" } else { "const " };
-    let fallible = true; // the dispatch itself rejects reserved values
     let scrutinee = if def.ctx.is_empty() {
         "self".to_string()
     } else {
@@ -2399,7 +2397,6 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
     }
     out.push('\n');
 
-    // Capacity consts from any arm repeats.
     for (ad, _) in &arm_lays {
         let lay = layout(ad);
         for region in &lay.regions {
@@ -2415,8 +2412,6 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
         }
     }
 
-    // Struct (only when ctx fields exist; otherwise the wrapper's
-    // enum itself is the codec target).
     if !def.ctx.is_empty() {
         out.push_str(&format!("/// {}\n", def.doc));
         if has_repeat {
@@ -2441,7 +2436,6 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
 
     out.push_str(&format!("impl {} {{\n", def.name));
 
-    // encoded_len
     out.push_str(&format!(
         "    /// Number of bytes [`Self::serialize`] will write.\n\
          \x20   #[must_use]\n\
@@ -2476,7 +2470,6 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
     }
     out.push_str("        }\n    }\n\n");
 
-    // serialize
     out.push_str(
         "    /// Serialize the body into `out`. Returns the number of bytes written.\n\
          \x20   ///\n\
@@ -2499,13 +2492,13 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
     }
     out.push_str("        }\n    }\n\n");
 
-    // parse
     out.push_str("    /// Parse the bytes as `Self`.\n");
     for c in def.ctx {
         out.push_str(&format!("    ///\n    /// `{}`: {}\n", c.name, c.doc));
     }
     out.push_str("    ///\n    /// # Errors\n    ///\n");
-    let _ = fallible;
+    // The variant dispatch itself rejects reserved discriminants, so
+    // both error clauses apply regardless of the arms' field types.
     out.push_str(
         "    /// Returns [`ParsingError::Truncated`] on short input and\n\
          \x20   /// [`ParsingError::ReservedValue`] when a field carries a\n\
@@ -2544,7 +2537,6 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
     }
     out.push_str("            _ => Err(ParsingError::ReservedValue),\n        }\n    }\n}\n");
 
-    // Trait impls.
     if let Some(v) = def.ie_type {
         out.push_str(&format!(
             "\nimpl MessageBody for {} {{\n\

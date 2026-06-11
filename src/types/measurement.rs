@@ -70,29 +70,15 @@ impl BroadcastFeedbackType {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Load percentage (Load Info IE)
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // LoadPercentage
 // =========================================================================
 
 /// 8-bit percentage value (0..=255 maps to 0..=100% linearly; 0x00 = 0%,
 /// 0xFF = 100%).
-///
-/// The inner `u8` is the on-wire byte value, already converted from the
-/// spec's MSB-to-LSB column layout (column 0 = MSB) to a Rust native
-/// `u8` by [`Message::parse`](crate::mac::pdu::Message::parse). Callers
-/// that read `pct.0` see the same numeric value the spec table names,
-/// not raw bit positions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct LoadPercentage(pub u8);
-
-// ---------------------------------------------------------------------------
-// Radio Device Status IE enums (§6.4.3.13)
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // RadioDeviceStatusFlag
@@ -180,10 +166,6 @@ impl RadioDeviceStatusDuration {
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// Hop limit / Hop count (Source Routing IE)
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // DlDataReception
@@ -279,10 +261,6 @@ impl UlPeriod {
     }
 }
 
-// ---------------------------------------------------------------------------
-// EndpointProtocol - 16-bit Joining Information EP value
-// ---------------------------------------------------------------------------
-
 // =========================================================================
 // EndpointProtocol
 // =========================================================================
@@ -296,11 +274,6 @@ impl UlPeriod {
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(transparent)]
 pub struct EndpointProtocol(pub u16);
-
-// ---------------------------------------------------------------------------
-// RSSI / SNR measurement codes (Neighbouring IE, Measurement Report IE)
-// ETSI TS 103 636-4 references ETSI TS 103 636-2 for value semantics.
-// ---------------------------------------------------------------------------
 
 // =========================================================================
 // Rssi1Measurement
@@ -331,8 +304,3 @@ pub struct Rssi2Measurement(pub u8);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SnrMeasurement(pub u8);
-
-// ---------------------------------------------------------------------------
-// RD Capability IE enums
-// ETSI TS 103 636-4, clause 6.4.3.5, Table 6.4.3.5-1
-// ---------------------------------------------------------------------------

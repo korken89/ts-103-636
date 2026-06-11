@@ -151,7 +151,6 @@ pub fn def() -> MessageDef {
             ],
         }],
         items: &[
-            // Byte 0.
             Item::Count {
                 of: "additional_phy",
                 bits: 3,
@@ -168,7 +167,6 @@ pub fn def() -> MessageDef {
                 },
                 doc: "DECT-2020 release.",
             }),
-            // Byte 1.
             Item::Reserved { bits: 2 },
             Item::Field(Field {
                 name: "group_as",
@@ -209,7 +207,6 @@ pub fn def() -> MessageDef {
                 ty: Ty::Bool,
                 doc: "Scheduled access support.",
             }),
-            // Byte 2.
             Item::Field(Field {
                 name: "mac_security",
                 fig: Some("Security"),
@@ -261,7 +258,6 @@ pub fn def() -> MessageDef {
                       part's HARQ feedback delay octet).",
             }),
             Item::Reserved { bits: 2 },
-            // Additional 5-octet PHY capability blocks.
             Item::Repeat(Repeat {
                 name: "additional_phy",
                 doc: "Up to [`MAX_ADDITIONAL_PHY`] additional PHY capability blocks.",

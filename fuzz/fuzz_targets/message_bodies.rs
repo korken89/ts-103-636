@@ -1,6 +1,6 @@
 //! Property: no IE payload may panic any of the typed message body
-//! parsers. This is the main attack surface: every parser here is
-//! hand-written bit twiddling over radio input.
+//! parsers. This is the main attack surface: every parser here runs
+//! over raw radio input.
 //!
 //! The input is treated as a MAC IE stream; every recognized IE's
 //! payload is dispatched into its `*Parts::parse`. Mu-dependent
