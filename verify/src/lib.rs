@@ -303,3 +303,38 @@ fn slow_message_parse_framing() {
         &ctx,
     );
 }
+
+/// Cap for the IE-stream and security-info walks: a header plus
+/// several minimal IEs. Like [`CIPHER_RANGE_CAP`], 16 bytes keeps
+/// the 1-byte-minimum-advance walk inside CI budget.
+const IE_STREAM_CAP: usize = 16;
+
+/// The full receive walk: split any input and iterate every IE in
+/// the tail (mirrors the pdu_parse fuzz target). The walker
+/// terminates without panicking on any malformed tail.
+#[kani::proof]
+#[kani::unwind(18)]
+fn ie_stream_walk_safe() {
+    let buf: [u8; IE_STREAM_CAP] = kani::any();
+    let len: usize = kani::any();
+    kani::assume(len <= buf.len());
+    if let Ok(msg) = Message::parse_unverified(&buf[..len]) {
+        for ie in msg.tail_items() {
+            if ie.is_err() {
+                break;
+            }
+        }
+    }
+}
+
+/// `Message::peek_security_info` (the HPC resynchronization path)
+/// never panics on any input: it walks the plaintext IE prefix much
+/// like the cipher-range computation.
+#[kani::proof]
+#[kani::unwind(18)]
+fn peek_security_info_safe() {
+    let buf: [u8; IE_STREAM_CAP] = kani::any();
+    let len: usize = kani::any();
+    kani::assume(len <= buf.len());
+    let _ = Message::peek_security_info(&buf[..len]);
+}
