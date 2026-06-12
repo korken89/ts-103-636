@@ -75,6 +75,10 @@
               # `make verify` (symbolic verification of the codecs)
               nix-tools.packages.${system}.kani
             ];
+            # libfuzzer-sys links the C++ runtime dynamically and the
+            # fenix toolchain embeds no Nix rpath, so the
+            # `make fuzz-smoke` binaries need libstdc++ at runtime.
+            env.LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.stdenv.cc.cc.lib ];
           };
         }
       );
