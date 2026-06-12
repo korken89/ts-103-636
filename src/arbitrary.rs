@@ -109,9 +109,11 @@ impl kani::Arbitrary for PowerConst {
 
 // types::identifiers
 arb_via!(LongRdId, u32, LongRdId::new);
+arb_via!(NetworkId24, u32, NetworkId24::new);
 arb_via!(ShortRdId, u16, ShortRdId::new);
 
 // types::mac_frame
+arb_via!(SequenceNumber, u16, SequenceNumber::new);
 impl kani::Arbitrary for PacketLengthType {
     fn any() -> Self {
         PacketLengthType::from_bit(kani::any())

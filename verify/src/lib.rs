@@ -22,11 +22,12 @@
 //! Run with Kani (`make verify`, or `cd verify && cargo kani`).
 
 use ts_103_636::SerializationError;
+use ts_103_636::mac::headers::MacCommonHeader;
 use ts_103_636::mac::messages::*;
-use ts_103_636::mac::pdu::Message;
+use ts_103_636::mac::pdu::{MacPduBuilder, Message, NotUsed, UsedNoIe, UsedWithIe};
 use ts_103_636::pcc::Pcc;
 use ts_103_636::security::{KEY_LEN, MacCrypto, SecurityContext, cipher_range_for_verification};
-use ts_103_636::types::{FlowEntry, LongRdId, Mu};
+use ts_103_636::types::{FlowEntry, LongRdId, Mu, NetworkId24, SequenceNumber};
 
 /// Prove, for every buffer up to `$cap` bytes (all byte values, all
 /// lengths, all valid mu where the codec takes one):
@@ -569,5 +570,284 @@ fn reconfiguration_response_serialize_total() {
                 assert!(e != SerializationError::BufferTooShort);
             }
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Builder TX-path proofs
+// ---------------------------------------------------------------------------
+
+/// Cap for the builder TX-path proofs: the 10-byte Unicast header
+/// plus the 7-byte MAC Security Info IE plus the 5-byte MIC.
+const BUILDER_CAP: usize = 24;
+
+/// Unsecured Beacon TX path: for any user-constructible typed inputs
+/// and any buffer length up to [`BUILDER_CAP`], the builder never
+/// panics (a too-small buffer is a clean `BufferFull`), and a built
+/// PDU always parses back via `parse_unverified` with the pushed
+/// fields intact, an empty tail, and no MIC.
+#[kani::proof]
+fn builder_beacon_unsecured_safe() {
+    let mut buf = [0; BUILDER_CAP];
+    let buf_len: usize = kani::any();
+    kani::assume(buf_len <= buf.len());
+    let net: NetworkId24 = kani::any();
+    let tx: LongRdId = kani::any();
+    if let Ok(b) = MacPduBuilder::new(&mut buf[..buf_len]).push_beacon(NotUsed, net, tx) {
+        let out = b.finish_without_security();
+        let msg = Message::parse_unverified(out).unwrap();
+        assert!(msg.tail.is_empty());
+        assert!(msg.mic.is_none());
+        match msg.common {
+            MacCommonHeader::Beacon(h) => {
+                assert_eq!(h.network_id_typed(), Some(net));
+                assert_eq!(h.transmitter(), Some(tx));
+            }
+            _ => panic!("expected beacon"),
+        }
+    }
+}
+
+/// Unsecured Data MAC PDU TX path; same properties as the beacon
+/// proof.
+#[kani::proof]
+fn builder_data_mac_pdu_unsecured_safe() {
+    let mut buf = [0; BUILDER_CAP];
+    let buf_len: usize = kani::any();
+    kani::assume(buf_len <= buf.len());
+    let reset: bool = kani::any();
+    let psn: SequenceNumber = kani::any();
+    if let Ok(b) = MacPduBuilder::new(&mut buf[..buf_len]).push_data_mac_pdu(NotUsed, reset, psn) {
+        let out = b.finish_without_security();
+        let msg = Message::parse_unverified(out).unwrap();
+        assert!(msg.tail.is_empty());
+        assert!(msg.mic.is_none());
+        match msg.common {
+            MacCommonHeader::DataMacPdu(h) => {
+                assert_eq!(h.reset(), reset);
+                assert_eq!(h.sequence_number(), psn);
+            }
+            _ => panic!("expected data mac pdu"),
+        }
+    }
+}
+
+/// Unsecured Unicast TX path; same properties as the beacon proof.
+#[kani::proof]
+fn builder_unicast_unsecured_safe() {
+    let mut buf = [0; BUILDER_CAP];
+    let buf_len: usize = kani::any();
+    kani::assume(buf_len <= buf.len());
+    let reset: bool = kani::any();
+    let psn: SequenceNumber = kani::any();
+    let rx: LongRdId = kani::any();
+    let tx: LongRdId = kani::any();
+    if let Ok(b) = MacPduBuilder::new(&mut buf[..buf_len]).push_unicast(NotUsed, reset, psn, rx, tx)
+    {
+        let out = b.finish_without_security();
+        let msg = Message::parse_unverified(out).unwrap();
+        assert!(msg.tail.is_empty());
+        assert!(msg.mic.is_none());
+        match msg.common {
+            MacCommonHeader::Unicast(h) => {
+                assert_eq!(h.reset(), reset);
+                assert_eq!(h.sequence_number(), psn);
+                assert_eq!(h.receiver(), Some(rx));
+                assert_eq!(h.transmitter(), Some(tx));
+            }
+            _ => panic!("expected unicast"),
+        }
+    }
+}
+
+/// Unsecured RD Broadcast TX path; same properties as the beacon
+/// proof.
+#[kani::proof]
+fn builder_rd_broadcast_unsecured_safe() {
+    let mut buf = [0; BUILDER_CAP];
+    let buf_len: usize = kani::any();
+    kani::assume(buf_len <= buf.len());
+    let reset: bool = kani::any();
+    let psn: SequenceNumber = kani::any();
+    let tx: LongRdId = kani::any();
+    if let Ok(b) = MacPduBuilder::new(&mut buf[..buf_len]).push_rd_broadcast(NotUsed, reset, psn, tx)
+    {
+        let out = b.finish_without_security();
+        let msg = Message::parse_unverified(out).unwrap();
+        assert!(msg.tail.is_empty());
+        assert!(msg.mic.is_none());
+        match msg.common {
+            MacCommonHeader::RdBroadcast(h) => {
+                assert_eq!(h.reset(), reset);
+                assert_eq!(h.sequence_number(), psn);
+                assert_eq!(h.transmitter(), Some(tx));
+            }
+            _ => panic!("expected rd broadcast"),
+        }
+    }
+}
+
+/// Secured (UsedNoIe) TX-to-RX loop under the no-op backend: build a
+/// secured Unicast PDU, then `Message::parse` the produced bytes with
+/// the same keys and context. The result must be `ParsedPdu::Secured`
+/// (the MIC the builder wrote verifies) with the header fields
+/// intact. The unwind bound covers the 5-byte MIC zero-fill and
+/// constant-time compare loops and the 16-byte IV handling.
+#[kani::proof]
+#[kani::unwind(18)]
+fn builder_secured_no_ie_roundtrip() {
+    let mut buf = [0; BUILDER_CAP];
+    let buf_len: usize = kani::any();
+    kani::assume(buf_len <= buf.len());
+    let reset: bool = kani::any();
+    let psn: SequenceNumber = kani::any();
+    let ctx = SecurityContext {
+        tx: kani::any(),
+        rx: kani::any(),
+        hpc: kani::any(),
+    };
+    let Ok(b) = MacPduBuilder::new(&mut buf[..buf_len]).push_unicast(UsedNoIe, reset, psn, ctx.rx, ctx.tx)
+    else {
+        return;
+    };
+    let Ok(out) = b.finish_with_security(&mut NoOpCrypto, &[0; KEY_LEN], &[0; KEY_LEN], &ctx) else {
+        return;
+    };
+    let mut rx_buf = [0; BUILDER_CAP];
+    let n = out.len();
+    rx_buf[..n].copy_from_slice(out);
+    let parsed = Message::parse(
+        &mut rx_buf[..n],
+        &mut NoOpCrypto,
+        &[0; KEY_LEN],
+        &[0; KEY_LEN],
+        &ctx,
+    )
+    .unwrap();
+    let msg = parsed.secured().unwrap();
+    match msg.common {
+        MacCommonHeader::Unicast(h) => {
+            assert_eq!(h.reset(), reset);
+            assert_eq!(h.sequence_number(), psn);
+        }
+        _ => panic!("expected unicast"),
+    }
+}
+
+/// Secured (UsedWithIe) TX-to-RX loop under the no-op backend: as the
+/// UsedNoIe proof, plus the MAC Security Info IE the builder injects
+/// must surface through `peek_security_info` with the context's HPC
+/// patched in (the HPC the receiver resynchronizes on can never
+/// diverge from the IV's).
+#[kani::proof]
+#[kani::unwind(18)]
+fn builder_secured_with_ie_roundtrip() {
+    let mut buf = [0; BUILDER_CAP];
+    let buf_len: usize = kani::any();
+    kani::assume(buf_len <= buf.len());
+    let reset: bool = kani::any();
+    let psn: SequenceNumber = kani::any();
+    let version: ts_103_636::types::SecurityVersion = kani::any();
+    let key_index: ts_103_636::types::KeyIndex = kani::any();
+    let iv_type: ts_103_636::types::SecurityIvType = kani::any();
+    let ctx = SecurityContext {
+        tx: kani::any(),
+        rx: kani::any(),
+        hpc: kani::any(),
+    };
+    let Ok(b) = MacPduBuilder::new(&mut buf[..buf_len]).push_unicast(UsedWithIe, reset, psn, ctx.rx, ctx.tx)
+    else {
+        return;
+    };
+    let Ok(b) = b.push_mac_security_info(version, key_index, iv_type) else {
+        return;
+    };
+    let Ok(out) = b.finish_with_security(&mut NoOpCrypto, &[0; KEY_LEN], &[0; KEY_LEN], &ctx) else {
+        return;
+    };
+    let info = Message::peek_security_info(out).unwrap();
+    assert_eq!(info.version, version);
+    assert_eq!(info.key_index, key_index);
+    assert_eq!(info.iv_type, iv_type);
+    assert_eq!(info.hpc, ctx.hpc);
+    let mut rx_buf = [0; BUILDER_CAP];
+    let n = out.len();
+    rx_buf[..n].copy_from_slice(out);
+    let parsed = Message::parse(
+        &mut rx_buf[..n],
+        &mut NoOpCrypto,
+        &[0; KEY_LEN],
+        &[0; KEY_LEN],
+        &ctx,
+    )
+    .unwrap();
+    assert!(parsed.secured().is_some());
+}
+
+/// Padded unsecured finish: `finish_without_security_padded` either
+/// fails cleanly or returns exactly `target_len` bytes that still
+/// parse, with every padding IE in the tail walking cleanly. The
+/// unwind bound covers the padding zero-fill over the full gap.
+#[kani::proof]
+#[kani::unwind(26)]
+fn builder_unsecured_padded_exact() {
+    let mut buf = [0; BUILDER_CAP];
+    let buf_len: usize = kani::any();
+    kani::assume(buf_len <= buf.len());
+    let reset: bool = kani::any();
+    let psn: SequenceNumber = kani::any();
+    let target_len: usize = kani::any();
+    kani::assume(target_len <= BUILDER_CAP);
+    let Ok(b) = MacPduBuilder::new(&mut buf[..buf_len]).push_data_mac_pdu(NotUsed, reset, psn)
+    else {
+        return;
+    };
+    if let Ok(out) = b.finish_without_security_padded(target_len) {
+        assert_eq!(out.len(), target_len);
+        let msg = Message::parse_unverified(out).unwrap();
+        for ie in msg.tail_items() {
+            assert!(ie.is_ok());
+        }
+    }
+}
+
+/// Padded secured finish: `finish_with_security_padded` either fails
+/// cleanly or returns exactly `target_len` bytes (MIC included) that
+/// `Message::parse` accepts as Secured under the same context.
+#[kani::proof]
+#[kani::unwind(26)]
+fn builder_secured_padded_exact() {
+    let mut buf = [0; BUILDER_CAP];
+    let buf_len: usize = kani::any();
+    kani::assume(buf_len <= buf.len());
+    let reset: bool = kani::any();
+    let psn: SequenceNumber = kani::any();
+    let target_len: usize = kani::any();
+    kani::assume(target_len <= BUILDER_CAP);
+    let ctx = SecurityContext {
+        tx: kani::any(),
+        rx: kani::any(),
+        hpc: kani::any(),
+    };
+    let Ok(b) = MacPduBuilder::new(&mut buf[..buf_len]).push_unicast(UsedNoIe, reset, psn, ctx.rx, ctx.tx)
+    else {
+        return;
+    };
+    if let Ok(out) =
+        b.finish_with_security_padded(target_len, &mut NoOpCrypto, &[0; KEY_LEN], &[0; KEY_LEN], &ctx)
+    {
+        assert_eq!(out.len(), target_len);
+        let mut rx_buf = [0; BUILDER_CAP];
+        let n = out.len();
+        rx_buf[..n].copy_from_slice(out);
+        let parsed = Message::parse(
+            &mut rx_buf[..n],
+            &mut NoOpCrypto,
+            &[0; KEY_LEN],
+            &[0; KEY_LEN],
+            &ctx,
+        )
+        .unwrap();
+        assert!(parsed.secured().is_some());
     }
 }
