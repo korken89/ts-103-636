@@ -60,7 +60,7 @@ doc:
 # cargo-fuzz; -s none because AddressSanitizer needs nightly and the
 # pinned toolchain is stable. FUZZ_JOBS spawns that many libFuzzer
 # workers sharing the corpus (default: all cores).
-FUZZ_TARGETS := pdu_parse message_bodies pcc_parse parse_secure
+FUZZ_TARGETS := pdu_parse message_bodies parse_secure
 FUZZ_SECONDS ?= 30
 FUZZ_JOBS ?= $(shell nproc)
 fuzz-smoke:

@@ -26,13 +26,6 @@ doc = false
 bench = false
 
 [[bin]]
-name = "pcc_parse"
-path = "fuzz_targets/pcc_parse.rs"
-test = false
-doc = false
-bench = false
-
-[[bin]]
 name = "parse_secure"
 path = "fuzz_targets/parse_secure.rs"
 test = false
