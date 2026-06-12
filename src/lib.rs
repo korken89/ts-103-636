@@ -2,6 +2,8 @@
 #![no_std]
 #![deny(missing_docs)]
 
+#[cfg(kani)]
+mod arbitrary;
 pub mod constants;
 pub mod mac;
 pub mod pcc;

@@ -43,6 +43,26 @@ pub struct JoiningBeaconParts {
     pub channels: Vec<AbsoluteChannel, MAX_CHANNELS>,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for JoiningBeaconParts {
+    fn any() -> Self {
+        Self {
+            network_beacon_period: kani::any(),
+            channels: {
+                let n: usize = kani::any();
+                kani::assume(n <= MAX_CHANNELS);
+                let mut v = Vec::new();
+                let mut i = 0;
+                while i < n {
+                    let _ = v.push(kani::any());
+                    i += 1;
+                }
+                v
+            },
+        }
+    }
+}
+
 impl JoiningBeaconParts {
     /// Number of bytes [`Self::serialize`] will write.
     #[must_use]

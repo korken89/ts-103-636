@@ -84,6 +84,20 @@ pub struct LoadInfoParts {
     pub channel_load: Option<(LoadPercentage, LoadPercentage)>,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for LoadInfoParts {
+    fn any() -> Self {
+        Self {
+            traffic_load: kani::any(),
+            max_associated_rds: kani::any(),
+            currently_associated_ft_mode: kani::any(),
+            currently_associated_pt_mode: kani::any(),
+            rach_load: kani::any(),
+            channel_load: kani::any(),
+        }
+    }
+}
+
 impl LoadInfoParts {
     /// Number of bytes [`Self::serialize`] will write.
     #[must_use]

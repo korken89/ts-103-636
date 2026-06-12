@@ -89,6 +89,32 @@ pub struct NetworkBeaconParts {
     pub additional_channels: Vec<AbsoluteChannel, MAX_ADDITIONAL_CHANNELS>,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for NetworkBeaconParts {
+    fn any() -> Self {
+        Self {
+            power_const: kani::any(),
+            network_beacon_period: kani::any(),
+            cluster_beacon_period: kani::any(),
+            next_cluster_channel: kani::any(),
+            time_to_next: kani::any(),
+            cluster_max_tx_power: kani::any(),
+            current_cluster_channel: kani::any(),
+            additional_channels: {
+                let n: usize = kani::any();
+                kani::assume(n <= MAX_ADDITIONAL_CHANNELS);
+                let mut v = Vec::new();
+                let mut i = 0;
+                while i < n {
+                    let _ = v.push(kani::any());
+                    i += 1;
+                }
+                v
+            },
+        }
+    }
+}
+
 impl NetworkBeaconParts {
     /// Number of bytes [`Self::serialize`] will write.
     #[must_use]

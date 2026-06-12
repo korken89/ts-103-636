@@ -40,6 +40,25 @@ pub struct JoiningInformationParts {
     pub endpoints: Vec<EndpointProtocol, MAX_ENDPOINTS>,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for JoiningInformationParts {
+    fn any() -> Self {
+        Self {
+            endpoints: {
+                let n: usize = kani::any();
+                kani::assume(n <= MAX_ENDPOINTS);
+                let mut v = Vec::new();
+                let mut i = 0;
+                while i < n {
+                    let _ = v.push(kani::any());
+                    i += 1;
+                }
+                v
+            },
+        }
+    }
+}
+
 impl JoiningInformationParts {
     /// Number of bytes [`Self::serialize`] will write.
     #[must_use]

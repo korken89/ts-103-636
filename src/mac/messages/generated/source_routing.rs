@@ -47,6 +47,18 @@ pub struct SourceRoutingParts {
     pub validity_timer: SourceRoutingValidityTimer,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for SourceRoutingParts {
+    fn any() -> Self {
+        Self {
+            source_routing_id: kani::any(),
+            hop_limit: kani::any(),
+            hop_count: kani::any(),
+            validity_timer: kani::any(),
+        }
+    }
+}
+
 impl SourceRoutingParts {
     /// Body length in bytes (always 6).
     #[must_use]

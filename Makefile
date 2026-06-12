@@ -81,5 +81,7 @@ verify:
 	@for m in $(basename $(notdir $(wildcard src/mac/messages/generated/*.rs))); do \
 		grep -q "$${m}_codec_safe" verify/src/lib.rs \
 			|| { echo "missing harness: $${m}_codec_safe"; exit 1; }; \
+		grep -q "$${m}_serialize_total" verify/src/lib.rs \
+			|| { echo "missing harness: $${m}_serialize_total"; exit 1; }; \
 	done
 	cd verify && cargo kani -j $(VERIFY_JOBS) --output-format=terse

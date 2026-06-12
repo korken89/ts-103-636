@@ -107,6 +107,36 @@ pub struct RdCapabilityParts {
     pub additional_phy: Vec<AdditionalPhyCapability, MAX_ADDITIONAL_PHY>,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for RdCapabilityParts {
+    fn any() -> Self {
+        Self {
+            release: kani::any(),
+            group_as: kani::any(),
+            paging: kani::any(),
+            operating_modes: kani::any(),
+            mesh: kani::any(),
+            schedul: kani::any(),
+            mac_security: kani::any(),
+            dlc_service_type: kani::any(),
+            base_phy: kani::any(),
+            d_delay: kani::any(),
+            half_dup: kani::any(),
+            additional_phy: {
+                let n: usize = kani::any();
+                kani::assume(n <= MAX_ADDITIONAL_PHY);
+                let mut v = Vec::new();
+                let mut i = 0;
+                while i < n {
+                    let _ = v.push(kani::any());
+                    i += 1;
+                }
+                v
+            },
+        }
+    }
+}
+
 impl RdCapabilityParts {
     /// Number of bytes [`Self::serialize`] will write.
     #[must_use]

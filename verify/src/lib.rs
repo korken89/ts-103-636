@@ -8,6 +8,11 @@
 //! (parse-serialize-parse identity). `make verify` runs them with
 //! Kani, one harness per core.
 //!
+//! One `*_serialize_total` proof per message covers the TX side:
+//! serialize never panics for ANY user-constructible value (drawn
+//! through the public constructors via `kani::Arbitrary`), not just
+//! the values `parse` can produce.
+//!
 //! Additional harnesses cover the PCC formats (same round-trip
 //! property) and the secured-PDU framing of `Message::parse` under a
 //! no-op crypto backend - the AES primitives themselves are out of
@@ -16,11 +21,12 @@
 //!
 //! Run with Kani (`make verify`, or `cd verify && cargo kani`).
 
+use ts_103_636::SerializationError;
 use ts_103_636::mac::messages::*;
 use ts_103_636::mac::pdu::Message;
 use ts_103_636::pcc::Pcc;
 use ts_103_636::security::{KEY_LEN, MacCrypto, SecurityContext, cipher_range_for_verification};
-use ts_103_636::types::{LongRdId, Mu};
+use ts_103_636::types::{FlowEntry, LongRdId, Mu};
 
 /// Prove, for every buffer up to `$cap` bytes (all byte values, all
 /// lengths, all valid mu where the codec takes one):
@@ -337,4 +343,231 @@ fn peek_security_info_safe() {
     let len: usize = kani::any();
     kani::assume(len <= buf.len());
     let _ = Message::peek_security_info(&buf[..len]);
+}
+
+/// Prove serialize total over every USER-CONSTRUCTIBLE value of a
+/// message - the TX-side complement of `codec_safe!`, whose
+/// serialize leg only covers values that `parse` can produce.
+/// `kani::Arbitrary` (src/arbitrary.rs + generated impls) draws
+/// values through the public constructors only, so "any value" means
+/// exactly "any value a user can build". For any such value and any
+/// output buffer up to `$cap` bytes:
+///
+/// - `serialize` never panics;
+/// - `Ok(n)` implies `n == encoded_len()` and `n <= out.len()`;
+/// - at the full cap - chosen at or above the message's maximum
+///   encoded length - the only possible rejection is
+///   `ValueOutOfRange`, never `BufferTooShort` (this also fails
+///   loudly if the cap is ever set too small).
+macro_rules! serialize_total {
+    ($(#[$attr:meta])* $name:ident, $ty:ty, $cap:expr) => {
+        $(#[$attr])*
+        #[kani::proof]
+        fn $name() {
+            let parts: $ty = kani::any();
+            let mut out = [0; $cap];
+            let out_len: usize = kani::any();
+            kani::assume(out_len <= out.len());
+            match parts.serialize(&mut out[..out_len]) {
+                Ok(n) => {
+                    assert_eq!(n, parts.encoded_len());
+                    assert!(n <= out_len);
+                }
+                Err(e) => {
+                    if out_len == $cap {
+                        assert!(e != SerializationError::BufferTooShort);
+                    }
+                }
+            }
+        }
+    };
+}
+
+serialize_total!(
+    association_control_serialize_total,
+    AssociationControlParts,
+    8
+);
+serialize_total!(
+    association_release_serialize_total,
+    AssociationReleaseParts,
+    8
+);
+serialize_total!(
+    // MAX_REQUEST_FLOWS = 6 element loops (Arbitrary fill and serialize).
+    #[kani::unwind(8)]
+    association_request_serialize_total,
+    AssociationRequestParts,
+    24
+);
+serialize_total!(
+    // MAX_RESPONSE_FLOWS = 6 element loops (Arbitrary fill and serialize).
+    #[kani::unwind(8)]
+    association_response_serialize_total,
+    AssociationResponseParts,
+    16
+);
+serialize_total!(
+    broadcast_indication_serialize_total,
+    BroadcastIndicationParts,
+    16
+);
+serialize_total!(cluster_beacon_serialize_total, ClusterBeaconParts, 20);
+serialize_total!(
+    // MAX_ENDPOINTS = 4 element loops.
+    #[kani::unwind(6)]
+    joining_beacon_serialize_total,
+    JoiningBeaconParts,
+    16
+);
+serialize_total!(
+    // MAX_ENDPOINTS = 4 element loops.
+    #[kani::unwind(6)]
+    joining_information_serialize_total,
+    JoiningInformationParts,
+    16
+);
+serialize_total!(load_info_serialize_total, LoadInfoParts, 24);
+serialize_total!(mac_security_info_serialize_total, MacSecurityInfoParts, 8);
+serialize_total!(
+    measurement_report_serialize_total,
+    MeasurementReportParts,
+    12
+);
+serialize_total!(neighbouring_serialize_total, NeighbouringParts, 16);
+serialize_total!(
+    // MAX_ADDITIONAL_CHANNELS = 3 element loops.
+    #[kani::unwind(5)]
+    network_beacon_serialize_total,
+    NetworkBeaconParts,
+    20
+);
+serialize_total!(
+    radio_device_status_serialize_total,
+    RadioDeviceStatusParts,
+    8
+);
+serialize_total!(
+    random_access_resource_serialize_total,
+    RandomAccessResourceParts,
+    24
+);
+serialize_total!(
+    // MAX_ADDITIONAL_PHY = 7 element loops; max len 7 + 7 * 5 = 42.
+    #[kani::unwind(9)]
+    rd_capability_serialize_total,
+    RdCapabilityParts,
+    42
+);
+serialize_total!(
+    rd_capability_short_serialize_total,
+    RdCapabilityShortParts,
+    4
+);
+serialize_total!(
+    resource_allocation_serialize_total,
+    ResourceAllocationParts,
+    32
+);
+serialize_total!(route_info_serialize_total, RouteInfoParts, 8);
+serialize_total!(source_routing_serialize_total, SourceRoutingParts, 8);
+
+/// Serialize totality for the zero-copy Group Assignment body: same
+/// properties as `serialize_total!`, with the borrowed tag slice
+/// drawn from a symbolic 8-entry array at symbolic length (the wire
+/// format itself accepts any number of tags; 8 bounds the proof).
+#[kani::proof]
+#[kani::unwind(10)]
+fn group_assignment_serialize_total() {
+    let tags: [GroupResourceTagEntry; 8] = kani::any();
+    let n: usize = kani::any();
+    kani::assume(n <= tags.len());
+    let parts = GroupAssignmentParts {
+        single: kani::any(),
+        group_id: kani::any(),
+        tags: &tags[..n],
+    };
+    let mut out = [0; 12];
+    let out_len: usize = kani::any();
+    kani::assume(out_len <= out.len());
+    match parts.serialize(&mut out[..out_len]) {
+        Ok(m) => {
+            assert_eq!(m, parts.encoded_len());
+            assert!(m <= out_len);
+        }
+        Err(e) => {
+            if out_len == out.len() {
+                assert!(e != SerializationError::BufferTooShort);
+            }
+        }
+    }
+}
+
+/// Serialize totality for the zero-copy Reconfiguration Request body.
+/// The 7-entry flow array deliberately exceeds the on-wire maximum of
+/// 6, so the proof also covers the ValueOutOfRange reject path.
+#[kani::proof]
+#[kani::unwind(9)]
+fn reconfiguration_request_serialize_total() {
+    let flows: [FlowEntry; 7] = kani::any();
+    let n: usize = kani::any();
+    kani::assume(n <= flows.len());
+    let parts = ReconfigurationRequestParts {
+        rd_capability_changed: kani::any(),
+        radio_resource: kani::any(),
+        tx_harq: kani::any(),
+        rx_harq: kani::any(),
+        flows: &flows[..n],
+    };
+    let mut out = [0; 12];
+    let out_len: usize = kani::any();
+    kani::assume(out_len <= out.len());
+    match parts.serialize(&mut out[..out_len]) {
+        Ok(m) => {
+            assert_eq!(m, parts.encoded_len());
+            assert!(m <= out_len);
+        }
+        Err(e) => {
+            if out_len == out.len() {
+                assert!(e != SerializationError::BufferTooShort);
+            }
+        }
+    }
+}
+
+/// Serialize totality for the zero-copy Reconfiguration Response
+/// body. As in the Request proof, 7 specific flows cover the
+/// ValueOutOfRange reject path alongside the `All` encoding.
+#[kani::proof]
+#[kani::unwind(9)]
+fn reconfiguration_response_serialize_total() {
+    let flows: [FlowEntry; 7] = kani::any();
+    let n: usize = kani::any();
+    kani::assume(n <= flows.len());
+    let flow_acceptance = if kani::any() {
+        FlowChangeAcceptance::All
+    } else {
+        FlowChangeAcceptance::Specific(&flows[..n])
+    };
+    let parts = ReconfigurationResponseParts {
+        rd_capability_changed: kani::any(),
+        radio_resource: kani::any(),
+        tx_harq: kani::any(),
+        rx_harq: kani::any(),
+        flow_acceptance,
+    };
+    let mut out = [0; 12];
+    let out_len: usize = kani::any();
+    kani::assume(out_len <= out.len());
+    match parts.serialize(&mut out[..out_len]) {
+        Ok(m) => {
+            assert_eq!(m, parts.encoded_len());
+            assert!(m <= out_len);
+        }
+        Err(e) => {
+            if out_len == out.len() {
+                assert!(e != SerializationError::BufferTooShort);
+            }
+        }
+    }
 }

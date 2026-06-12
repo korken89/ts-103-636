@@ -34,6 +34,17 @@ pub struct RdCapabilityShortParts {
     pub dwa: bool,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for RdCapabilityShortParts {
+    fn any() -> Self {
+        Self {
+            cb_mc: kani::any(),
+            harq_feedback_delay: kani::any(),
+            dwa: kani::any(),
+        }
+    }
+}
+
 impl RdCapabilityShortParts {
     /// Body length in bytes (always 1).
     #[must_use]

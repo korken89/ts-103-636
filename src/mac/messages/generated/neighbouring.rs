@@ -104,6 +104,23 @@ pub struct NeighbouringParts {
     pub radio_device_class: Option<RadioDeviceClass>,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for NeighbouringParts {
+    fn any() -> Self {
+        Self {
+            power_const: kani::any(),
+            network_beacon_period: kani::any(),
+            cluster_beacon_period: kani::any(),
+            long_rd_id: kani::any(),
+            next_cluster_channel: kani::any(),
+            time_to_next: kani::any(),
+            rssi_2: kani::any(),
+            snr: kani::any(),
+            radio_device_class: kani::any(),
+        }
+    }
+}
+
 impl NeighbouringParts {
     /// Number of bytes [`Self::serialize`] will write.
     #[must_use]

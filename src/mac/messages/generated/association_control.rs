@@ -34,6 +34,17 @@ pub struct AssociationControlParts {
     pub ul_period: UlPeriod,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for AssociationControlParts {
+    fn any() -> Self {
+        Self {
+            cb_m: kani::any(),
+            dl_data_reception: kani::any(),
+            ul_period: kani::any(),
+        }
+    }
+}
+
 impl AssociationControlParts {
     /// Body length in bytes (always 1).
     #[must_use]

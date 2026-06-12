@@ -44,6 +44,18 @@ pub struct MacSecurityInfoParts {
     pub hpc: u32,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for MacSecurityInfoParts {
+    fn any() -> Self {
+        Self {
+            version: kani::any(),
+            key_index: kani::any(),
+            iv_type: kani::any(),
+            hpc: kani::any(),
+        }
+    }
+}
+
 impl MacSecurityInfoParts {
     /// Body length in bytes (always 5).
     #[must_use]

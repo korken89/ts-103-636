@@ -105,6 +105,26 @@ pub struct ClusterBeaconParts {
     pub time_to_next: Option<u32>,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for ClusterBeaconParts {
+    fn any() -> Self {
+        Self {
+            mu: kani::any(),
+            sfn: kani::any(),
+            power_const: kani::any(),
+            network_beacon_period: kani::any(),
+            cluster_beacon_period: kani::any(),
+            count_to_trigger: kani::any(),
+            rel_quality: kani::any(),
+            min_quality: kani::any(),
+            cluster_max_tx_power: kani::any(),
+            frame_offset: kani::any(),
+            next_cluster_channel: kani::any(),
+            time_to_next: kani::any(),
+        }
+    }
+}
+
 impl ClusterBeaconParts {
     /// Number of bytes [`Self::serialize`] will write.
     #[must_use]

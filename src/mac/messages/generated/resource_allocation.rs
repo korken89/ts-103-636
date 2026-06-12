@@ -264,6 +264,16 @@ pub struct ResourceAllocationParts {
     pub kind: ResourceAllocationKind,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for ResourceAllocationParts {
+    fn any() -> Self {
+        Self {
+            mu: kani::any(),
+            kind: kani::any(),
+        }
+    }
+}
+
 impl ResourceAllocationParts {
     /// Number of bytes [`Self::serialize`] will write.
     #[must_use]

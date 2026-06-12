@@ -64,6 +64,19 @@ pub struct MeasurementReportParts {
     pub tx_count: Option<u8>,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for MeasurementReportParts {
+    fn any() -> Self {
+        Self {
+            from_rach: kani::any(),
+            snr: kani::any(),
+            rssi_2: kani::any(),
+            rssi_1: kani::any(),
+            tx_count: kani::any(),
+        }
+    }
+}
+
 impl MeasurementReportParts {
     /// Number of bytes [`Self::serialize`] will write.
     #[must_use]

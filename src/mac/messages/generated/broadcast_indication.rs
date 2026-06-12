@@ -68,6 +68,20 @@ pub struct BroadcastIndicationParts {
     pub mcs_or_mimo_feedback: u8,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for BroadcastIndicationParts {
+    fn any() -> Self {
+        Self {
+            indication_type: kani::any(),
+            ack_nack: kani::any(),
+            feedback: kani::any(),
+            resource_allocation_present: kani::any(),
+            rd_id: kani::any(),
+            mcs_or_mimo_feedback: kani::any(),
+        }
+    }
+}
+
 impl BroadcastIndicationParts {
     /// Number of bytes [`Self::serialize`] will write.
     #[must_use]

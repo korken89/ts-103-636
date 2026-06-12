@@ -116,6 +116,26 @@ pub struct RandomAccessResourceParts {
     pub channel_2: Option<AbsoluteChannel>,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for RandomAccessResourceParts {
+    fn any() -> Self {
+        Self {
+            mu: kani::any(),
+            pair: kani::any(),
+            max_length_type: kani::any(),
+            max_rach_length: kani::any(),
+            cwmin_sig: kani::any(),
+            dect_delay: kani::any(),
+            response_window: kani::any(),
+            cwmax_sig: kani::any(),
+            repeat: kani::any(),
+            sfn_value: kani::any(),
+            channel: kani::any(),
+            channel_2: kani::any(),
+        }
+    }
+}
+
 impl RandomAccessResourceParts {
     /// Number of bytes [`Self::serialize`] will write.
     #[must_use]

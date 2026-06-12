@@ -974,6 +974,43 @@ fn sfield_decl(sf: &SField<'_>) -> (String, String, String) {
     }
 }
 
+/// `kani::Arbitrary` for a Parts struct, compiled only under `cargo
+/// kani`. Plain fields defer to the field type's impl (which goes
+/// through the public constructor - see src/arbitrary.rs); heapless
+/// Vec fields draw a symbolic length within capacity and fill
+/// element-by-element.
+fn arbitrary_impl(name: &str, fields: &[SField<'_>]) -> String {
+    let mut out = String::new();
+    out.push_str("#[cfg(kani)]\n");
+    out.push_str(&format!(
+        "impl kani::Arbitrary for {name} {{\n    fn any() -> Self {{\n        Self {{\n"
+    ));
+    for sf in fields {
+        let (fname, _, _) = sfield_decl(sf);
+        match sf {
+            SField::Rep(r) if r.all_escape.is_none() => {
+                out.push_str(&format!(
+                    "            {fname}: {{\n\
+                     \x20               let n: usize = kani::any();\n\
+                     \x20               kani::assume(n <= {});\n\
+                     \x20               let mut v = Vec::new();\n\
+                     \x20               let mut i = 0;\n\
+                     \x20               while i < n {{\n\
+                     \x20                   let _ = v.push(kani::any());\n\
+                     \x20                   i += 1;\n\
+                     \x20               }}\n\
+                     \x20               v\n\
+                     \x20           }},\n",
+                    r.max_const
+                ));
+            }
+            _ => out.push_str(&format!("            {fname}: kani::any(),\n")),
+        }
+    }
+    out.push_str("        }\n    }\n}\n\n");
+    out
+}
+
 /// Does any field anywhere use a fallible constructor?
 fn any_fallible(def: &MessageDef) -> bool {
     fn field_fallible(f: &Field) -> bool {
@@ -1120,6 +1157,10 @@ pub fn emit_message(def: &MessageDef) -> String {
         out.push_str(&format!("    pub {name}: {ty},\n"));
     }
     out.push_str("}\n\n");
+
+    if lt.is_empty() {
+        out.push_str(&arbitrary_impl(def.name, &fields));
+    }
 
     let impl_lt = if lt.is_empty() { "" } else { "<'_>" };
     out.push_str(&format!("impl {}{impl_lt} {{\n", def.name));
@@ -2433,6 +2474,17 @@ fn emit_enum_message(def: &MessageDef, vb: &VariantBody) -> String {
             vb.doc, vb.name, vb.ty
         ));
         out.push_str("}\n\n");
+
+        out.push_str("#[cfg(kani)]\n");
+        out.push_str(&format!(
+            "impl kani::Arbitrary for {} {{\n    fn any() -> Self {{\n        Self {{\n",
+            def.name
+        ));
+        for c in def.ctx {
+            out.push_str(&format!("            {}: kani::any(),\n", c.name));
+        }
+        out.push_str(&format!("            {}: kani::any(),\n", vb.name));
+        out.push_str("        }\n    }\n}\n\n");
     }
 
     out.push_str(&format!("impl {} {{\n", def.name));

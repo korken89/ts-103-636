@@ -44,6 +44,17 @@ pub struct RouteInfoParts {
     pub application_sequence_number: ApplicationSequenceNumber,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for RouteInfoParts {
+    fn any() -> Self {
+        Self {
+            sink_address: kani::any(),
+            route_cost: kani::any(),
+            application_sequence_number: kani::any(),
+        }
+    }
+}
+
 impl RouteInfoParts {
     /// Body length in bytes (always 6).
     #[must_use]

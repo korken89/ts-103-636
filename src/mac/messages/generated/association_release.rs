@@ -28,6 +28,13 @@ pub struct AssociationReleaseParts {
     pub cause: ReleaseCause,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for AssociationReleaseParts {
+    fn any() -> Self {
+        Self { cause: kani::any() }
+    }
+}
+
 impl AssociationReleaseParts {
     /// Body length in bytes (always 1).
     #[must_use]

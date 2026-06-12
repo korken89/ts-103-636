@@ -34,6 +34,17 @@ pub struct RadioDeviceStatusParts {
     pub duration: RadioDeviceStatusDuration,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for RadioDeviceStatusParts {
+    fn any() -> Self {
+        Self {
+            association_needed: kani::any(),
+            status: kani::any(),
+            duration: kani::any(),
+        }
+    }
+}
+
 impl RadioDeviceStatusParts {
     /// Body length in bytes (always 1).
     #[must_use]

@@ -96,6 +96,32 @@ pub struct AssociationRequestParts {
     pub ft_mode: Option<FtModeFields>,
 }
 
+#[cfg(kani)]
+impl kani::Arbitrary for AssociationRequestParts {
+    fn any() -> Self {
+        Self {
+            setup_cause: kani::any(),
+            power_const: kani::any(),
+            harq_processes_tx: kani::any(),
+            max_harq_re_tx: kani::any(),
+            harq_processes_rx: kani::any(),
+            max_harq_re_rx: kani::any(),
+            flow_ids: {
+                let n: usize = kani::any();
+                kani::assume(n <= MAX_REQUEST_FLOWS);
+                let mut v = Vec::new();
+                let mut i = 0;
+                while i < n {
+                    let _ = v.push(kani::any());
+                    i += 1;
+                }
+                v
+            },
+            ft_mode: kani::any(),
+        }
+    }
+}
+
 impl AssociationRequestParts {
     /// Number of bytes [`Self::serialize`] will write.
     #[must_use]
