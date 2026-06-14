@@ -31,7 +31,7 @@ mod tests {
         ];
         let parts = RdCapabilityShortParts {
             cb_mc: true,
-            harq_feedback_delay: HarqFeedbackDelay::new(4).unwrap(), // 4 subslots
+            harq_feedback_delay: HarqFeedbackDelay::try_from_u8(4).unwrap(), // 4 subslots
             dwa: true,
         };
         let mut buf = [0u8; 4];
@@ -44,7 +44,7 @@ mod tests {
     fn rd_capability_short_round_trip() {
         let parts = RdCapabilityShortParts {
             cb_mc: true,
-            harq_feedback_delay: HarqFeedbackDelay::new(3).unwrap(),
+            harq_feedback_delay: HarqFeedbackDelay::try_from_u8(3).unwrap(),
             dwa: false,
         };
         let mut buf = [0; 4];
@@ -73,7 +73,7 @@ mod tests {
     fn rd_capability_short_serialize_rejects_empty_buffer() {
         let parts = RdCapabilityShortParts {
             cb_mc: false,
-            harq_feedback_delay: HarqFeedbackDelay::new(0).unwrap(),
+            harq_feedback_delay: HarqFeedbackDelay::try_from_u8(0).unwrap(),
             dwa: false,
         };
         let mut buf = [0; 0];
@@ -84,7 +84,7 @@ mod tests {
     fn rd_capability_short_all_flags_set_round_trip() {
         let parts = RdCapabilityShortParts {
             cb_mc: true,
-            harq_feedback_delay: HarqFeedbackDelay::new(6).unwrap(),
+            harq_feedback_delay: HarqFeedbackDelay::try_from_u8(6).unwrap(),
             dwa: true,
         };
         let mut buf = [0; 4];
@@ -101,7 +101,7 @@ mod tests {
         // CB_MC=0, HARQ=0, DWA=1 -> B0 = 0x01
         let parts = RdCapabilityShortParts {
             cb_mc: false,
-            harq_feedback_delay: HarqFeedbackDelay::new(0).unwrap(),
+            harq_feedback_delay: HarqFeedbackDelay::try_from_u8(0).unwrap(),
             dwa: true,
         };
         let mut buf = [0; 4];
@@ -118,7 +118,7 @@ mod tests {
         // CB_MC=1, HARQ=0, DWA=0 -> B0 = 0x20
         let parts = RdCapabilityShortParts {
             cb_mc: true,
-            harq_feedback_delay: HarqFeedbackDelay::new(0).unwrap(),
+            harq_feedback_delay: HarqFeedbackDelay::try_from_u8(0).unwrap(),
             dwa: false,
         };
         let mut buf = [0; 4];
@@ -135,7 +135,7 @@ mod tests {
         // bit 0 = DWA. Verify each via a deliberately constructed value.
         let parts = RdCapabilityShortParts {
             cb_mc: true,
-            harq_feedback_delay: HarqFeedbackDelay::new(5).unwrap(),
+            harq_feedback_delay: HarqFeedbackDelay::try_from_u8(5).unwrap(),
             dwa: true,
         };
         let mut buf = [0; 4];

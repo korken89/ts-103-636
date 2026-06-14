@@ -84,7 +84,7 @@ impl GroupAssignmentParts<'_> {
         }
         let b0 = buffer[0];
         let single = b0 & 0x80 != 0;
-        let Some(group_id) = GroupId::new(b0 & 0x7F) else {
+        let Some(group_id) = GroupId::try_from_u8(b0 & 0x7F) else {
             return Err(ParsingError::ReservedValue);
         };
         let (_, rest) = buffer.split_at(1);

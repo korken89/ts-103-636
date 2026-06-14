@@ -79,14 +79,15 @@ impl PccType1 {
         }
         Ok(Self {
             packet_length_type: PacketLengthType::from_bit(((word >> 36) & 1) != 0),
-            packet_length: PacketLength::new(((word >> 32) & 0xF) as u8).expect("masked to 4 bits"),
-            short_network_id: NetworkId8::new(((word >> 24) & 0xFF) as u8)
-                .ok_or(ParsingError::ReservedValue)?,
-            transmitter_identity: ShortRdId::new(((word >> 8) & 0xFFFF) as u16)
-                .ok_or(ParsingError::ReservedValue)?,
-            transmit_power: TransmitPower::new(((word >> 4) & 0xF) as u8)
+            packet_length: PacketLength::try_from_u8(((word >> 32) & 0xF) as u8)
                 .expect("masked to 4 bits"),
-            df_mcs: Mcs::new((word & 0x7) as u8).expect("masked to 3 bits"),
+            short_network_id: NetworkId8::try_from_u8(((word >> 24) & 0xFF) as u8)
+                .ok_or(ParsingError::ReservedValue)?,
+            transmitter_identity: ShortRdId::try_from_u16(((word >> 8) & 0xFFFF) as u16)
+                .ok_or(ParsingError::ReservedValue)?,
+            transmit_power: TransmitPower::try_from_u8(((word >> 4) & 0xF) as u8)
+                .expect("masked to 4 bits"),
+            df_mcs: Mcs::try_from_u8((word & 0x7) as u8).expect("masked to 3 bits"),
         })
     }
 
@@ -166,16 +167,17 @@ impl PccType2F000 {
         }
         Ok(Self {
             packet_length_type: PacketLengthType::from_bit(((word >> 124) & 1) != 0),
-            packet_length: PacketLength::new(((word >> 120) & 0xF) as u8)
+            packet_length: PacketLength::try_from_u8(((word >> 120) & 0xF) as u8)
                 .expect("masked to 4 bits"),
-            short_network_id: NetworkId8::new(((word >> 112) & 0xFF) as u8)
+            short_network_id: NetworkId8::try_from_u8(((word >> 112) & 0xFF) as u8)
                 .ok_or(ParsingError::ReservedValue)?,
-            transmitter_identity: ShortRdId::new(((word >> 96) & 0xFFFF) as u16)
+            transmitter_identity: ShortRdId::try_from_u16(((word >> 96) & 0xFFFF) as u16)
                 .ok_or(ParsingError::ReservedValue)?,
-            transmit_power: TransmitPower::new(((word >> 92) & 0xF) as u8)
+            transmit_power: TransmitPower::try_from_u8(((word >> 92) & 0xF) as u8)
                 .expect("masked to 4 bits"),
-            df_mcs: Mcs::new(((word >> 88) & 0xF) as u8).ok_or(ParsingError::ReservedValue)?,
-            receiver_identity: ShortRdId::new(((word >> 72) & 0xFFFF) as u16)
+            df_mcs: Mcs::try_from_u8(((word >> 88) & 0xF) as u8)
+                .ok_or(ParsingError::ReservedValue)?,
+            receiver_identity: ShortRdId::try_from_u16(((word >> 72) & 0xFFFF) as u16)
                 .ok_or(ParsingError::ReservedValue)?,
             spatial_streams: ((word >> 70) & 0b11) as u8,
             df_redundancy_version: ((word >> 68) & 0b11) as u8,
@@ -255,16 +257,17 @@ impl PccType2F001 {
         // 6 reserved bits at PCC positions 58..=63 are ignored.
         Ok(Self {
             packet_length_type: PacketLengthType::from_bit(((word >> 124) & 1) != 0),
-            packet_length: PacketLength::new(((word >> 120) & 0xF) as u8)
+            packet_length: PacketLength::try_from_u8(((word >> 120) & 0xF) as u8)
                 .expect("masked to 4 bits"),
-            short_network_id: NetworkId8::new(((word >> 112) & 0xFF) as u8)
+            short_network_id: NetworkId8::try_from_u8(((word >> 112) & 0xFF) as u8)
                 .ok_or(ParsingError::ReservedValue)?,
-            transmitter_identity: ShortRdId::new(((word >> 96) & 0xFFFF) as u16)
+            transmitter_identity: ShortRdId::try_from_u16(((word >> 96) & 0xFFFF) as u16)
                 .ok_or(ParsingError::ReservedValue)?,
-            transmit_power: TransmitPower::new(((word >> 92) & 0xF) as u8)
+            transmit_power: TransmitPower::try_from_u8(((word >> 92) & 0xF) as u8)
                 .expect("masked to 4 bits"),
-            df_mcs: Mcs::new(((word >> 88) & 0xF) as u8).ok_or(ParsingError::ReservedValue)?,
-            receiver_identity: ShortRdId::new(((word >> 72) & 0xFFFF) as u16)
+            df_mcs: Mcs::try_from_u8(((word >> 88) & 0xF) as u8)
+                .ok_or(ParsingError::ReservedValue)?,
+            receiver_identity: ShortRdId::try_from_u16(((word >> 72) & 0xFFFF) as u16)
                 .ok_or(ParsingError::ReservedValue)?,
             spatial_streams: ((word >> 70) & 0b11) as u8,
             feedback: Feedback::try_from_raw(
@@ -411,11 +414,11 @@ mod tests {
     fn pcc_type1_round_trip() {
         let pcc = PccType1 {
             packet_length_type: PacketLengthType::Subslot,
-            packet_length: PacketLength::new(7).unwrap(),
-            short_network_id: NetworkId8::new(0xAB).unwrap(),
-            transmitter_identity: ShortRdId::new(0x1234).unwrap(),
+            packet_length: PacketLength::try_from_u8(7).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0xAB).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0x1234).unwrap(),
             transmit_power: TransmitPower::Dbm13,
-            df_mcs: Mcs::new(5).unwrap(),
+            df_mcs: Mcs::try_from_u8(5).unwrap(),
         };
         let bytes = pcc.to_bytes().unwrap();
         let parsed = PccType1::from_bytes(&bytes).unwrap();
@@ -427,11 +430,11 @@ mod tests {
         // Table 6.2.1-1: "The Receiver shall ignore this bit."
         let pcc = PccType1 {
             packet_length_type: PacketLengthType::Subslot,
-            packet_length: PacketLength::new(7).unwrap(),
-            short_network_id: NetworkId8::new(0xAB).unwrap(),
-            transmitter_identity: ShortRdId::new(0x1234).unwrap(),
+            packet_length: PacketLength::try_from_u8(7).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0xAB).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0x1234).unwrap(),
             transmit_power: TransmitPower::Dbm13,
-            df_mcs: Mcs::new(5).unwrap(),
+            df_mcs: Mcs::try_from_u8(5).unwrap(),
         };
         let mut bytes = pcc.to_bytes().unwrap();
         // Reserved = PCC bit 36 = bit 3 of the last byte.
@@ -444,11 +447,11 @@ mod tests {
     fn pcc_type1_rejects_mcs_out_of_3bit_range() {
         let pcc = PccType1 {
             packet_length_type: PacketLengthType::Subslot,
-            packet_length: PacketLength::new(0).unwrap(),
-            short_network_id: NetworkId8::new(0x01).unwrap(),
-            transmitter_identity: ShortRdId::new(0x0001).unwrap(),
+            packet_length: PacketLength::try_from_u8(0).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0x01).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0x0001).unwrap(),
             transmit_power: TransmitPower::Dbm0,
-            df_mcs: Mcs::new(8).unwrap(),
+            df_mcs: Mcs::try_from_u8(8).unwrap(),
         };
         assert!(pcc.to_bytes().is_err());
     }
@@ -469,21 +472,21 @@ mod tests {
     fn pcc_type2_f000_round_trip() {
         let pcc = PccType2F000 {
             packet_length_type: PacketLengthType::Slot,
-            packet_length: PacketLength::new(0).unwrap(),
-            short_network_id: NetworkId8::new(0x42).unwrap(),
-            transmitter_identity: ShortRdId::new(0xCAFE).unwrap(),
+            packet_length: PacketLength::try_from_u8(0).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0x42).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0xCAFE).unwrap(),
             transmit_power: TransmitPower::Dbm0,
-            df_mcs: Mcs::new(7).unwrap(),
+            df_mcs: Mcs::try_from_u8(7).unwrap(),
             receiver_identity: ShortRdId::BROADCAST,
             spatial_streams: 0,
             df_redundancy_version: 1,
             df_new_data_indication: true,
             df_harq_process_number: 3,
             feedback: Feedback::Format1 {
-                harq_process: HarqProcess::new(5).unwrap(),
+                harq_process: HarqProcess::try_from_u8(5).unwrap(),
                 ack: true,
                 buffer_status: BufferStatus::UpTo2048,
-                cqi: Cqi::Mcs(Mcs::new(11).unwrap()),
+                cqi: Cqi::Mcs(Mcs::try_from_u8(11).unwrap()),
             },
         };
         let bytes = pcc.to_bytes();
@@ -495,11 +498,11 @@ mod tests {
     fn pcc_type2_f001_round_trip() {
         let pcc = PccType2F001 {
             packet_length_type: PacketLengthType::Subslot,
-            packet_length: PacketLength::new(15).unwrap(),
-            short_network_id: NetworkId8::new(0x01).unwrap(),
-            transmitter_identity: ShortRdId::new(0x0001).unwrap(),
+            packet_length: PacketLength::try_from_u8(15).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0x01).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0x0001).unwrap(),
             transmit_power: TransmitPower::DbmNeg40,
-            df_mcs: Mcs::new(11).unwrap(),
+            df_mcs: Mcs::try_from_u8(11).unwrap(),
             receiver_identity: ShortRdId::BROADCAST,
             spatial_streams: 3,
             feedback: Feedback::None,
@@ -527,11 +530,11 @@ mod tests {
         ];
         let pcc = PccType1 {
             packet_length_type: PacketLengthType::Subslot,
-            packet_length: PacketLength::new(9).unwrap(),
-            short_network_id: NetworkId8::new(0xA5).unwrap(),
-            transmitter_identity: ShortRdId::new(0x0F3C).unwrap(),
+            packet_length: PacketLength::try_from_u8(9).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0xA5).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0x0F3C).unwrap(),
             transmit_power: TransmitPower::Dbm0,
-            df_mcs: Mcs::new(4).unwrap(),
+            df_mcs: Mcs::try_from_u8(4).unwrap(),
         };
         assert_eq!(pcc.to_bytes().unwrap(), GOLDEN);
         assert_eq!(PccType1::from_bytes(&GOLDEN).unwrap(), pcc);
@@ -560,21 +563,21 @@ mod tests {
         ];
         let pcc = PccType2F000 {
             packet_length_type: PacketLengthType::Slot,
-            packet_length: PacketLength::new(5).unwrap(),
-            short_network_id: NetworkId8::new(0x5A).unwrap(),
-            transmitter_identity: ShortRdId::new(0x1234).unwrap(),
+            packet_length: PacketLength::try_from_u8(5).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0x5A).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0x1234).unwrap(),
             transmit_power: TransmitPower::Dbm13,
-            df_mcs: Mcs::new(7).unwrap(),
-            receiver_identity: ShortRdId::new(0xABCD).unwrap(),
+            df_mcs: Mcs::try_from_u8(7).unwrap(),
+            receiver_identity: ShortRdId::try_from_u16(0xABCD).unwrap(),
             spatial_streams: 0b10,
             df_redundancy_version: 0b11,
             df_new_data_indication: true,
             df_harq_process_number: 0b101,
             feedback: Feedback::Format1 {
-                harq_process: HarqProcess::new(6).unwrap(),
+                harq_process: HarqProcess::try_from_u8(6).unwrap(),
                 ack: true,
                 buffer_status: BufferStatus::UpTo128,
-                cqi: Cqi::Mcs(Mcs::new(9).unwrap()),
+                cqi: Cqi::Mcs(Mcs::try_from_u8(9).unwrap()),
             },
         };
         assert_eq!(pcc.to_bytes(), GOLDEN);
@@ -604,18 +607,18 @@ mod tests {
         ];
         let pcc = PccType2F001 {
             packet_length_type: PacketLengthType::Slot,
-            packet_length: PacketLength::new(5).unwrap(),
-            short_network_id: NetworkId8::new(0x5A).unwrap(),
-            transmitter_identity: ShortRdId::new(0x1234).unwrap(),
+            packet_length: PacketLength::try_from_u8(5).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0x5A).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0x1234).unwrap(),
             transmit_power: TransmitPower::Dbm13,
-            df_mcs: Mcs::new(7).unwrap(),
-            receiver_identity: ShortRdId::new(0xABCD).unwrap(),
+            df_mcs: Mcs::try_from_u8(7).unwrap(),
+            receiver_identity: ShortRdId::try_from_u16(0xABCD).unwrap(),
             spatial_streams: 0b10,
             feedback: Feedback::Format1 {
-                harq_process: HarqProcess::new(6).unwrap(),
+                harq_process: HarqProcess::try_from_u8(6).unwrap(),
                 ack: true,
                 buffer_status: BufferStatus::UpTo128,
-                cqi: Cqi::Mcs(Mcs::new(9).unwrap()),
+                cqi: Cqi::Mcs(Mcs::try_from_u8(9).unwrap()),
             },
         };
         assert_eq!(pcc.to_bytes(), GOLDEN);
@@ -650,11 +653,11 @@ mod tests {
         // Instead test with concrete values and check byte positions.
         let pcc = PccType1 {
             packet_length_type: PacketLengthType::Slot, // bit 3 set
-            packet_length: PacketLength::new(0xA).unwrap(), // bits 4..=7 = 0xA
-            short_network_id: NetworkId8::new(0x01).unwrap(),
-            transmitter_identity: ShortRdId::new(0x0001).unwrap(),
+            packet_length: PacketLength::try_from_u8(0xA).unwrap(), // bits 4..=7 = 0xA
+            short_network_id: NetworkId8::try_from_u8(0x01).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0x0001).unwrap(),
             transmit_power: TransmitPower::Dbm0,
-            df_mcs: Mcs::new(0).unwrap(),
+            df_mcs: Mcs::try_from_u8(0).unwrap(),
         };
         let bytes = pcc.to_bytes().unwrap();
         // byte 0: 000_1_1010 = 0b0001_1010 = 0x1A
@@ -665,11 +668,11 @@ mod tests {
     fn pcc_enum_dispatches_type1() {
         let inner = PccType1 {
             packet_length_type: PacketLengthType::Subslot,
-            packet_length: PacketLength::new(0).unwrap(),
-            short_network_id: NetworkId8::new(0x01).unwrap(),
-            transmitter_identity: ShortRdId::new(0x0001).unwrap(),
+            packet_length: PacketLength::try_from_u8(0).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0x01).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0x0001).unwrap(),
             transmit_power: TransmitPower::DbmNeg40,
-            df_mcs: Mcs::new(0).unwrap(),
+            df_mcs: Mcs::try_from_u8(0).unwrap(),
         };
         let pcc = Pcc::Type1(inner);
         let bytes = pcc.to_bytes().unwrap();
@@ -682,11 +685,11 @@ mod tests {
     fn pcc_enum_dispatches_type2_f000() {
         let inner = PccType2F000 {
             packet_length_type: PacketLengthType::Slot,
-            packet_length: PacketLength::new(1).unwrap(),
-            short_network_id: NetworkId8::new(0x42).unwrap(),
-            transmitter_identity: ShortRdId::new(0xCAFE).unwrap(),
+            packet_length: PacketLength::try_from_u8(1).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0x42).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0xCAFE).unwrap(),
             transmit_power: TransmitPower::Dbm0,
-            df_mcs: Mcs::new(4).unwrap(),
+            df_mcs: Mcs::try_from_u8(4).unwrap(),
             receiver_identity: ShortRdId::BROADCAST,
             spatial_streams: 1,
             df_redundancy_version: 0,
@@ -705,18 +708,18 @@ mod tests {
     fn pcc_enum_dispatches_type2_f001() {
         let inner = PccType2F001 {
             packet_length_type: PacketLengthType::Subslot,
-            packet_length: PacketLength::new(2).unwrap(),
-            short_network_id: NetworkId8::new(0xAB).unwrap(),
-            transmitter_identity: ShortRdId::new(0x1234).unwrap(),
+            packet_length: PacketLength::try_from_u8(2).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0xAB).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0x1234).unwrap(),
             transmit_power: TransmitPower::Dbm13,
-            df_mcs: Mcs::new(5).unwrap(),
-            receiver_identity: ShortRdId::new(0x5678).unwrap(),
+            df_mcs: Mcs::try_from_u8(5).unwrap(),
+            receiver_identity: ShortRdId::try_from_u16(0x5678).unwrap(),
             spatial_streams: 0,
             feedback: Feedback::Format2 {
-                codebook_index: CodebookIndex3::new(0).unwrap(),
+                codebook_index: CodebookIndex3::try_from_u8(0).unwrap(),
                 dual_layer: true,
                 buffer_status: BufferStatus::UpTo32,
-                cqi: Cqi::Mcs(Mcs::new(2).unwrap()),
+                cqi: Cqi::Mcs(Mcs::try_from_u8(2).unwrap()),
             },
         };
         let pcc = Pcc::Type2F001(inner);
@@ -749,20 +752,20 @@ mod tests {
     fn pcc_enum_size() {
         let t1 = Pcc::Type1(PccType1 {
             packet_length_type: PacketLengthType::Subslot,
-            packet_length: PacketLength::new(0).unwrap(),
-            short_network_id: NetworkId8::new(0x01).unwrap(),
-            transmitter_identity: ShortRdId::new(0x0001).unwrap(),
+            packet_length: PacketLength::try_from_u8(0).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0x01).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0x0001).unwrap(),
             transmit_power: TransmitPower::DbmNeg40,
-            df_mcs: Mcs::new(0).unwrap(),
+            df_mcs: Mcs::try_from_u8(0).unwrap(),
         });
         assert_eq!(t1.size(), 5);
         let t2 = Pcc::Type2F000(PccType2F000 {
             packet_length_type: PacketLengthType::Slot,
-            packet_length: PacketLength::new(0).unwrap(),
-            short_network_id: NetworkId8::new(0x01).unwrap(),
-            transmitter_identity: ShortRdId::new(0x0001).unwrap(),
+            packet_length: PacketLength::try_from_u8(0).unwrap(),
+            short_network_id: NetworkId8::try_from_u8(0x01).unwrap(),
+            transmitter_identity: ShortRdId::try_from_u16(0x0001).unwrap(),
             transmit_power: TransmitPower::DbmNeg40,
-            df_mcs: Mcs::new(0).unwrap(),
+            df_mcs: Mcs::try_from_u8(0).unwrap(),
             receiver_identity: ShortRdId::BROADCAST,
             spatial_streams: 0,
             df_redundancy_version: 0,

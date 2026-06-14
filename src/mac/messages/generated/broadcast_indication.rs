@@ -173,7 +173,7 @@ impl BroadcastIndicationParts {
                 buffer[pos + 3],
             ]);
             pos += 4;
-            let Some(v) = LongRdId::new(raw) else {
+            let Some(v) = LongRdId::try_from_u32(raw) else {
                 return Err(ParsingError::ReservedValue);
             };
             BroadcastRdId::Long(v)
@@ -183,7 +183,7 @@ impl BroadcastIndicationParts {
             }
             let raw = u16::from_be_bytes([buffer[pos], buffer[pos + 1]]);
             pos += 2;
-            let Some(v) = ShortRdId::new(raw) else {
+            let Some(v) = ShortRdId::try_from_u16(raw) else {
                 return Err(ParsingError::ReservedValue);
             };
             BroadcastRdId::Short(v)

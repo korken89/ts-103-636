@@ -30,7 +30,7 @@ pub fn def() -> MessageDef {
                 bits: 4,
                 ty: Ty::Fallible {
                     ty: "HarqFeedbackDelay",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "subslots",
                 },
                 doc: "HARQ feedback delay in subslots (0..=6; 7..=15 reserved).",

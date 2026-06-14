@@ -248,7 +248,7 @@ impl NeighbouringParts {
             if buffer.len() < pos + 4 {
                 return Err(ParsingError::Truncated);
             }
-            let Some(v) = LongRdId::new(u32::from_be_bytes([
+            let Some(v) = LongRdId::try_from_u32(u32::from_be_bytes([
                 buffer[pos],
                 buffer[pos + 1],
                 buffer[pos + 2],
@@ -265,9 +265,9 @@ impl NeighbouringParts {
             if buffer.len() < pos + 2 {
                 return Err(ParsingError::Truncated);
             }
-            let Some(v) =
-                AbsoluteChannel::new(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF)
-            else {
+            let Some(v) = AbsoluteChannel::try_from_u16(
+                u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF,
+            ) else {
                 return Err(ParsingError::ReservedValue);
             };
             pos += 2;

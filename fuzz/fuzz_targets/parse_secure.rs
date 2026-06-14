@@ -13,8 +13,8 @@ use ts_103_636::prelude::*;
 fuzz_target!(|data: &[u8]| {
     let mut crypto = SoftwareCrypto;
     let ctx = SecurityContext {
-        tx: LongRdId::new(0x1111_1111).unwrap(),
-        rx: LongRdId::new(0x2222_2222).unwrap(),
+        tx: LongRdId::try_from_u32(0x1111_1111).unwrap(),
+        rx: LongRdId::try_from_u32(0x2222_2222).unwrap(),
         hpc: 0x1234_5678,
     };
     let keys = [0; 16];

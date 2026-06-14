@@ -55,7 +55,7 @@ impl KeyIndex {
     /// Construct from a 2-bit value. Returns `None` if `value > 3`.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value & !0x03 != 0 {
             return None;
         }

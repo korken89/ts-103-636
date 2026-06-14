@@ -211,7 +211,7 @@ impl NetworkBeaconParts {
             return Err(ParsingError::ReservedValue);
         };
         let Some(next_cluster_channel) =
-            AbsoluteChannel::new(u16::from_be_bytes([buffer[2], buffer[3]]) & 0x1FFF)
+            AbsoluteChannel::try_from_u16(u16::from_be_bytes([buffer[2], buffer[3]]) & 0x1FFF)
         else {
             return Err(ParsingError::ReservedValue);
         };
@@ -221,7 +221,7 @@ impl NetworkBeaconParts {
             if buffer.len() < pos + 1 {
                 return Err(ParsingError::Truncated);
             }
-            let Some(v) = TransmitPower::new(buffer[pos] & 0x0F) else {
+            let Some(v) = TransmitPower::try_from_u8(buffer[pos] & 0x0F) else {
                 return Err(ParsingError::ReservedValue);
             };
             pos += 1;
@@ -233,9 +233,9 @@ impl NetworkBeaconParts {
             if buffer.len() < pos + 2 {
                 return Err(ParsingError::Truncated);
             }
-            let Some(v) =
-                AbsoluteChannel::new(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF)
-            else {
+            let Some(v) = AbsoluteChannel::try_from_u16(
+                u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF,
+            ) else {
                 return Err(ParsingError::ReservedValue);
             };
             pos += 2;
@@ -248,9 +248,9 @@ impl NetworkBeaconParts {
         }
         let mut additional_channels = Vec::new();
         for _ in 0..additional_channels_count {
-            let Some(v) =
-                AbsoluteChannel::new(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF)
-            else {
+            let Some(v) = AbsoluteChannel::try_from_u16(
+                u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF,
+            ) else {
                 return Err(ParsingError::ReservedValue);
             };
             pos += 2;

@@ -587,7 +587,7 @@ impl<'a> MacPduBuilder<'a, NoHeader> {
             pos: 0,
             cipher_start: 0,
             hpc_offset: 0,
-            psn: const { SequenceNumber::new(0).expect("0 is a valid SequenceNumber") },
+            psn: const { SequenceNumber::try_from_u16(0).expect("0 is a valid SequenceNumber") },
             _state: PhantomData,
         }
     }
@@ -631,7 +631,7 @@ impl<'a> MacPduBuilder<'a, NoHeader> {
         self.write_header_then::<S>(
             constants::mac_header_type::BEACON,
             &common,
-            const { SequenceNumber::new(0).expect("0 is a valid SequenceNumber") },
+            const { SequenceNumber::try_from_u16(0).expect("0 is a valid SequenceNumber") },
         )
     }
 
@@ -1021,8 +1021,8 @@ mod tests {
         // builder produces the same bytes as a hand-constructed Beacon
         // common header.
         let mut buf = [0; 64];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let b = MacPduBuilder::new(&mut buf)
             .push_beacon(NotUsed, net, tx)
             .unwrap();
@@ -1032,8 +1032,8 @@ mod tests {
     #[test]
     fn builder_push_beacon_round_trips_typed_args() {
         let mut buf = [0; 64];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let b = MacPduBuilder::new(&mut buf)
             .push_beacon(NotUsed, net, tx)
             .unwrap();
@@ -1053,9 +1053,9 @@ mod tests {
     #[test]
     fn builder_push_unicast() {
         let mut buf = [0; 64];
-        let seq = SequenceNumber::new(0xABC).unwrap();
-        let rx = LongRdId::new(0x11223344).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let seq = SequenceNumber::try_from_u16(0xABC).unwrap();
+        let rx = LongRdId::try_from_u32(0x11223344).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let b = MacPduBuilder::new(&mut buf)
             .push_unicast(NotUsed, true, seq, rx, tx)
             .unwrap();
@@ -1076,8 +1076,8 @@ mod tests {
     #[test]
     fn builder_appends_ie() {
         let mut buf = [0; 64];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let payload: &[u8] = &[1, 2, 3, 4, 5];
         let ie =
             InformationElement::new_6bit_with_length(IEType6bit::ClusterBeacon, payload).unwrap();
@@ -1104,8 +1104,8 @@ mod tests {
         // bare finish_without_security would.
         let mut buf_a = [0; 32];
         let mut buf_b = [0; 32];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let bare_len = MacPduBuilder::new(&mut buf_a)
             .push_beacon(NotUsed, net, tx)
             .unwrap()
@@ -1123,8 +1123,8 @@ mod tests {
     #[test]
     fn builder_finish_padded_one_byte_uses_short_padding() {
         let mut buf = [0; 32];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let bare_len = 8; // 1 header byte + 7 beacon header bytes
         let pdu = MacPduBuilder::new(&mut buf)
             .push_beacon(NotUsed, net, tx)
@@ -1139,8 +1139,8 @@ mod tests {
     #[test]
     fn builder_finish_padded_two_bytes_uses_short_padding_with_payload() {
         let mut buf = [0; 32];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let bare_len = 8;
         let pdu = MacPduBuilder::new(&mut buf)
             .push_beacon(NotUsed, net, tx)
@@ -1156,8 +1156,8 @@ mod tests {
     #[test]
     fn builder_finish_padded_large_gap_uses_8bit_length_padding() {
         let mut buf = [0; 64];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let bare_len = 8;
         let target = bare_len + 10;
         let pdu = MacPduBuilder::new(&mut buf)
@@ -1188,8 +1188,8 @@ mod tests {
         // gap = 3 is the smallest gap on the 8-bit-length branch:
         // 0x40, length 1, one zero byte.
         let mut buf = [0; 16];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let bare_len = 8;
         let pdu = MacPduBuilder::new(&mut buf)
             .push_beacon(NotUsed, net, tx)
@@ -1215,8 +1215,8 @@ mod tests {
     #[test]
     fn builder_finish_padded_rejects_smaller_than_current() {
         let mut buf = [0; 32];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         // Beacon header is 8 bytes already; ask for 4.
         assert!(
             MacPduBuilder::new(&mut buf)
@@ -1235,12 +1235,12 @@ mod tests {
         use crate::types::{HarqFeedbackDelay, IEType5bitLen1};
         let body = RdCapabilityShortParts {
             cb_mc: true,
-            harq_feedback_delay: HarqFeedbackDelay::new(3).unwrap(),
+            harq_feedback_delay: HarqFeedbackDelay::try_from_u8(3).unwrap(),
             dwa: false,
         };
         let mut buf = [0; 64];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let written = MacPduBuilder::new(&mut buf)
             .push_beacon(NotUsed, net, tx)
             .unwrap()
@@ -1275,8 +1275,8 @@ mod tests {
             kind: ResourceAllocationKind::ReleaseAll,
         };
         let mut buf = [0; 64];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let written = MacPduBuilder::new(&mut buf)
             .push_beacon(NotUsed, net, tx)
             .unwrap()
@@ -1302,16 +1302,16 @@ mod tests {
         use crate::types::{GroupId, ResourceTag};
         let tags = [GroupResourceTagEntry::new(
             false,
-            ResourceTag::new(0x20).unwrap(),
+            ResourceTag::try_from_u8(0x20).unwrap(),
         )];
         let body = GroupAssignmentParts {
             single: true,
-            group_id: GroupId::new(0x01).unwrap(),
+            group_id: GroupId::try_from_u8(0x01).unwrap(),
             tags: &tags,
         };
         let mut buf = [0; 64];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let written = MacPduBuilder::new(&mut buf)
             .push_beacon(NotUsed, net, tx)
             .unwrap()
@@ -1334,8 +1334,8 @@ mod tests {
         use crate::mac::messages::JoiningInformationParts;
         use crate::types::EndpointProtocol;
         let mut buf = [0; 64];
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         let endpoints =
             heapless::Vec::from_slice(&[EndpointProtocol(0x1111), EndpointProtocol(0x2222)])
                 .unwrap();
@@ -1364,8 +1364,8 @@ mod tests {
     #[test]
     fn builder_buffer_full_on_header() {
         let mut buf = [0; 5]; // too small for beacon (8 bytes)
-        let net = NetworkId24::new(0x123456).unwrap();
-        let tx = LongRdId::new(0xAABBCCDD).unwrap();
+        let net = NetworkId24::try_from_u32(0x123456).unwrap();
+        let tx = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
         assert!(
             MacPduBuilder::new(&mut buf)
                 .push_beacon(NotUsed, net, tx)
@@ -1382,9 +1382,9 @@ mod tests {
                 .push_unicast(
                     NotUsed,
                     false,
-                    SequenceNumber::new(1).unwrap(),
-                    LongRdId::new(0xCAFEBABE).unwrap(),
-                    LongRdId::new(0xDEADBEEF).unwrap(),
+                    SequenceNumber::try_from_u16(1).unwrap(),
+                    LongRdId::try_from_u32(0xCAFEBABE).unwrap(),
+                    LongRdId::try_from_u32(0xDEADBEEF).unwrap(),
                 )
                 .unwrap();
             b.finish_without_security().len()
@@ -1478,10 +1478,10 @@ mod tests {
             let mut crypto = SoftwareCrypto;
             let int_key = [0x11u8; 16];
             let cipher_key = [0x22u8; 16];
-            let psn = SequenceNumber::new(7).unwrap();
+            let psn = SequenceNumber::try_from_u16(7).unwrap();
             let ctx = SecurityContext {
-                tx: LongRdId::new(0xCAFEBABE).unwrap(),
-                rx: LongRdId::new(0xDEADBEEF).unwrap(),
+                tx: LongRdId::try_from_u32(0xCAFEBABE).unwrap(),
+                rx: LongRdId::try_from_u32(0xDEADBEEF).unwrap(),
                 hpc: 0x1234,
             };
 
@@ -1532,10 +1532,10 @@ mod tests {
             let mut crypto = SoftwareCrypto;
             let int_key = [0x77u8; 16];
             let cipher_key = [0x88u8; 16];
-            let psn = SequenceNumber::new(1).unwrap();
+            let psn = SequenceNumber::try_from_u16(1).unwrap();
             let ctx = SecurityContext {
-                tx: LongRdId::new(0xAABBCCDD).unwrap(),
-                rx: LongRdId::new(0x11223344).unwrap(),
+                tx: LongRdId::try_from_u32(0xAABBCCDD).unwrap(),
+                rx: LongRdId::try_from_u32(0x11223344).unwrap(),
                 hpc: 0x1000,
             };
             let mut tx_buf = [0; 128];
@@ -1575,13 +1575,13 @@ mod tests {
             let int_key = [0x33u8; 16];
             let cipher_key = [0x44u8; 16];
             let ctx = SecurityContext {
-                tx: LongRdId::new(0x01020304).unwrap(),
+                tx: LongRdId::try_from_u32(0x01020304).unwrap(),
                 rx: LongRdId::BROADCAST,
                 hpc: 0xABCD_1234,
             };
 
             let mut tx_buf = [0; 128];
-            let net = NetworkId24::new(0x123456).unwrap();
+            let net = NetworkId24::try_from_u32(0x123456).unwrap();
             let payload_ie = InformationElement::new_6bit_with_length(
                 IEType6bit::ClusterBeacon,
                 &[1, 2, 3, 4, 5],
@@ -1592,7 +1592,7 @@ mod tests {
                 .unwrap()
                 .push_mac_security_info(
                     SecurityVersion::Mode1,
-                    KeyIndex::new(0).unwrap(),
+                    KeyIndex::try_from_u8(0).unwrap(),
                     SecurityIvType::OneTimeHpc,
                 )
                 .unwrap()
@@ -1646,13 +1646,17 @@ mod tests {
             let mut crypto = SoftwareCrypto;
             let keys = [0; 16];
             let ctx = SecurityContext {
-                tx: LongRdId::new(1).unwrap(),
-                rx: LongRdId::new(2).unwrap(),
+                tx: LongRdId::try_from_u32(1).unwrap(),
+                rx: LongRdId::try_from_u32(2).unwrap(),
                 hpc: 0,
             };
             let mut buf = [0; 64];
             let len = MacPduBuilder::new(&mut buf)
-                .push_beacon(NotUsed, NetworkId24::new(0x123456).unwrap(), ctx.tx)
+                .push_beacon(
+                    NotUsed,
+                    NetworkId24::try_from_u32(0x123456).unwrap(),
+                    ctx.tx,
+                )
                 .unwrap()
                 .finish_without_security()
                 .len();
@@ -1667,8 +1671,8 @@ mod tests {
             use crate::security::MacSecurityError;
 
             let ctx = SecurityContext {
-                tx: LongRdId::new(0x11111111).unwrap(),
-                rx: LongRdId::new(0x22222222).unwrap(),
+                tx: LongRdId::try_from_u32(0x11111111).unwrap(),
+                rx: LongRdId::try_from_u32(0x22222222).unwrap(),
                 hpc: 0,
             };
             let keys = [0; 16];
@@ -1677,7 +1681,11 @@ mod tests {
             let mut crypto = NoCrypto;
             let mut buf = [0; 64];
             let len = MacPduBuilder::new(&mut buf)
-                .push_beacon(NotUsed, NetworkId24::new(0x123456).unwrap(), ctx.tx)
+                .push_beacon(
+                    NotUsed,
+                    NetworkId24::try_from_u32(0x123456).unwrap(),
+                    ctx.tx,
+                )
                 .unwrap()
                 .finish_without_security()
                 .len();
@@ -1687,7 +1695,7 @@ mod tests {
             // Secured PDU: rejected with a Crypto error, not parsed.
             let mut soft = SoftwareCrypto;
             let mut tx_buf = [0; 64];
-            let psn = SequenceNumber::new(3).unwrap();
+            let psn = SequenceNumber::try_from_u16(3).unwrap();
             let len = MacPduBuilder::new(&mut tx_buf)
                 .push_unicast(UsedNoIe, false, psn, ctx.rx, ctx.tx)
                 .unwrap()
@@ -1705,8 +1713,8 @@ mod tests {
             let int_key = [0x55u8; 16];
             let cipher_key = [0x66u8; 16];
             let ctx = SecurityContext {
-                tx: LongRdId::new(0x11111111).unwrap(),
-                rx: LongRdId::new(0x22222222).unwrap(),
+                tx: LongRdId::try_from_u32(0x11111111).unwrap(),
+                rx: LongRdId::try_from_u32(0x22222222).unwrap(),
                 hpc: 1,
             };
 
@@ -1716,7 +1724,7 @@ mod tests {
                     .push_unicast(
                         UsedNoIe,
                         false,
-                        const { SequenceNumber::new(0).unwrap() },
+                        const { SequenceNumber::try_from_u16(0).unwrap() },
                         ctx.rx,
                         ctx.tx,
                     )

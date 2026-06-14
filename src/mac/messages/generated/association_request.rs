@@ -220,16 +220,16 @@ impl AssociationRequestParts {
         } else {
             PowerConst::Constrained
         };
-        let Some(harq_processes_tx) = HarqProcesses::new(b2 >> 5) else {
+        let Some(harq_processes_tx) = HarqProcesses::try_from_u8(b2 >> 5) else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(max_harq_re_tx) = MaxHarqReTx::new(b2 & 0x1F) else {
+        let Some(max_harq_re_tx) = MaxHarqReTx::try_from_u8(b2 & 0x1F) else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(harq_processes_rx) = HarqProcesses::new(b3 >> 5) else {
+        let Some(harq_processes_rx) = HarqProcesses::try_from_u8(b3 >> 5) else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(max_harq_re_rx) = MaxHarqReTx::new(b3 & 0x1F) else {
+        let Some(max_harq_re_rx) = MaxHarqReTx::try_from_u8(b3 & 0x1F) else {
             return Err(ParsingError::ReservedValue);
         };
         let mut pos = 4;
@@ -238,7 +238,7 @@ impl AssociationRequestParts {
         }
         let mut flow_ids = Vec::new();
         for _ in 0..flow_ids_count {
-            let Some(v) = FlowId::new(buffer[pos] & 0x3F) else {
+            let Some(v) = FlowId::try_from_u8(buffer[pos] & 0x3F) else {
                 return Err(ParsingError::ReservedValue);
             };
             pos += 1;
@@ -258,7 +258,7 @@ impl AssociationRequestParts {
             else {
                 return Err(ParsingError::ReservedValue);
             };
-            let Some(next_cluster_channel) = AbsoluteChannel::new(
+            let Some(next_cluster_channel) = AbsoluteChannel::try_from_u16(
                 u16::from_be_bytes([buffer[pos + 1], buffer[pos + 2]]) & 0x1FFF,
             ) else {
                 return Err(ParsingError::ReservedValue);
@@ -274,7 +274,7 @@ impl AssociationRequestParts {
                 if buffer.len() < pos + 2 {
                     return Err(ParsingError::Truncated);
                 }
-                let Some(v) = AbsoluteChannel::new(
+                let Some(v) = AbsoluteChannel::try_from_u16(
                     u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF,
                 ) else {
                     return Err(ParsingError::ReservedValue);

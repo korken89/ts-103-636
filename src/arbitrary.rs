@@ -10,9 +10,10 @@
 //! public API".
 //!
 //! Three shapes:
-//! - `arb_via!`: fallible one-raw-value constructor (`new` /
-//!   `try_from_u8` returning `Option`); draw a symbolic raw and
-//!   assume the constructor accepts it.
+//! - `arb_via!`: fallible one-raw-value constructor
+//!   (`try_from_u8` / `try_from_u16` / `try_from_u32` returning
+//!   `Option`); draw a symbolic raw and assume the constructor
+//!   accepts it.
 //! - `arb_raw!`: transparent newtype over a full-range integer with a
 //!   `pub` field; every representation is constructible.
 //! - `arb_fields!`: composite with all-`pub` fields, built
@@ -74,15 +75,15 @@ macro_rules! arb_fields {
 
 // Exemplars; the sweep below this line covers every field type used
 // by the generated Parts structs and their composite support types.
-arb_via!(Mcs, u8, Mcs::new);
+arb_via!(Mcs, u8, Mcs::try_from_u8);
 arb_raw!(LoadPercentage);
 
 // types::association
 arb_via!(DlcServiceType, u8, DlcServiceType::try_from_u8);
-arb_via!(HarqFeedbackDelay, u8, HarqFeedbackDelay::new);
-arb_via!(HarqProcesses, u8, HarqProcesses::new);
+arb_via!(HarqFeedbackDelay, u8, HarqFeedbackDelay::try_from_u8);
+arb_via!(HarqProcesses, u8, HarqProcesses::try_from_u8);
 arb_via!(MacSecuritySupport, u8, MacSecuritySupport::try_from_u8);
-arb_via!(MaxHarqReTx, u8, MaxHarqReTx::new);
+arb_via!(MaxHarqReTx, u8, MaxHarqReTx::try_from_u8);
 arb_via!(OperatingModes, u8, OperatingModes::try_from_u8);
 arb_via!(Release, u8, Release::try_from_u8);
 arb_via!(ReleaseCause, u8, ReleaseCause::try_from_u8);
@@ -92,10 +93,10 @@ arb_via!(SetupCause, u8, SetupCause::try_from_u8);
 
 // types::beacon
 arb_via!(ClusterBeaconPeriod, u8, ClusterBeaconPeriod::try_from_u8);
-arb_via!(CountToTrigger, u8, CountToTrigger::new);
+arb_via!(CountToTrigger, u8, CountToTrigger::try_from_u8);
 arb_via!(NetworkBeaconPeriod, u8, NetworkBeaconPeriod::try_from_u8);
 arb_raw!(Sfn);
-arb_via!(Quality, u8, Quality::new);
+arb_via!(Quality, u8, Quality::try_from_u8);
 
 impl kani::Arbitrary for PowerConst {
     fn any() -> Self {
@@ -108,12 +109,12 @@ impl kani::Arbitrary for PowerConst {
 }
 
 // types::identifiers
-arb_via!(LongRdId, u32, LongRdId::new);
-arb_via!(NetworkId24, u32, NetworkId24::new);
-arb_via!(ShortRdId, u16, ShortRdId::new);
+arb_via!(LongRdId, u32, LongRdId::try_from_u32);
+arb_via!(NetworkId24, u32, NetworkId24::try_from_u32);
+arb_via!(ShortRdId, u16, ShortRdId::try_from_u16);
 
 // types::mac_frame
-arb_via!(SequenceNumber, u16, SequenceNumber::new);
+arb_via!(SequenceNumber, u16, SequenceNumber::try_from_u16);
 impl kani::Arbitrary for PacketLengthType {
     fn any() -> Self {
         PacketLengthType::from_bit(kani::any())
@@ -121,7 +122,7 @@ impl kani::Arbitrary for PacketLengthType {
 }
 
 // types::mac_security
-arb_via!(KeyIndex, u8, KeyIndex::new);
+arb_via!(KeyIndex, u8, KeyIndex::try_from_u8);
 arb_via!(SecurityIvType, u8, SecurityIvType::try_from_u8);
 arb_via!(SecurityVersion, u8, SecurityVersion::try_from_u8);
 
@@ -150,8 +151,8 @@ arb_raw!(SnrMeasurement);
 arb_via!(UlPeriod, u8, UlPeriod::try_from_u8);
 
 // types::phy
-arb_via!(AbsoluteChannel, u16, AbsoluteChannel::new);
-arb_via!(Mu, u8, Mu::new);
+arb_via!(AbsoluteChannel, u16, AbsoluteChannel::try_from_u16);
+arb_via!(Mu, u8, Mu::try_from_u8);
 arb_via!(NumHarqProcesses, u8, NumHarqProcesses::try_from_u8);
 arb_via!(Nss, u8, Nss::try_from_u8);
 arb_via!(RdClassBeta, u8, RdClassBeta::try_from_u8);
@@ -159,31 +160,31 @@ arb_via!(RdClassMu, u8, RdClassMu::try_from_u8);
 arb_via!(RdPowerClass, u8, RdPowerClass::try_from_u8);
 arb_via!(RxGain, u8, RxGain::try_from_u8);
 arb_via!(SoftBufferSize, u8, SoftBufferSize::try_from_u8);
-arb_via!(TransmitPower, u8, TransmitPower::new);
+arb_via!(TransmitPower, u8, TransmitPower::try_from_u8);
 
 // types::resource
-arb_via!(Cwsig, u8, Cwsig::new);
+arb_via!(Cwsig, u8, Cwsig::try_from_u8);
 arb_via!(
     DectScheduledResourceFailure,
     u8,
     DectScheduledResourceFailure::try_from_u8
 );
-arb_via!(MaxRachLength, u8, MaxRachLength::new);
-arb_via!(RaLength, u8, RaLength::new);
+arb_via!(MaxRachLength, u8, MaxRachLength::try_from_u8);
+arb_via!(RaLength, u8, RaLength::try_from_u8);
 arb_via!(RachRepeatMode, u8, RachRepeatMode::try_from_u8);
 arb_via!(RepeatMode, u8, RepeatMode::try_from_u8);
-arb_via!(Repetition, u8, Repetition::new);
-arb_via!(ResponseWindow, u8, ResponseWindow::new);
+arb_via!(Repetition, u8, Repetition::try_from_u8);
+arb_via!(ResponseWindow, u8, ResponseWindow::try_from_u8);
 arb_raw!(Validity);
 
 // types::routing_flow
 arb_raw!(ApplicationSequenceNumber);
-arb_via!(FlowEntry, u8, FlowEntry::try_from_raw);
-arb_via!(FlowId, u8, FlowId::new);
+arb_via!(FlowEntry, u8, FlowEntry::try_from_u8);
+arb_via!(FlowId, u8, FlowId::try_from_u8);
 arb_via!(RadioResourceChange, u8, RadioResourceChange::try_from_u8);
-arb_via!(GroupId, u8, GroupId::new);
-arb_via!(Hop, u8, Hop::new);
-arb_via!(ResourceTag, u8, ResourceTag::new);
+arb_via!(GroupId, u8, GroupId::try_from_u8);
+arb_via!(Hop, u8, Hop::try_from_u8);
+arb_via!(ResourceTag, u8, ResourceTag::try_from_u8);
 arb_raw!(RouteCost);
 arb_via!(
     SourceRoutingValidityTimer,

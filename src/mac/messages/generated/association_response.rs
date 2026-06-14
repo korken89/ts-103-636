@@ -185,16 +185,19 @@ impl AssociationResponseParts {
                     if buffer.len() < pos + 2 {
                         return Err(ParsingError::Truncated);
                     }
-                    let Some(harq_processes_rx) = HarqProcesses::new(buffer[pos] >> 5) else {
+                    let Some(harq_processes_rx) = HarqProcesses::try_from_u8(buffer[pos] >> 5)
+                    else {
                         return Err(ParsingError::ReservedValue);
                     };
-                    let Some(max_harq_re_rx) = MaxHarqReTx::new(buffer[pos] & 0x1F) else {
+                    let Some(max_harq_re_rx) = MaxHarqReTx::try_from_u8(buffer[pos] & 0x1F) else {
                         return Err(ParsingError::ReservedValue);
                     };
-                    let Some(harq_processes_tx) = HarqProcesses::new(buffer[pos + 1] >> 5) else {
+                    let Some(harq_processes_tx) = HarqProcesses::try_from_u8(buffer[pos + 1] >> 5)
+                    else {
                         return Err(ParsingError::ReservedValue);
                     };
-                    let Some(max_harq_re_tx) = MaxHarqReTx::new(buffer[pos + 1] & 0x1F) else {
+                    let Some(max_harq_re_tx) = MaxHarqReTx::try_from_u8(buffer[pos + 1] & 0x1F)
+                    else {
                         return Err(ParsingError::ReservedValue);
                     };
                     pos += 2;
@@ -216,7 +219,7 @@ impl AssociationResponseParts {
                     }
                     let mut f = Vec::new();
                     for _ in 0..flow_acceptance_count {
-                        let Some(v) = FlowId::new(buffer[pos] & 0x3F) else {
+                        let Some(v) = FlowId::try_from_u8(buffer[pos] & 0x3F) else {
                             return Err(ParsingError::ReservedValue);
                         };
                         pos += 1;
@@ -228,10 +231,11 @@ impl AssociationResponseParts {
                     if buffer.len() < pos + 2 {
                         return Err(ParsingError::Truncated);
                     }
-                    let Some(group_id) = GroupId::new(buffer[pos] & 0x7F) else {
+                    let Some(group_id) = GroupId::try_from_u8(buffer[pos] & 0x7F) else {
                         return Err(ParsingError::ReservedValue);
                     };
-                    let Some(resource_tag) = ResourceTag::new(buffer[pos + 1] & 0x7F) else {
+                    let Some(resource_tag) = ResourceTag::try_from_u8(buffer[pos + 1] & 0x7F)
+                    else {
                         return Err(ParsingError::ReservedValue);
                     };
                     pos += 2;

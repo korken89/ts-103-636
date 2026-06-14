@@ -16,7 +16,7 @@ pub const fn harq_group(name: &'static str, doc: &'static str) -> Group {
                 bits: 3,
                 ty: Ty::Fallible {
                     ty: "HarqProcesses",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Number of HARQ processes.",
@@ -27,7 +27,7 @@ pub const fn harq_group(name: &'static str, doc: &'static str) -> Group {
                 bits: 5,
                 ty: Ty::Fallible {
                     ty: "MaxHarqReTx",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Maximum HARQ retransmissions / re-receptions.",

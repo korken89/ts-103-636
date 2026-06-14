@@ -83,7 +83,7 @@ impl RdCapabilityShortParts {
         }
         let b0 = buffer[0];
         let cb_mc = b0 & 0x20 != 0;
-        let Some(harq_feedback_delay) = HarqFeedbackDelay::new((b0 >> 1) & 0x0F) else {
+        let Some(harq_feedback_delay) = HarqFeedbackDelay::try_from_u8((b0 >> 1) & 0x0F) else {
             return Err(ParsingError::ReservedValue);
         };
         let dwa = b0 & 0x01 != 0;

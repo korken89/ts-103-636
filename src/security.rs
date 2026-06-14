@@ -337,11 +337,11 @@ mod tests {
     fn build_iv_layout_matches_table() {
         let iv = build_iv(
             &SecurityContext {
-                tx: LongRdId::new(0x11223344).unwrap(),
-                rx: LongRdId::new(0x55667788).unwrap(),
+                tx: LongRdId::try_from_u32(0x11223344).unwrap(),
+                rx: LongRdId::try_from_u32(0x55667788).unwrap(),
                 hpc: 0xAABBCCDD,
             },
-            SequenceNumber::new(0x123).unwrap(),
+            SequenceNumber::try_from_u16(0x123).unwrap(),
         );
         assert_eq!(&iv[0..4], &[0x11, 0x22, 0x33, 0x44]);
         assert_eq!(&iv[4..8], &[0x55, 0x66, 0x77, 0x88]);

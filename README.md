@@ -105,8 +105,8 @@ use ts_103_636::mac::pdu::{MacPduBuilder, NotUsed};
 use ts_103_636::types::{LongRdId, NetworkId24};
 
 let mut buf = [0; 64];
-let net = NetworkId24::new(0x123456).unwrap();
-let tx  = LongRdId::new(0xAABBCCDD).unwrap();
+let net = NetworkId24::try_from_u32(0x123456).unwrap();
+let tx  = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
 
 let written = MacPduBuilder::new(&mut buf)
     .push_beacon(NotUsed, net, tx)
@@ -126,9 +126,9 @@ use ts_103_636::types::{LongRdId, SequenceNumber};
 let integrity_key = [0; 16];
 let cipher_key    = [0; 16];
 
-let tx  = LongRdId::new(0xAABBCCDD).unwrap();
-let rx  = LongRdId::new(0x11223344).unwrap();
-let psn = SequenceNumber::new(0x123).unwrap();
+let tx  = LongRdId::try_from_u32(0xAABBCCDD).unwrap();
+let rx  = LongRdId::try_from_u32(0x11223344).unwrap();
+let psn = SequenceNumber::try_from_u16(0x123).unwrap();
 
 let ctx = SecurityContext { tx, rx, hpc: 0 };
 let mut crypto = SoftwareCrypto;
@@ -172,7 +172,7 @@ use ts_103_636::types::{Beta, Mcs, Mu};
 
 let tbs = compute_tbs(
     /* subslot_count */ 6,
-    Mcs::new(4).unwrap(),
+    Mcs::try_from_u8(4).unwrap(),
     Beta::B1,
     Mu::M1,
     /* n_ss */ 1,

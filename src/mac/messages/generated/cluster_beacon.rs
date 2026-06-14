@@ -243,13 +243,13 @@ impl ClusterBeaconParts {
         let Some(cluster_beacon_period) = ClusterBeaconPeriod::try_from_u8(b2 & 0x0F) else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(count_to_trigger) = CountToTrigger::new(b3 >> 4) else {
+        let Some(count_to_trigger) = CountToTrigger::try_from_u8(b3 >> 4) else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(rel_quality) = Quality::new((b3 >> 2) & 0x03) else {
+        let Some(rel_quality) = Quality::try_from_u8((b3 >> 2) & 0x03) else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(min_quality) = Quality::new(b3 & 0x03) else {
+        let Some(min_quality) = Quality::try_from_u8(b3 & 0x03) else {
             return Err(ParsingError::ReservedValue);
         };
         let mut pos = 4;
@@ -257,7 +257,7 @@ impl ClusterBeaconParts {
             if buffer.len() < pos + 1 {
                 return Err(ParsingError::Truncated);
             }
-            let Some(v) = TransmitPower::new(buffer[pos] & 0x0F) else {
+            let Some(v) = TransmitPower::try_from_u8(buffer[pos] & 0x0F) else {
                 return Err(ParsingError::ReservedValue);
             };
             pos += 1;
@@ -288,9 +288,9 @@ impl ClusterBeaconParts {
             if buffer.len() < pos + 2 {
                 return Err(ParsingError::Truncated);
             }
-            let Some(v) =
-                AbsoluteChannel::new(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF)
-            else {
+            let Some(v) = AbsoluteChannel::try_from_u16(
+                u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF,
+            ) else {
                 return Err(ParsingError::ReservedValue);
             };
             pos += 2;

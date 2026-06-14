@@ -41,9 +41,9 @@ mod tests {
             0x0B,        // validity_timer H2=11; Table 6.4.3.16-1 code 11 = 2 hours
         ];
         let parts = SourceRoutingParts {
-            source_routing_id: LongRdId::new(0xDEAD_C0DE).unwrap(),
-            hop_limit: Hop::new(12).unwrap(),
-            hop_count: Hop::new(5).unwrap(),
+            source_routing_id: LongRdId::try_from_u32(0xDEAD_C0DE).unwrap(),
+            hop_limit: Hop::try_from_u8(12).unwrap(),
+            hop_count: Hop::try_from_u8(5).unwrap(),
             validity_timer: SourceRoutingValidityTimer::H2,
         };
         let mut buf = [0u8; 8];
@@ -56,9 +56,9 @@ mod tests {
     #[test]
     fn source_routing_round_trip() {
         let parts = SourceRoutingParts {
-            source_routing_id: LongRdId::new(0xCAFEBABE).unwrap(),
-            hop_limit: Hop::new(8).unwrap(),
-            hop_count: Hop::new(3).unwrap(),
+            source_routing_id: LongRdId::try_from_u32(0xCAFEBABE).unwrap(),
+            hop_limit: Hop::try_from_u8(8).unwrap(),
+            hop_count: Hop::try_from_u8(3).unwrap(),
             validity_timer: SourceRoutingValidityTimer::H1,
         };
         let mut buf = [0; 8];

@@ -165,7 +165,7 @@ impl CountToTrigger {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value & !0x0F != 0 {
             return None;
         }
@@ -199,7 +199,7 @@ impl Quality {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value & !0x03 != 0 {
             return None;
         }

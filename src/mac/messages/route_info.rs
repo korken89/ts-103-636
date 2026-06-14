@@ -38,7 +38,7 @@ mod tests {
             0x3C, // application_sequence_number = 60
         ];
         let parts = RouteInfoParts {
-            sink_address: LongRdId::new(0x1234_5678).unwrap(),
+            sink_address: LongRdId::try_from_u32(0x1234_5678).unwrap(),
             route_cost: RouteCost(0xA5),
             application_sequence_number: ApplicationSequenceNumber(0x3C),
         };
@@ -52,7 +52,7 @@ mod tests {
     #[test]
     fn route_info_round_trip() {
         let parts = RouteInfoParts {
-            sink_address: LongRdId::new(0xAABBCCDD).unwrap(),
+            sink_address: LongRdId::try_from_u32(0xAABBCCDD).unwrap(),
             route_cost: RouteCost(42),
             application_sequence_number: ApplicationSequenceNumber(7),
         };

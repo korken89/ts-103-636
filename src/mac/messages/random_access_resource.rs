@@ -75,14 +75,14 @@ mod tests {
             pair: AllocationPair {
                 start_subslot: 0xA5,
                 length_type: PacketLengthType::Slot,
-                length: RaLength::new(7).unwrap(),
+                length: RaLength::try_from_u8(7).unwrap(),
             },
             max_length_type: PacketLengthType::Subslot,
-            max_rach_length: MaxRachLength::new(5).unwrap(),
-            cwmin_sig: Cwsig::new(3).unwrap(),
+            max_rach_length: MaxRachLength::try_from_u8(5).unwrap(),
+            cwmin_sig: Cwsig::try_from_u8(3).unwrap(),
             dect_delay: false,
-            response_window: ResponseWindow::new(7).unwrap(),
-            cwmax_sig: Cwsig::new(5).unwrap(),
+            response_window: ResponseWindow::try_from_u8(7).unwrap(),
+            cwmax_sig: Cwsig::try_from_u8(5).unwrap(),
             repeat: None,
             sfn_value: None,
             channel: None,
@@ -148,22 +148,22 @@ mod tests {
             pair: AllocationPair {
                 start_subslot: 0x01AB,
                 length_type: PacketLengthType::Subslot,
-                length: RaLength::new(63).unwrap(),
+                length: RaLength::try_from_u8(63).unwrap(),
             },
             max_length_type: PacketLengthType::Slot,
-            max_rach_length: MaxRachLength::new(10).unwrap(),
-            cwmin_sig: Cwsig::new(6).unwrap(),
+            max_rach_length: MaxRachLength::try_from_u8(10).unwrap(),
+            cwmin_sig: Cwsig::try_from_u8(6).unwrap(),
             dect_delay: true,
-            response_window: ResponseWindow::new(12).unwrap(),
-            cwmax_sig: Cwsig::new(7).unwrap(),
+            response_window: ResponseWindow::try_from_u8(12).unwrap(),
+            cwmax_sig: Cwsig::try_from_u8(7).unwrap(),
             repeat: Some(RachRepeatPolicy {
                 mode: RachRepeatMode::PerFrame, // code 0b01 (Table 6.4.3.4-1)
-                repetition: Repetition::new(3).unwrap(),
+                repetition: Repetition::try_from_u8(3).unwrap(),
                 validity: Validity(0xAA),
             }),
             sfn_value: Some(0x42),
-            channel: Some(AbsoluteChannel::new(0x0DEF).unwrap()),
-            channel_2: Some(AbsoluteChannel::new(0x0BCD).unwrap()),
+            channel: Some(AbsoluteChannel::try_from_u16(0x0DEF).unwrap()),
+            channel_2: Some(AbsoluteChannel::try_from_u16(0x0BCD).unwrap()),
         };
         let mut buf = [0u8; 32];
         assert_eq!(parts.serialize(&mut buf).unwrap(), GOLDEN.len());
@@ -180,14 +180,14 @@ mod tests {
             pair: AllocationPair {
                 start_subslot: 1,
                 length_type: PacketLengthType::Subslot,
-                length: RaLength::new(1).unwrap(),
+                length: RaLength::try_from_u8(1).unwrap(),
             },
             max_length_type: PacketLengthType::Subslot,
-            max_rach_length: MaxRachLength::new(2).unwrap(),
-            cwmin_sig: Cwsig::new(1).unwrap(),
+            max_rach_length: MaxRachLength::try_from_u8(2).unwrap(),
+            cwmin_sig: Cwsig::try_from_u8(1).unwrap(),
             dect_delay: false,
-            response_window: ResponseWindow::new(3).unwrap(),
-            cwmax_sig: Cwsig::new(2).unwrap(),
+            response_window: ResponseWindow::try_from_u8(3).unwrap(),
+            cwmax_sig: Cwsig::try_from_u8(2).unwrap(),
             repeat: None,
             sfn_value: None,
             channel: None,
@@ -223,12 +223,12 @@ mod tests {
         parts.dect_delay = true;
         parts.repeat = Some(RachRepeatPolicy {
             mode: RachRepeatMode::PerSubslot,
-            repetition: Repetition::new(2).unwrap(),
+            repetition: Repetition::try_from_u8(2).unwrap(),
             validity: Validity(0xFF),
         });
         parts.sfn_value = Some(0x80);
-        parts.channel = Some(AbsoluteChannel::new(0x1FFF).unwrap());
-        parts.channel_2 = Some(AbsoluteChannel::new(0x0001).unwrap());
+        parts.channel = Some(AbsoluteChannel::try_from_u16(0x1FFF).unwrap());
+        parts.channel_2 = Some(AbsoluteChannel::try_from_u16(0x0001).unwrap());
         parts.pair.start_subslot = 0x1AB; // 9-bit at mu=8
 
         let mut buf = [0; 32];

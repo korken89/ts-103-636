@@ -100,15 +100,15 @@ impl SourceRoutingParts {
             return Err(ParsingError::Truncated);
         }
         let b4 = buffer[4];
-        let Some(source_routing_id) = LongRdId::new(u32::from_be_bytes([
+        let Some(source_routing_id) = LongRdId::try_from_u32(u32::from_be_bytes([
             buffer[0], buffer[1], buffer[2], buffer[3],
         ])) else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(hop_limit) = Hop::new(b4 >> 4) else {
+        let Some(hop_limit) = Hop::try_from_u8(b4 >> 4) else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(hop_count) = Hop::new(b4 & 0x0F) else {
+        let Some(hop_count) = Hop::try_from_u8(b4 & 0x0F) else {
             return Err(ParsingError::ReservedValue);
         };
         let Some(validity_timer) = SourceRoutingValidityTimer::try_from_u8(buffer[5]) else {

@@ -33,10 +33,10 @@ mod tests {
             setup_cause: SetupCause::InitialAssociation,
             power_const: PowerConst::Unconstrained,
             flow_ids: Vec::new(),
-            harq_processes_tx: HarqProcesses::new(0).unwrap(),
-            max_harq_re_tx: MaxHarqReTx::new(0).unwrap(),
-            harq_processes_rx: HarqProcesses::new(0).unwrap(),
-            max_harq_re_rx: MaxHarqReTx::new(0).unwrap(),
+            harq_processes_tx: HarqProcesses::try_from_u8(0).unwrap(),
+            max_harq_re_tx: MaxHarqReTx::try_from_u8(0).unwrap(),
+            harq_processes_rx: HarqProcesses::try_from_u8(0).unwrap(),
+            max_harq_re_rx: MaxHarqReTx::try_from_u8(0).unwrap(),
             ft_mode: None,
         }
     }
@@ -67,16 +67,16 @@ mod tests {
             setup_cause: SetupCause::Mobility,
             power_const: PowerConst::Constrained,
             flow_ids,
-            harq_processes_tx: HarqProcesses::new(2).unwrap(),
-            max_harq_re_tx: MaxHarqReTx::new(5).unwrap(),
-            harq_processes_rx: HarqProcesses::new(4).unwrap(),
-            max_harq_re_rx: MaxHarqReTx::new(7).unwrap(),
+            harq_processes_tx: HarqProcesses::try_from_u8(2).unwrap(),
+            max_harq_re_tx: MaxHarqReTx::try_from_u8(5).unwrap(),
+            harq_processes_rx: HarqProcesses::try_from_u8(4).unwrap(),
+            max_harq_re_rx: MaxHarqReTx::try_from_u8(7).unwrap(),
             ft_mode: Some(FtModeFields {
                 network_beacon_period: NetworkBeaconPeriod::Ms1000,
                 cluster_beacon_period: ClusterBeaconPeriod::Ms1500,
-                next_cluster_channel: AbsoluteChannel::new(0x0123).unwrap(),
+                next_cluster_channel: AbsoluteChannel::try_from_u16(0x0123).unwrap(),
                 time_to_next: 0xCAFEBABE,
-                current_cluster_channel: Some(AbsoluteChannel::new(0x0124).unwrap()),
+                current_cluster_channel: Some(AbsoluteChannel::try_from_u16(0x0124).unwrap()),
             }),
         };
         let mut buf = [0; 32];
@@ -185,10 +185,10 @@ mod tests {
         let parts = AssociationRequestParts {
             setup_cause: SetupCause::Mobility,
             power_const: PowerConst::Constrained,
-            harq_processes_tx: HarqProcesses::new(3).unwrap(),
-            max_harq_re_tx: MaxHarqReTx::new(5).unwrap(),
-            harq_processes_rx: HarqProcesses::new(4).unwrap(),
-            max_harq_re_rx: MaxHarqReTx::new(7).unwrap(),
+            harq_processes_tx: HarqProcesses::try_from_u8(3).unwrap(),
+            max_harq_re_tx: MaxHarqReTx::try_from_u8(5).unwrap(),
+            harq_processes_rx: HarqProcesses::try_from_u8(4).unwrap(),
+            max_harq_re_rx: MaxHarqReTx::try_from_u8(7).unwrap(),
             flow_ids: Vec::new(),
             ft_mode: None,
         };
@@ -254,28 +254,28 @@ mod tests {
             0x67,          // Current Cluster Channel low byte
         ];
         let flow_ids = Vec::from_slice(&[
-            FlowId::new(0x01).unwrap(),
-            FlowId::new(0x02).unwrap(),
-            FlowId::new(0x03).unwrap(),
-            FlowId::new(0x0A).unwrap(),
-            FlowId::new(0x15).unwrap(),
-            FlowId::new(0x20).unwrap(),
+            FlowId::try_from_u8(0x01).unwrap(),
+            FlowId::try_from_u8(0x02).unwrap(),
+            FlowId::try_from_u8(0x03).unwrap(),
+            FlowId::try_from_u8(0x0A).unwrap(),
+            FlowId::try_from_u8(0x15).unwrap(),
+            FlowId::try_from_u8(0x20).unwrap(),
         ])
         .unwrap();
         let parts = AssociationRequestParts {
             setup_cause: SetupCause::ReassociationAfterError,
             power_const: PowerConst::Unconstrained,
-            harq_processes_tx: HarqProcesses::new(3).unwrap(),
-            max_harq_re_tx: MaxHarqReTx::new(5).unwrap(),
-            harq_processes_rx: HarqProcesses::new(4).unwrap(),
-            max_harq_re_rx: MaxHarqReTx::new(7).unwrap(),
+            harq_processes_tx: HarqProcesses::try_from_u8(3).unwrap(),
+            max_harq_re_tx: MaxHarqReTx::try_from_u8(5).unwrap(),
+            harq_processes_rx: HarqProcesses::try_from_u8(4).unwrap(),
+            max_harq_re_rx: MaxHarqReTx::try_from_u8(7).unwrap(),
             flow_ids,
             ft_mode: Some(FtModeFields {
                 network_beacon_period: NetworkBeaconPeriod::Ms2000,
                 cluster_beacon_period: ClusterBeaconPeriod::Ms4000,
-                next_cluster_channel: AbsoluteChannel::new(0x1234).unwrap(),
+                next_cluster_channel: AbsoluteChannel::try_from_u16(0x1234).unwrap(),
                 time_to_next: 0xDEAD_BEEF,
-                current_cluster_channel: Some(AbsoluteChannel::new(0x0567).unwrap()),
+                current_cluster_channel: Some(AbsoluteChannel::try_from_u16(0x0567).unwrap()),
             }),
         };
         let mut buf = [0u8; 19];

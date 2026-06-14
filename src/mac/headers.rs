@@ -134,7 +134,7 @@ impl DataMacPdu<'_> {
         let raw = (((self.0[0] as u16) & 0x0F) << 8) | (self.0[1] as u16);
         // The 0x0F mask above guarantees the 12-bit fit, so the
         // SequenceNumber invariant always holds.
-        match SequenceNumber::new(raw) {
+        match SequenceNumber::try_from_u16(raw) {
             Some(s) => s,
             None => unreachable!(),
         }
@@ -204,7 +204,7 @@ impl Beacon<'_> {
     #[must_use]
     #[inline]
     pub fn network_id_typed(self) -> Option<NetworkId24> {
-        NetworkId24::new(self.network_id())
+        NetworkId24::try_from_u32(self.network_id())
     }
 
     /// 32-bit Transmitter Address (Long RD ID, clause 4.2.3.2).
@@ -218,7 +218,7 @@ impl Beacon<'_> {
     #[must_use]
     #[inline]
     pub fn transmitter(self) -> Option<LongRdId> {
-        LongRdId::new(self.transmitter_address())
+        LongRdId::try_from_u32(self.transmitter_address())
     }
 
     /// Build a 7-byte Beacon common header (Figure 6.3.3.2-1).
@@ -287,7 +287,7 @@ impl Unicast<'_> {
     #[inline]
     pub const fn sequence_number(self) -> SequenceNumber {
         let raw = (((self.0[0] as u16) & 0x0F) << 8) | (self.0[1] as u16);
-        match SequenceNumber::new(raw) {
+        match SequenceNumber::try_from_u16(raw) {
             Some(s) => s,
             None => unreachable!(),
         }
@@ -311,14 +311,14 @@ impl Unicast<'_> {
     #[must_use]
     #[inline]
     pub fn receiver(self) -> Option<LongRdId> {
-        LongRdId::new(self.receiver_address())
+        LongRdId::try_from_u32(self.receiver_address())
     }
 
     /// Transmitter Long RD ID (typed). `None` if the raw value is reserved (0).
     #[must_use]
     #[inline]
     pub fn transmitter(self) -> Option<LongRdId> {
-        LongRdId::new(self.transmitter_address())
+        LongRdId::try_from_u32(self.transmitter_address())
     }
 
     /// Build a 10-byte Unicast common header (Figure 6.3.3.3-1).
@@ -412,7 +412,7 @@ impl RdBroadcast<'_> {
     #[inline]
     pub const fn sequence_number(self) -> SequenceNumber {
         let raw = (((self.0[0] as u16) & 0x0F) << 8) | (self.0[1] as u16);
-        match SequenceNumber::new(raw) {
+        match SequenceNumber::try_from_u16(raw) {
             Some(s) => s,
             None => unreachable!(),
         }
@@ -429,7 +429,7 @@ impl RdBroadcast<'_> {
     #[must_use]
     #[inline]
     pub fn transmitter(self) -> Option<LongRdId> {
-        LongRdId::new(self.transmitter_address())
+        LongRdId::try_from_u32(self.transmitter_address())
     }
 
     /// Build a 6-byte RD Broadcasting common header (Figure 6.3.3.4-1).
@@ -521,7 +521,7 @@ impl MacCommonHeader<'_> {
         match self {
             MacCommonHeader::DataMacPdu(h) => h.sequence_number(),
             MacCommonHeader::Beacon(_) => {
-                const { SequenceNumber::new(0).expect("0 is a valid SequenceNumber") }
+                const { SequenceNumber::try_from_u16(0).expect("0 is a valid SequenceNumber") }
             }
             MacCommonHeader::Unicast(h) => h.sequence_number(),
             MacCommonHeader::RdBroadcast(h) => h.sequence_number(),

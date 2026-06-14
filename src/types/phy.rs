@@ -25,7 +25,7 @@ impl Mu {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         match value {
             1 | 2 | 4 | 8 => Some(Mu(value)),
             _ => None,
@@ -106,7 +106,7 @@ impl Beta {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         match value {
             1 | 2 | 4 | 8 | 12 | 16 => Some(Beta(value)),
             _ => None,
@@ -186,7 +186,7 @@ impl Mcs {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value <= 11 { Some(Mcs(value)) } else { None }
     }
 
@@ -647,7 +647,7 @@ impl AbsoluteChannel {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u16) -> Option<Self> {
+    pub const fn try_from_u16(value: u16) -> Option<Self> {
         if value > 0x1FFF {
             return None;
         }
@@ -724,7 +724,7 @@ impl TransmitPower {
     /// Construct from the raw 4-bit code point. Returns `None` only
     /// for values above 4 bits (all 16 code points are defined).
     #[must_use]
-    pub const fn new(field: u8) -> Option<Self> {
+    pub const fn try_from_u8(field: u8) -> Option<Self> {
         Some(match field {
             0b0000 => Self::DbmNeg40,
             0b0001 => Self::DbmNeg30,
@@ -796,19 +796,23 @@ mod tests {
     #[test]
     fn mcs_description_covers_all_indices() {
         for i in 0..12 {
-            let m = Mcs::new(i).unwrap();
+            let m = Mcs::try_from_u8(i).unwrap();
             assert!(m.description().is_some(), "MCS {} has no description", i);
         }
-        assert!(Mcs::new(12).is_none());
+        assert!(Mcs::try_from_u8(12).is_none());
     }
 
     #[test]
     fn beta_idx_exhaustive() {
         for v in [1, 2, 4, 8, 12, 16] {
-            assert!(Beta::new(v).is_some());
+            assert!(Beta::try_from_u8(v).is_some());
         }
         for v in [0, 3, 5, 7, 9, 11, 13, 15, 17, 32, 255] {
-            assert!(Beta::new(v).is_none(), "Beta({}) should be invalid", v);
+            assert!(
+                Beta::try_from_u8(v).is_none(),
+                "Beta({}) should be invalid",
+                v
+            );
         }
     }
 
@@ -819,18 +823,18 @@ mod tests {
             -40, -30, -20, -16, -12, -8, -4, 0, 4, 7, 10, 13, 16, 19, 21, 23,
         ];
         for (code, dbm) in expected.iter().enumerate() {
-            let p = TransmitPower::new(code as u8).unwrap();
+            let p = TransmitPower::try_from_u8(code as u8).unwrap();
             assert_eq!(p.dbm(), *dbm, "code point {code}");
             assert_eq!(p.as_u8(), code as u8);
         }
-        assert!(TransmitPower::new(16).is_none());
+        assert!(TransmitPower::try_from_u8(16).is_none());
     }
 
     #[test]
     fn absolute_channel_13_bit_range() {
-        assert!(AbsoluteChannel::new(0).is_none());
-        assert!(AbsoluteChannel::new(1).is_some());
-        assert!(AbsoluteChannel::new(0x1FFF).is_some());
-        assert!(AbsoluteChannel::new(0x2000).is_none());
+        assert!(AbsoluteChannel::try_from_u16(0).is_none());
+        assert!(AbsoluteChannel::try_from_u16(1).is_some());
+        assert!(AbsoluteChannel::try_from_u16(0x1FFF).is_some());
+        assert!(AbsoluteChannel::try_from_u16(0x2000).is_none());
     }
 }

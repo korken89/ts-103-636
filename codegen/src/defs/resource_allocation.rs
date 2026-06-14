@@ -82,7 +82,7 @@ const fn pair(name: &'static str, accessors: &'static [&'static str]) -> Item {
                 bits: 7,
                 ty: Ty::Fallible {
                     ty: "RaLength",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Allocation length.",
@@ -107,7 +107,7 @@ const OPTIONS: [Item; 5] = [
             bits: 16,
             ty: Ty::Fallible {
                 ty: "ShortRdId",
-                ctor: "new",
+                ctor: "try_from_u16",
                 getter: "as_u16",
             },
             doc: "Recipient of a beacon-carried allocation.",
@@ -124,7 +124,7 @@ const OPTIONS: [Item; 5] = [
                 bits: 8,
                 ty: Ty::Fallible {
                     ty: "Repetition",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Repetition interval.",
@@ -170,7 +170,7 @@ const OPTIONS: [Item; 5] = [
                 bits: 13,
                 ty: Ty::Fallible {
                     ty: "AbsoluteChannel",
-                    ctor: "new",
+                    ctor: "try_from_u16",
                     getter: "as_u16",
                 },
                 doc: "Channel override for the allocation.",

@@ -57,7 +57,7 @@ pub fn def() -> MessageDef {
                 bits: 3,
                 ty: Ty::Fallible {
                     ty: "HarqProcesses",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Number of HARQ processes for transmission.",
@@ -68,7 +68,7 @@ pub fn def() -> MessageDef {
                 bits: 5,
                 ty: Ty::Fallible {
                     ty: "MaxHarqReTx",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Maximum HARQ retransmissions.",
@@ -79,7 +79,7 @@ pub fn def() -> MessageDef {
                 bits: 3,
                 ty: Ty::Fallible {
                     ty: "HarqProcesses",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Number of HARQ processes for reception.",
@@ -90,7 +90,7 @@ pub fn def() -> MessageDef {
                 bits: 5,
                 ty: Ty::Fallible {
                     ty: "MaxHarqReTx",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Maximum HARQ re-receptions.",
@@ -107,7 +107,7 @@ pub fn def() -> MessageDef {
                         bits: 6,
                         ty: Ty::Fallible {
                             ty: "FlowId",
-                            ctor: "new",
+                            ctor: "try_from_u8",
                             getter: "as_u8",
                         },
                         doc: "Flow ID.",
@@ -157,7 +157,7 @@ pub fn def() -> MessageDef {
                         bits: 13,
                         ty: Ty::Fallible {
                             ty: "AbsoluteChannel",
-                            ctor: "new",
+                            ctor: "try_from_u16",
                             getter: "as_u16",
                         },
                         doc: "Next cluster channel.",
@@ -180,7 +180,7 @@ pub fn def() -> MessageDef {
                                 bits: 13,
                                 ty: Ty::Fallible {
                                     ty: "AbsoluteChannel",
-                                    ctor: "new",
+                                    ctor: "try_from_u16",
                                     getter: "as_u16",
                                 },
                                 doc: "Current cluster channel.",

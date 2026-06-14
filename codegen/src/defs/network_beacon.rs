@@ -69,7 +69,7 @@ pub fn def() -> MessageDef {
                 bits: 13,
                 ty: Ty::Fallible {
                     ty: "AbsoluteChannel",
-                    ctor: "new",
+                    ctor: "try_from_u16",
                     getter: "as_u16",
                 },
                 doc: "Next cluster channel (13-bit).",
@@ -92,7 +92,7 @@ pub fn def() -> MessageDef {
                         bits: 4,
                         ty: Ty::Fallible {
                             ty: "TransmitPower",
-                            ctor: "new",
+                            ctor: "try_from_u8",
                             getter: "as_u8",
                         },
                         doc: "Cluster maximum TX power.",
@@ -111,7 +111,7 @@ pub fn def() -> MessageDef {
                         bits: 13,
                         ty: Ty::Fallible {
                             ty: "AbsoluteChannel",
-                            ctor: "new",
+                            ctor: "try_from_u16",
                             getter: "as_u16",
                         },
                         doc: "Current cluster channel.",
@@ -131,7 +131,7 @@ pub fn def() -> MessageDef {
                         bits: 13,
                         ty: Ty::Fallible {
                             ty: "AbsoluteChannel",
-                            ctor: "new",
+                            ctor: "try_from_u16",
                             getter: "as_u16",
                         },
                         doc: "Additional Network Beacon channel.",

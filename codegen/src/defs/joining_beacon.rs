@@ -43,7 +43,7 @@ pub fn def() -> MessageDef {
                         bits: 13,
                         ty: Ty::Fallible {
                             ty: "AbsoluteChannel",
-                            ctor: "new",
+                            ctor: "try_from_u16",
                             getter: "as_u16",
                         },
                         doc: "Network Beacon channel.",

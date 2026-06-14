@@ -41,7 +41,7 @@ impl GroupResourceTagEntry {
     /// Resource Tag carried in this entry.
     #[must_use]
     pub const fn resource_tag(self) -> ResourceTag {
-        match ResourceTag::new(self.0 & 0x7F) {
+        match ResourceTag::try_from_u8(self.0 & 0x7F) {
             Some(t) => t,
             None => unreachable!(),
         }
@@ -54,12 +54,12 @@ mod tests {
     #[test]
     fn group_assignment_round_trip() {
         let tags = [
-            GroupResourceTagEntry::new(false, ResourceTag::new(0x12).unwrap()),
-            GroupResourceTagEntry::new(true, ResourceTag::new(0x7F).unwrap()),
+            GroupResourceTagEntry::new(false, ResourceTag::try_from_u8(0x12).unwrap()),
+            GroupResourceTagEntry::new(true, ResourceTag::try_from_u8(0x7F).unwrap()),
         ];
         let parts = GroupAssignmentParts {
             single: true,
-            group_id: GroupId::new(0x42).unwrap(),
+            group_id: GroupId::try_from_u8(0x42).unwrap(),
             tags: &tags,
         };
         let mut buf = [0; 16];
@@ -85,7 +85,7 @@ mod tests {
         // Minimum body: 1 byte (Single + GroupId) with no resource tags.
         let parts = GroupAssignmentParts {
             single: false,
-            group_id: GroupId::new(0x10).unwrap(),
+            group_id: GroupId::try_from_u8(0x10).unwrap(),
             tags: &[],
         };
         let mut buf = [0; 8];
@@ -101,10 +101,10 @@ mod tests {
     fn group_assignment_serialize_rejects_short_buffer() {
         let parts = GroupAssignmentParts {
             single: true,
-            group_id: GroupId::new(0x42).unwrap(),
+            group_id: GroupId::try_from_u8(0x42).unwrap(),
             tags: &[GroupResourceTagEntry::new(
                 false,
-                ResourceTag::new(0x12).unwrap(),
+                ResourceTag::try_from_u8(0x12).unwrap(),
             )],
         };
         // encoded_len = 2 (header + 1 tag); buffer has only 1 byte.
@@ -118,7 +118,7 @@ mod tests {
         // a non-inverted tag with the BROADCAST resource tag value (0x7F).
         let entry = GroupResourceTagEntry::new(
             false,
-            ResourceTag::new(GroupResourceTagEntry::BROADCAST).unwrap(),
+            ResourceTag::try_from_u8(GroupResourceTagEntry::BROADCAST).unwrap(),
         );
         assert_eq!(entry.as_raw(), GroupResourceTagEntry::BROADCAST);
         assert!(!entry.direct_inverted());
@@ -128,8 +128,8 @@ mod tests {
     #[test]
     fn group_assignment_tag_direct_bit_layout() {
         // Direct = 0 puts the high bit clear; Direct = 1 sets bit 7.
-        let no_inv = GroupResourceTagEntry::new(false, ResourceTag::new(0x05).unwrap());
-        let inv = GroupResourceTagEntry::new(true, ResourceTag::new(0x05).unwrap());
+        let no_inv = GroupResourceTagEntry::new(false, ResourceTag::try_from_u8(0x05).unwrap());
+        let inv = GroupResourceTagEntry::new(true, ResourceTag::try_from_u8(0x05).unwrap());
         assert_eq!(no_inv.as_raw(), 0x05);
         assert_eq!(inv.as_raw(), 0x85);
         assert!(no_inv.resource_tag().as_u8() == inv.resource_tag().as_u8());
@@ -141,7 +141,7 @@ mod tests {
         // serialized bits match this exact layout.
         let parts = GroupAssignmentParts {
             single: true,
-            group_id: GroupId::new(0x05).unwrap(),
+            group_id: GroupId::try_from_u8(0x05).unwrap(),
             tags: &[],
         };
         let mut buf = [0; 8];
@@ -150,7 +150,7 @@ mod tests {
 
         let parts2 = GroupAssignmentParts {
             single: false,
-            group_id: GroupId::new(0x05).unwrap(),
+            group_id: GroupId::try_from_u8(0x05).unwrap(),
             tags: &[],
         };
         let mut buf2 = [0; 8];
@@ -177,7 +177,7 @@ mod tests {
         ];
         let parts = GroupAssignmentParts {
             single: true,
-            group_id: GroupId::new(0x1A).unwrap(),
+            group_id: GroupId::try_from_u8(0x1A).unwrap(),
             tags: &[],
         };
         let mut buf = [0u8; 16];
@@ -206,13 +206,13 @@ mod tests {
             0b0_1111111, // Direct=0 | Resource Tag=0x7F  (broadcast for all group members)
         ];
         let tags = [
-            GroupResourceTagEntry::new(false, ResourceTag::new(0x12).unwrap()),
-            GroupResourceTagEntry::new(true, ResourceTag::new(0x2B).unwrap()),
-            GroupResourceTagEntry::new(false, ResourceTag::new(0x7F).unwrap()),
+            GroupResourceTagEntry::new(false, ResourceTag::try_from_u8(0x12).unwrap()),
+            GroupResourceTagEntry::new(true, ResourceTag::try_from_u8(0x2B).unwrap()),
+            GroupResourceTagEntry::new(false, ResourceTag::try_from_u8(0x7F).unwrap()),
         ];
         let parts = GroupAssignmentParts {
             single: false,
-            group_id: GroupId::new(0x35).unwrap(),
+            group_id: GroupId::try_from_u8(0x35).unwrap(),
             tags: &tags,
         };
         let mut buf = [0u8; 16];

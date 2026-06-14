@@ -56,10 +56,10 @@ fn ft_build_tx(
     rv: u8,
     feedback: Feedback,
 ) -> TxParams {
-    let mcs = Mcs::new(2).unwrap();
-    let psn = SequenceNumber::new(42).unwrap();
-    let ft = LongRdId::new(0x2222_BBBB).unwrap();
-    let pt = LongRdId::new(0x1111_AAAA).unwrap();
+    let mcs = Mcs::try_from_u8(2).unwrap();
+    let psn = SequenceNumber::try_from_u16(42).unwrap();
+    let ft = LongRdId::try_from_u32(0x2222_BBBB).unwrap();
+    let pt = LongRdId::try_from_u32(0x1111_AAAA).unwrap();
 
     // MAC PDU overhead: 1 header type byte + 10-byte unicast header +
     // 2-byte IE header. Compute the bare PDU first, then size the TBS.
@@ -83,12 +83,12 @@ fn ft_build_tx(
     let phy_header = PccType2F000 {
         packet_length_type: PacketLengthType::Subslot,
         // On-air field carries subslot count - 1 (clause 6.2.1).
-        packet_length: PacketLength::new(subslots - 1).unwrap(),
-        short_network_id: NetworkId8::new(SHORT_NETWORK_ID).unwrap(),
-        transmitter_identity: ShortRdId::new(FT_SHORT_ID).unwrap(),
+        packet_length: PacketLength::try_from_u8(subslots - 1).unwrap(),
+        short_network_id: NetworkId8::try_from_u8(SHORT_NETWORK_ID).unwrap(),
+        transmitter_identity: ShortRdId::try_from_u16(FT_SHORT_ID).unwrap(),
         transmit_power: TransmitPower::Dbm10,
         df_mcs: mcs,
-        receiver_identity: ShortRdId::new(PT_SHORT_ID).unwrap(),
+        receiver_identity: ShortRdId::try_from_u16(PT_SHORT_ID).unwrap(),
         spatial_streams: 0,
         df_redundancy_version: rv,
         df_new_data_indication: ndi,
@@ -125,12 +125,12 @@ fn pt_on_pcc_event(phy_header: &[u8]) -> Feedback {
     // Time-critical path: schedule nrf_modem_dect_phy_tx_harq with the
     // prepared response. ack is ALWAYS false here on the nRF9151.
     Feedback::Format1 {
-        harq_process: HarqProcess::new(header.df_harq_process_number).unwrap(),
+        harq_process: HarqProcess::try_from_u8(header.df_harq_process_number).unwrap(),
         ack: false,
         // Report the PT's own pending uplink data.
         buffer_status: BufferStatus::UpTo256,
         // Channel estimate from this reception.
-        cqi: Cqi::Mcs(Mcs::new(2).unwrap()),
+        cqi: Cqi::Mcs(Mcs::try_from_u8(2).unwrap()),
     }
 }
 
@@ -242,7 +242,7 @@ fn main() {
     println!();
     let bitmap = Feedback::Format4 {
         harq_feedback_bitmap: 0b0000_0101, // processes 0 and 2
-        cqi: Cqi::Mcs(Mcs::new(3).unwrap()),
+        cqi: Cqi::Mcs(Mcs::try_from_u8(3).unwrap()),
     };
     let pt_tx = ft_build_tx(&mut pt_buf, &[0; 4], 1, false, 0, bitmap);
     let Pcc::Type2F000(header) = Pcc::parse(&pt_tx.phy_header).unwrap() else {

@@ -91,7 +91,7 @@ pub fn def() -> MessageDef {
                 bits: 4,
                 ty: Ty::Fallible {
                     ty: "CountToTrigger",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Count to trigger (4 bits, high nibble of byte 3).",
@@ -102,7 +102,7 @@ pub fn def() -> MessageDef {
                 bits: 2,
                 ty: Ty::Fallible {
                     ty: "Quality",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Relative quality (2 bits, byte 3 bits 3..=2).",
@@ -113,7 +113,7 @@ pub fn def() -> MessageDef {
                 bits: 2,
                 ty: Ty::Fallible {
                     ty: "Quality",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Minimum quality (2 bits, byte 3 bits 1..=0).",
@@ -129,7 +129,7 @@ pub fn def() -> MessageDef {
                         bits: 4,
                         ty: Ty::Fallible {
                             ty: "TransmitPower",
-                            ctor: "new",
+                            ctor: "try_from_u8",
                             getter: "as_u8",
                         },
                         doc: "Cluster maximum TX power.",
@@ -166,7 +166,7 @@ pub fn def() -> MessageDef {
                         bits: 13,
                         ty: Ty::Fallible {
                             ty: "AbsoluteChannel",
-                            ctor: "new",
+                            ctor: "try_from_u16",
                             getter: "as_u16",
                         },
                         doc: "Next cluster channel.",

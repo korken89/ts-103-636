@@ -15,7 +15,7 @@ mod tests {
     fn joining_beacon_single_channel_round_trip() {
         let mut channels = Vec::new();
         channels
-            .push(AbsoluteChannel::new(0x0100).unwrap())
+            .push(AbsoluteChannel::try_from_u16(0x0100).unwrap())
             .unwrap();
         let parts = JoiningBeaconParts {
             network_beacon_period: NetworkBeaconPeriod::Ms1000,
@@ -35,10 +35,10 @@ mod tests {
     #[test]
     fn joining_beacon_four_channels_round_trip() {
         let channels = Vec::from_slice(&[
-            AbsoluteChannel::new(0x0100).unwrap(),
-            AbsoluteChannel::new(0x0200).unwrap(),
-            AbsoluteChannel::new(0x0300).unwrap(),
-            AbsoluteChannel::new(0x1FFF).unwrap(),
+            AbsoluteChannel::try_from_u16(0x0100).unwrap(),
+            AbsoluteChannel::try_from_u16(0x0200).unwrap(),
+            AbsoluteChannel::try_from_u16(0x0300).unwrap(),
+            AbsoluteChannel::try_from_u16(0x1FFF).unwrap(),
         ])
         .unwrap();
         let parts = JoiningBeaconParts {
@@ -94,7 +94,7 @@ mod tests {
         ];
         let mut channels = Vec::new();
         channels
-            .push(AbsoluteChannel::new(0x05F5).unwrap())
+            .push(AbsoluteChannel::try_from_u16(0x05F5).unwrap())
             .unwrap();
         let parts = JoiningBeaconParts {
             network_beacon_period: NetworkBeaconPeriod::Ms2000, // code 5
@@ -129,10 +129,10 @@ mod tests {
             0b10111100,   // Channel 0x1ABC low
         ];
         let channels = Vec::from_slice(&[
-            AbsoluteChannel::new(0x0123).unwrap(),
-            AbsoluteChannel::new(0x07BC).unwrap(),
-            AbsoluteChannel::new(0x0E6F).unwrap(),
-            AbsoluteChannel::new(0x1ABC).unwrap(),
+            AbsoluteChannel::try_from_u16(0x0123).unwrap(),
+            AbsoluteChannel::try_from_u16(0x07BC).unwrap(),
+            AbsoluteChannel::try_from_u16(0x0E6F).unwrap(),
+            AbsoluteChannel::try_from_u16(0x1ABC).unwrap(),
         ])
         .unwrap();
         let parts = JoiningBeaconParts {

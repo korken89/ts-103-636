@@ -72,9 +72,9 @@ mod tests {
             power_const: PowerConst::Unconstrained,
             network_beacon_period: NetworkBeaconPeriod::Ms100,
             cluster_beacon_period: ClusterBeaconPeriod::Ms100,
-            count_to_trigger: CountToTrigger::new(0x3).unwrap(),
-            rel_quality: Quality::new(0).unwrap(),
-            min_quality: Quality::new(0).unwrap(),
+            count_to_trigger: CountToTrigger::try_from_u8(0x3).unwrap(),
+            rel_quality: Quality::try_from_u8(0).unwrap(),
+            min_quality: Quality::try_from_u8(0).unwrap(),
             cluster_max_tx_power: None,
             frame_offset: None,
             next_cluster_channel: None,
@@ -99,12 +99,12 @@ mod tests {
             power_const: PowerConst::Constrained,
             network_beacon_period: NetworkBeaconPeriod::Ms100,
             cluster_beacon_period: ClusterBeaconPeriod::Ms100,
-            count_to_trigger: CountToTrigger::new(0x3).unwrap(),
-            rel_quality: Quality::new(0x2).unwrap(),
-            min_quality: Quality::new(0x1).unwrap(),
+            count_to_trigger: CountToTrigger::try_from_u8(0x3).unwrap(),
+            rel_quality: Quality::try_from_u8(0x2).unwrap(),
+            min_quality: Quality::try_from_u8(0x1).unwrap(),
             cluster_max_tx_power: Some(TransmitPower::Dbm13),
             frame_offset: Some(0x55),
-            next_cluster_channel: Some(AbsoluteChannel::new(0x1234).unwrap()),
+            next_cluster_channel: Some(AbsoluteChannel::try_from_u16(0x1234).unwrap()),
             time_to_next: Some(0x00001000),
         };
         let mut buf = [0; 16];
@@ -154,9 +154,9 @@ mod tests {
             power_const: PowerConst::Unconstrained,
             network_beacon_period: NetworkBeaconPeriod::Ms100,
             cluster_beacon_period: ClusterBeaconPeriod::Ms100,
-            count_to_trigger: CountToTrigger::new(0x3).unwrap(),
-            rel_quality: Quality::new(0).unwrap(),
-            min_quality: Quality::new(0).unwrap(),
+            count_to_trigger: CountToTrigger::try_from_u8(0x3).unwrap(),
+            rel_quality: Quality::try_from_u8(0).unwrap(),
+            min_quality: Quality::try_from_u8(0).unwrap(),
             cluster_max_tx_power: None,
             frame_offset: Some(0x0123),
             next_cluster_channel: None,
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn count_to_trigger_rejects_overflow() {
-        assert!(CountToTrigger::new(0x10).is_none());
+        assert!(CountToTrigger::try_from_u8(0x10).is_none());
     }
 
     /// Golden vector (minimal) hand-derived from Figure 6.4.2.3-1 and Table 6.4.2.3-1.
@@ -213,9 +213,9 @@ mod tests {
             power_const: PowerConst::Constrained,
             network_beacon_period: NetworkBeaconPeriod::Ms500,
             cluster_beacon_period: ClusterBeaconPeriod::Ms1000,
-            count_to_trigger: CountToTrigger::new(5).unwrap(),
-            rel_quality: Quality::new(2).unwrap(),
-            min_quality: Quality::new(1).unwrap(),
+            count_to_trigger: CountToTrigger::try_from_u8(5).unwrap(),
+            rel_quality: Quality::try_from_u8(2).unwrap(),
+            min_quality: Quality::try_from_u8(1).unwrap(),
             cluster_max_tx_power: None,
             frame_offset: None,
             next_cluster_channel: None,
@@ -279,12 +279,12 @@ mod tests {
             power_const: PowerConst::Constrained,
             network_beacon_period: NetworkBeaconPeriod::Ms500,
             cluster_beacon_period: ClusterBeaconPeriod::Ms1000,
-            count_to_trigger: CountToTrigger::new(5).unwrap(),
-            rel_quality: Quality::new(2).unwrap(),
-            min_quality: Quality::new(1).unwrap(),
+            count_to_trigger: CountToTrigger::try_from_u8(5).unwrap(),
+            rel_quality: Quality::try_from_u8(2).unwrap(),
+            min_quality: Quality::try_from_u8(1).unwrap(),
             cluster_max_tx_power: Some(TransmitPower::Dbm10),
             frame_offset: Some(0x1234),
-            next_cluster_channel: Some(AbsoluteChannel::new(0x1A00).unwrap()),
+            next_cluster_channel: Some(AbsoluteChannel::try_from_u16(0x1A00).unwrap()),
             time_to_next: Some(0xCAFE_BABE),
         };
         let mut buf = [0u8; 13];
@@ -305,9 +305,9 @@ mod tests {
                 power_const: PowerConst::Unconstrained,
                 network_beacon_period: NetworkBeaconPeriod::Ms100,
                 cluster_beacon_period: ClusterBeaconPeriod::Ms100,
-                count_to_trigger: CountToTrigger::new(3).unwrap(),
-                rel_quality: Quality::new(0).unwrap(),
-                min_quality: Quality::new(0).unwrap(),
+                count_to_trigger: CountToTrigger::try_from_u8(3).unwrap(),
+                rel_quality: Quality::try_from_u8(0).unwrap(),
+                min_quality: Quality::try_from_u8(0).unwrap(),
                 cluster_max_tx_power: None,
                 frame_offset: None,
                 next_cluster_channel: None,

@@ -30,7 +30,7 @@ pub fn def() -> MessageDef {
                 bits: 7,
                 ty: Ty::Fallible {
                     ty: "GroupId",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Group ID the assignment applies to.",

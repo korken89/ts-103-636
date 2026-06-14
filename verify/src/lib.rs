@@ -69,7 +69,7 @@ macro_rules! codec_safe {
             let len: usize = kani::any();
             kani::assume(len <= buf.len());
             let mu_raw: u8 = kani::any();
-            let Some(mu) = Mu::new(mu_raw) else { return };
+            let Some(mu) = Mu::try_from_u8(mu_raw) else { return };
             if let Ok(parts) = <$ty>::parse(&buf[..len], mu) {
                 let mut out = [0; $cap];
                 let n = parts.serialize(&mut out).unwrap();
@@ -269,8 +269,8 @@ fn message_parse_loopfree_safe() {
     // MAC Security bits (byte 0, bits 5..4) != 0b10 (UsedWithIe).
     kani::assume(buf.is_empty() || (buf[0] >> 4) & 0b11 != 0b10);
     let ctx = SecurityContext {
-        tx: LongRdId::new(0xAABB_CCDD).unwrap(),
-        rx: LongRdId::new(0x1122_3344).unwrap(),
+        tx: LongRdId::try_from_u32(0xAABB_CCDD).unwrap(),
+        rx: LongRdId::try_from_u32(0x1122_3344).unwrap(),
         hpc: kani::any(),
     };
     let _ = Message::parse(
@@ -298,8 +298,8 @@ fn slow_message_parse_framing() {
     let len: usize = kani::any();
     kani::assume(len <= buf.len());
     let ctx = SecurityContext {
-        tx: LongRdId::new(0xAABB_CCDD).unwrap(),
-        rx: LongRdId::new(0x1122_3344).unwrap(),
+        tx: LongRdId::try_from_u32(0xAABB_CCDD).unwrap(),
+        rx: LongRdId::try_from_u32(0x1122_3344).unwrap(),
         hpc: kani::any(),
     };
     let _ = Message::parse(

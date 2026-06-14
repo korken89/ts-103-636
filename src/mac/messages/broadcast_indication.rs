@@ -25,7 +25,7 @@ mod tests {
     fn broadcast_indication_short_rd_id_round_trip() {
         let parts = BroadcastIndicationParts {
             indication_type: IndicationType::RandomAccessResponse,
-            rd_id: BroadcastRdId::Short(ShortRdId::new(0xABCD).unwrap()),
+            rd_id: BroadcastRdId::Short(ShortRdId::try_from_u16(0xABCD).unwrap()),
             ack_nack: true,
             feedback: BroadcastFeedbackType::Mcs,
             resource_allocation_present: true,
@@ -50,7 +50,7 @@ mod tests {
     fn broadcast_indication_long_rd_id_round_trip() {
         let parts = BroadcastIndicationParts {
             indication_type: IndicationType::Paging,
-            rd_id: BroadcastRdId::Long(LongRdId::new(0x1234_5678).unwrap()),
+            rd_id: BroadcastRdId::Long(LongRdId::try_from_u32(0x1234_5678).unwrap()),
             ack_nack: false,
             feedback: BroadcastFeedbackType::NoFeedback,
             resource_allocation_present: false,
@@ -103,7 +103,7 @@ mod tests {
             ack_nack: true,
             feedback: BroadcastFeedbackType::Mcs,
             resource_allocation_present: true,
-            rd_id: BroadcastRdId::Short(ShortRdId::new(0xABCD).unwrap()),
+            rd_id: BroadcastRdId::Short(ShortRdId::try_from_u16(0xABCD).unwrap()),
             mcs_or_mimo_feedback: 0x0A,
         };
         let mut buf = [0u8; 4];
@@ -152,7 +152,7 @@ mod tests {
             ack_nack: false,
             feedback: BroadcastFeedbackType::Mimo4Antenna,
             resource_allocation_present: true,
-            rd_id: BroadcastRdId::Long(LongRdId::new(0x1234_5678).unwrap()),
+            rd_id: BroadcastRdId::Long(LongRdId::try_from_u32(0x1234_5678).unwrap()),
             mcs_or_mimo_feedback: 0xC3,
         };
         let mut buf = [0u8; 6];

@@ -71,7 +71,7 @@ impl HarqProcesses {
     /// Construct from a 3-bit value. Returns `None` if `value > 7`.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value & !0x07 != 0 {
             return None;
         }
@@ -298,7 +298,7 @@ impl MaxHarqReTx {
     /// fit in 5 bits or if it is the reserved `0b11111` value.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value & !0x1F != 0 || value == 0b11111 {
             return None;
         }
@@ -485,7 +485,7 @@ impl HarqFeedbackDelay {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(subslots: u8) -> Option<Self> {
+    pub const fn try_from_u8(subslots: u8) -> Option<Self> {
         if subslots > 6 {
             return None;
         }

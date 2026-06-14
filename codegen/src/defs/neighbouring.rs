@@ -85,7 +85,7 @@ pub fn def() -> MessageDef {
                     bits: 32,
                     ty: Ty::Fallible {
                         ty: "LongRdId",
-                        ctor: "new",
+                        ctor: "try_from_u32",
                         getter: "as_u32",
                     },
                     doc: "Long RD ID of the neighbouring RD.",
@@ -103,7 +103,7 @@ pub fn def() -> MessageDef {
                         bits: 13,
                         ty: Ty::Fallible {
                             ty: "AbsoluteChannel",
-                            ctor: "new",
+                            ctor: "try_from_u16",
                             getter: "as_u16",
                         },
                         doc: "Next cluster channel of the neighbouring RD.",

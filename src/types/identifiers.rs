@@ -17,7 +17,7 @@ impl NetworkId24 {
     /// upper 8 bits are set.
     #[must_use]
     #[inline]
-    pub const fn new(value: u32) -> Option<Self> {
+    pub const fn try_from_u32(value: u32) -> Option<Self> {
         if value & 0xFF_FF_FF == 0 {
             return None;
         }
@@ -70,7 +70,7 @@ impl NetworkId8 {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         match NonZero::new(value) {
             Some(n) => Some(Self(n)),
             None => None,
@@ -117,7 +117,7 @@ impl NetworkId32 {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u32) -> Option<Self> {
+    pub const fn try_from_u32(value: u32) -> Option<Self> {
         if (value >> 8) == 0 || (value & 0xFF) == 0 {
             return None;
         }
@@ -137,13 +137,13 @@ impl NetworkId32 {
     /// Most-significant 24 bits (Network ID MSB part).
     #[must_use]
     pub const fn msb(self) -> NetworkId24 {
-        NetworkId24::new(self.as_u32() >> 8).expect("NetworkId32 invariant")
+        NetworkId24::try_from_u32(self.as_u32() >> 8).expect("NetworkId32 invariant")
     }
 
     /// Least-significant 8 bits (Network ID LSB part).
     #[must_use]
     pub const fn lsb(self) -> NetworkId8 {
-        NetworkId8::new((self.as_u32() & 0xFF) as u8).expect("NetworkId32 invariant")
+        NetworkId8::try_from_u8((self.as_u32() & 0xFF) as u8).expect("NetworkId32 invariant")
     }
 }
 
@@ -181,7 +181,7 @@ impl ShortRdId {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u16) -> Option<Self> {
+    pub const fn try_from_u16(value: u16) -> Option<Self> {
         match NonZero::new(value) {
             Some(n) => Some(Self(n)),
             None => None,
@@ -246,7 +246,7 @@ impl LongRdId {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u32) -> Option<Self> {
+    pub const fn try_from_u32(value: u32) -> Option<Self> {
         match NonZero::new(value) {
             Some(n) => Some(Self(n)),
             None => None,
@@ -315,10 +315,10 @@ mod tests {
     #[test]
     fn network_id_32_rejects_partial_zero() {
         // MSB zero (high 24 bits) - reject
-        assert!(NetworkId32::new(0x0000_00FF).is_none());
+        assert!(NetworkId32::try_from_u32(0x0000_00FF).is_none());
         // LSB zero (low 8 bits) - reject
-        assert!(NetworkId32::new(0xFF_FF_FF_00).is_none());
+        assert!(NetworkId32::try_from_u32(0xFF_FF_FF_00).is_none());
         // Both nonzero - accept
-        assert!(NetworkId32::new(0x12_34_56_78).is_some());
+        assert!(NetworkId32::try_from_u32(0x12_34_56_78).is_some());
     }
 }

@@ -119,8 +119,8 @@ mod tests {
             power_const: PowerConst::Constrained,
             network_beacon_period: NetworkBeaconPeriod::Ms2000, // code 5
             cluster_beacon_period: ClusterBeaconPeriod::Ms2000, // code 6
-            long_rd_id: Some(LongRdId::new(0xDEAD_CAFE).unwrap()),
-            next_cluster_channel: Some(AbsoluteChannel::new(0x1234).unwrap()),
+            long_rd_id: Some(LongRdId::try_from_u32(0xDEAD_CAFE).unwrap()),
+            next_cluster_channel: Some(AbsoluteChannel::try_from_u16(0x1234).unwrap()),
             time_to_next: Some(0x0012_3456),
             rssi_2: Some(Rssi2Measurement(0xA5)),
             snr: Some(SnrMeasurement(0x5A)),
@@ -168,8 +168,8 @@ mod tests {
             network_beacon_period: NetworkBeaconPeriod::Ms2000,
             cluster_beacon_period: ClusterBeaconPeriod::Ms2000,
             power_const: PowerConst::Constrained,
-            long_rd_id: Some(LongRdId::new(0xDEADBEEF).unwrap()),
-            next_cluster_channel: Some(AbsoluteChannel::new(0x1ABC).unwrap()),
+            long_rd_id: Some(LongRdId::try_from_u32(0xDEADBEEF).unwrap()),
+            next_cluster_channel: Some(AbsoluteChannel::try_from_u16(0x1ABC).unwrap()),
             time_to_next: Some(0xDEAD_C0DE),
             rssi_2: Some(Rssi2Measurement(0x7F)),
             snr: Some(SnrMeasurement(0x12)),

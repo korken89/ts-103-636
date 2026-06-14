@@ -53,8 +53,8 @@ impl SensorSample {
 /// PT side: build a Unicast PDU containing a single User Plane Data
 /// Flow 1 IE carrying one [`SensorSample`].
 fn pt_build_data<'a>(buf: &'a mut [u8], psn: SequenceNumber, sample: &SensorSample) -> &'a [u8] {
-    let pt = LongRdId::new(PT_ID).unwrap();
-    let ft = LongRdId::new(FT_ID).unwrap();
+    let pt = LongRdId::try_from_u32(PT_ID).unwrap();
+    let ft = LongRdId::try_from_u32(FT_ID).unwrap();
 
     // Encode the application payload into a small stack buffer.
     let mut payload = [0; SensorSample::ENCODED_LEN];
@@ -121,8 +121,8 @@ fn ft_receive_and_ack<'a>(
     )
     .expect("payload fits in IE length field");
 
-    let pt = LongRdId::new(PT_ID).unwrap();
-    let ft = LongRdId::new(FT_ID).unwrap();
+    let pt = LongRdId::try_from_u32(PT_ID).unwrap();
+    let ft = LongRdId::try_from_u32(FT_ID).unwrap();
     MacPduBuilder::new(response_buf)
         .push_unicast(NotUsed, false, ack_psn, pt, ft)
         .expect("buffer fits header")
@@ -171,7 +171,7 @@ fn main() {
 
     for (i, sample) in samples.iter().enumerate() {
         // PT -> FT
-        let psn = SequenceNumber::new((i + 1) as u16).unwrap();
+        let psn = SequenceNumber::try_from_u16((i + 1) as u16).unwrap();
         let mut req_buf = [0; 64];
         let req_bytes = pt_build_data(&mut req_buf, psn, sample);
         println!(

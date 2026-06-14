@@ -21,7 +21,7 @@ pub fn def() -> MessageDef {
                 bits: 32,
                 ty: Ty::Fallible {
                     ty: "LongRdId",
-                    ctor: "new",
+                    ctor: "try_from_u32",
                     getter: "as_u32",
                 },
                 doc: "Long RD ID identifying the source route.",
@@ -32,7 +32,7 @@ pub fn def() -> MessageDef {
                 bits: 4,
                 ty: Ty::Fallible {
                     ty: "Hop",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Maximum number of hops.",
@@ -43,7 +43,7 @@ pub fn def() -> MessageDef {
                 bits: 4,
                 ty: Ty::Fallible {
                     ty: "Hop",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Hops travelled so far.",

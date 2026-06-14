@@ -277,7 +277,7 @@ mod tests {
     use crate::types::{Beta, Mcs, Mu};
 
     fn mcsi(n: u8) -> Mcs {
-        Mcs::new(n).unwrap()
+        Mcs::try_from_u8(n).unwrap()
     }
 
     #[test]

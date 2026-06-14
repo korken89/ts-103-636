@@ -64,7 +64,7 @@ const fn core_fields() -> [Item; 8] {
             bits: 4,
             ty: Ty::Fallible {
                 ty: "Mcs",
-                ctor: "new",
+                ctor: "try_from_u8",
                 getter: "as_u8",
             },
             doc: "Maximum supported MCS.",
@@ -97,7 +97,7 @@ const fn core_fields() -> [Item; 8] {
             bits: 4,
             ty: Ty::Fallible {
                 ty: "HarqFeedbackDelay",
-                ctor: "new",
+                ctor: "try_from_u8",
                 getter: "subslots",
             },
             doc: "HARQ feedback delay in subslots.",

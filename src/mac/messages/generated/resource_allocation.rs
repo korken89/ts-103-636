@@ -649,7 +649,7 @@ impl ResourceAllocationParts {
                 } else {
                     PacketLengthType::Slot
                 };
-                let Some(length) = RaLength::new(buffer[pos] & 0x7F) else {
+                let Some(length) = RaLength::try_from_u8(buffer[pos] & 0x7F) else {
                     return Err(ParsingError::ReservedValue);
                 };
                 pos += 1;
@@ -663,7 +663,7 @@ impl ResourceAllocationParts {
                         return Err(ParsingError::Truncated);
                     }
                     let Some(v) =
-                        ShortRdId::new(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]))
+                        ShortRdId::try_from_u16(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]))
                     else {
                         return Err(ParsingError::ReservedValue);
                     };
@@ -676,7 +676,7 @@ impl ResourceAllocationParts {
                     if buffer.len() < pos + 2 {
                         return Err(ParsingError::Truncated);
                     }
-                    let Some(repetition) = Repetition::new(buffer[pos]) else {
+                    let Some(repetition) = Repetition::try_from_u8(buffer[pos]) else {
                         return Err(ParsingError::ReservedValue);
                     };
                     let validity = Validity(buffer[pos + 1]);
@@ -703,7 +703,7 @@ impl ResourceAllocationParts {
                     if buffer.len() < pos + 2 {
                         return Err(ParsingError::Truncated);
                     }
-                    let Some(v) = AbsoluteChannel::new(
+                    let Some(v) = AbsoluteChannel::try_from_u16(
                         u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF,
                     ) else {
                         return Err(ParsingError::ReservedValue);
@@ -786,7 +786,7 @@ impl ResourceAllocationParts {
                 } else {
                     PacketLengthType::Slot
                 };
-                let Some(length) = RaLength::new(buffer[pos] & 0x7F) else {
+                let Some(length) = RaLength::try_from_u8(buffer[pos] & 0x7F) else {
                     return Err(ParsingError::ReservedValue);
                 };
                 pos += 1;
@@ -800,7 +800,7 @@ impl ResourceAllocationParts {
                         return Err(ParsingError::Truncated);
                     }
                     let Some(v) =
-                        ShortRdId::new(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]))
+                        ShortRdId::try_from_u16(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]))
                     else {
                         return Err(ParsingError::ReservedValue);
                     };
@@ -813,7 +813,7 @@ impl ResourceAllocationParts {
                     if buffer.len() < pos + 2 {
                         return Err(ParsingError::Truncated);
                     }
-                    let Some(repetition) = Repetition::new(buffer[pos]) else {
+                    let Some(repetition) = Repetition::try_from_u8(buffer[pos]) else {
                         return Err(ParsingError::ReservedValue);
                     };
                     let validity = Validity(buffer[pos + 1]);
@@ -840,7 +840,7 @@ impl ResourceAllocationParts {
                     if buffer.len() < pos + 2 {
                         return Err(ParsingError::Truncated);
                     }
-                    let Some(v) = AbsoluteChannel::new(
+                    let Some(v) = AbsoluteChannel::try_from_u16(
                         u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF,
                     ) else {
                         return Err(ParsingError::ReservedValue);
@@ -923,7 +923,7 @@ impl ResourceAllocationParts {
                 } else {
                     PacketLengthType::Slot
                 };
-                let Some(length) = RaLength::new(buffer[pos] & 0x7F) else {
+                let Some(length) = RaLength::try_from_u8(buffer[pos] & 0x7F) else {
                     return Err(ParsingError::ReservedValue);
                 };
                 pos += 1;
@@ -955,7 +955,7 @@ impl ResourceAllocationParts {
                 } else {
                     PacketLengthType::Slot
                 };
-                let Some(length) = RaLength::new(buffer[pos] & 0x7F) else {
+                let Some(length) = RaLength::try_from_u8(buffer[pos] & 0x7F) else {
                     return Err(ParsingError::ReservedValue);
                 };
                 pos += 1;
@@ -969,7 +969,7 @@ impl ResourceAllocationParts {
                         return Err(ParsingError::Truncated);
                     }
                     let Some(v) =
-                        ShortRdId::new(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]))
+                        ShortRdId::try_from_u16(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]))
                     else {
                         return Err(ParsingError::ReservedValue);
                     };
@@ -982,7 +982,7 @@ impl ResourceAllocationParts {
                     if buffer.len() < pos + 2 {
                         return Err(ParsingError::Truncated);
                     }
-                    let Some(repetition) = Repetition::new(buffer[pos]) else {
+                    let Some(repetition) = Repetition::try_from_u8(buffer[pos]) else {
                         return Err(ParsingError::ReservedValue);
                     };
                     let validity = Validity(buffer[pos + 1]);
@@ -1009,7 +1009,7 @@ impl ResourceAllocationParts {
                     if buffer.len() < pos + 2 {
                         return Err(ParsingError::Truncated);
                     }
-                    let Some(v) = AbsoluteChannel::new(
+                    let Some(v) = AbsoluteChannel::try_from_u16(
                         u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF,
                     ) else {
                         return Err(ParsingError::ReservedValue);

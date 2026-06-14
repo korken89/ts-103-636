@@ -237,7 +237,7 @@ impl RdCapabilityParts {
         let Some(rx_gain) = RxGain::try_from_u8(b4 >> 4) else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(max_mcs) = Mcs::new(b4 & 0x0F) else {
+        let Some(max_mcs) = Mcs::try_from_u8(b4 & 0x0F) else {
             return Err(ParsingError::ReservedValue);
         };
         let Some(soft_buffer_size) = SoftBufferSize::try_from_u8(b5 >> 4) else {
@@ -246,7 +246,7 @@ impl RdCapabilityParts {
         let Some(num_harq_processes) = NumHarqProcesses::try_from_u8((b5 >> 2) & 0x03) else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(harq_feedback_delay) = HarqFeedbackDelay::new(b6 >> 4) else {
+        let Some(harq_feedback_delay) = HarqFeedbackDelay::try_from_u8(b6 >> 4) else {
             return Err(ParsingError::ReservedValue);
         };
         let d_delay = b6 & 0x08 != 0;
@@ -276,7 +276,7 @@ impl RdCapabilityParts {
             let Some(rx_gain) = RxGain::try_from_u8(buffer[pos + 2] >> 4) else {
                 return Err(ParsingError::ReservedValue);
             };
-            let Some(max_mcs) = Mcs::new(buffer[pos + 2] & 0x0F) else {
+            let Some(max_mcs) = Mcs::try_from_u8(buffer[pos + 2] & 0x0F) else {
                 return Err(ParsingError::ReservedValue);
             };
             let Some(soft_buffer_size) = SoftBufferSize::try_from_u8(buffer[pos + 3] >> 4) else {
@@ -287,7 +287,8 @@ impl RdCapabilityParts {
             else {
                 return Err(ParsingError::ReservedValue);
             };
-            let Some(harq_feedback_delay) = HarqFeedbackDelay::new(buffer[pos + 4] >> 4) else {
+            let Some(harq_feedback_delay) = HarqFeedbackDelay::try_from_u8(buffer[pos + 4] >> 4)
+            else {
                 return Err(ParsingError::ReservedValue);
             };
             let v = AdditionalPhyCapability {

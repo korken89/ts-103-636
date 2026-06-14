@@ -102,21 +102,30 @@ mod tests {
             0b1_0_000101,   // flow[5]: Release(1) rsv=0 FlowID=0x05
         ];
         let flows = [
-            FlowEntry::new(FlowAction::SetupOrReconfigure, FlowId::new(0x0A).unwrap()),
-            FlowEntry::new(FlowAction::Release, FlowId::new(0x14).unwrap()),
-            FlowEntry::new(FlowAction::SetupOrReconfigure, FlowId::new(0x01).unwrap()),
-            FlowEntry::new(FlowAction::Release, FlowId::new(0x02).unwrap()),
-            FlowEntry::new(FlowAction::SetupOrReconfigure, FlowId::new(0x03).unwrap()),
-            FlowEntry::new(FlowAction::Release, FlowId::new(0x05).unwrap()),
+            FlowEntry::new(
+                FlowAction::SetupOrReconfigure,
+                FlowId::try_from_u8(0x0A).unwrap(),
+            ),
+            FlowEntry::new(FlowAction::Release, FlowId::try_from_u8(0x14).unwrap()),
+            FlowEntry::new(
+                FlowAction::SetupOrReconfigure,
+                FlowId::try_from_u8(0x01).unwrap(),
+            ),
+            FlowEntry::new(FlowAction::Release, FlowId::try_from_u8(0x02).unwrap()),
+            FlowEntry::new(
+                FlowAction::SetupOrReconfigure,
+                FlowId::try_from_u8(0x03).unwrap(),
+            ),
+            FlowEntry::new(FlowAction::Release, FlowId::try_from_u8(0x05).unwrap()),
         ];
         let parts = ReconfigurationRequestParts {
             tx_harq: Some(HarqConfig {
-                processes: HarqProcesses::new(5).unwrap(),
-                max_re: MaxHarqReTx::new(13).unwrap(),
+                processes: HarqProcesses::try_from_u8(5).unwrap(),
+                max_re: MaxHarqReTx::try_from_u8(13).unwrap(),
             }),
             rx_harq: Some(HarqConfig {
-                processes: HarqProcesses::new(2).unwrap(),
-                max_re: MaxHarqReTx::new(7).unwrap(),
+                processes: HarqProcesses::try_from_u8(2).unwrap(),
+                max_re: MaxHarqReTx::try_from_u8(7).unwrap(),
             }),
             rd_capability_changed: true,
             radio_resource: RadioResourceChange::ResourceAllocationIeIncluded,
@@ -193,21 +202,30 @@ mod tests {
             0b1_0_000101,   // flow[5]: Release(1) rsv=0 FlowID=0x05
         ];
         let flows = [
-            FlowEntry::new(FlowAction::SetupOrReconfigure, FlowId::new(0x0A).unwrap()),
-            FlowEntry::new(FlowAction::Release, FlowId::new(0x14).unwrap()),
-            FlowEntry::new(FlowAction::SetupOrReconfigure, FlowId::new(0x01).unwrap()),
-            FlowEntry::new(FlowAction::Release, FlowId::new(0x02).unwrap()),
-            FlowEntry::new(FlowAction::SetupOrReconfigure, FlowId::new(0x03).unwrap()),
-            FlowEntry::new(FlowAction::Release, FlowId::new(0x05).unwrap()),
+            FlowEntry::new(
+                FlowAction::SetupOrReconfigure,
+                FlowId::try_from_u8(0x0A).unwrap(),
+            ),
+            FlowEntry::new(FlowAction::Release, FlowId::try_from_u8(0x14).unwrap()),
+            FlowEntry::new(
+                FlowAction::SetupOrReconfigure,
+                FlowId::try_from_u8(0x01).unwrap(),
+            ),
+            FlowEntry::new(FlowAction::Release, FlowId::try_from_u8(0x02).unwrap()),
+            FlowEntry::new(
+                FlowAction::SetupOrReconfigure,
+                FlowId::try_from_u8(0x03).unwrap(),
+            ),
+            FlowEntry::new(FlowAction::Release, FlowId::try_from_u8(0x05).unwrap()),
         ];
         let parts = ReconfigurationResponseParts {
             tx_harq: Some(HarqConfig {
-                processes: HarqProcesses::new(5).unwrap(),
-                max_re: MaxHarqReTx::new(13).unwrap(),
+                processes: HarqProcesses::try_from_u8(5).unwrap(),
+                max_re: MaxHarqReTx::try_from_u8(13).unwrap(),
             }),
             rx_harq: Some(HarqConfig {
-                processes: HarqProcesses::new(2).unwrap(),
-                max_re: MaxHarqReTx::new(7).unwrap(),
+                processes: HarqProcesses::try_from_u8(2).unwrap(),
+                max_re: MaxHarqReTx::try_from_u8(7).unwrap(),
             }),
             rd_capability_changed: true,
             radio_resource: RadioResourceChange::ResourceAllocationIeIncluded,
@@ -233,7 +251,7 @@ mod tests {
     }
 
     fn fe(action: FlowAction, raw: u8) -> FlowEntry {
-        FlowEntry::new(action, FlowId::new(raw).unwrap())
+        FlowEntry::new(action, FlowId::try_from_u8(raw).unwrap())
     }
 
     #[test]
@@ -266,12 +284,12 @@ mod tests {
         ];
         let parts = ReconfigurationRequestParts {
             tx_harq: Some(HarqConfig {
-                processes: HarqProcesses::new(3).unwrap(),
-                max_re: MaxHarqReTx::new(7).unwrap(),
+                processes: HarqProcesses::try_from_u8(3).unwrap(),
+                max_re: MaxHarqReTx::try_from_u8(7).unwrap(),
             }),
             rx_harq: Some(HarqConfig {
-                processes: HarqProcesses::new(2).unwrap(),
-                max_re: MaxHarqReTx::new(5).unwrap(),
+                processes: HarqProcesses::try_from_u8(2).unwrap(),
+                max_re: MaxHarqReTx::try_from_u8(5).unwrap(),
             }),
             rd_capability_changed: true,
             radio_resource: RadioResourceChange::ResourceAllocationIeIncluded,

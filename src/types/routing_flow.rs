@@ -40,7 +40,7 @@ impl GroupId {
     /// Construct from a 7-bit value. Returns `None` if `value > 127`.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value & !0x7F != 0 {
             return None;
         }
@@ -75,7 +75,7 @@ impl ResourceTag {
     /// Construct from a 7-bit value. Returns `None` if `value > 127`.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value & !0x7F != 0 {
             return None;
         }
@@ -109,7 +109,7 @@ impl Hop {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value & !0x0F != 0 {
             return None;
         }
@@ -289,7 +289,7 @@ impl FlowEntry {
     /// Construct from a raw on-wire byte. Returns `None` if the reserved
     /// bit (ETSI bit 1 / mask 0x40) is set (`const`).
     #[must_use]
-    pub const fn try_from_raw(byte: u8) -> Option<Self> {
+    pub const fn try_from_u8(byte: u8) -> Option<Self> {
         if byte & 0x40 != 0 {
             return None;
         }
@@ -312,7 +312,7 @@ impl FlowEntry {
     #[must_use]
     pub const fn flow_id(self) -> FlowId {
         // Invariant: low 6 bits always fit, by construction.
-        match FlowId::new(self.0 & 0x3F) {
+        match FlowId::try_from_u8(self.0 & 0x3F) {
             Some(f) => f,
             None => unreachable!(),
         }
@@ -388,7 +388,7 @@ impl FlowId {
     /// Construct from a 6-bit value. Returns `None` if `value > 63`.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value & !0x3F != 0 {
             return None;
         }

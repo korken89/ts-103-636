@@ -111,7 +111,7 @@ pub fn def() -> MessageDef {
                                     bits: 3,
                                     ty: Ty::Fallible {
                                         ty: "HarqProcesses",
-                                        ctor: "new",
+                                        ctor: "try_from_u8",
                                         getter: "as_u8",
                                     },
                                     doc: "Number of HARQ processes for reception.",
@@ -122,7 +122,7 @@ pub fn def() -> MessageDef {
                                     bits: 5,
                                     ty: Ty::Fallible {
                                         ty: "MaxHarqReTx",
-                                        ctor: "new",
+                                        ctor: "try_from_u8",
                                         getter: "as_u8",
                                     },
                                     doc: "Maximum HARQ re-receptions.",
@@ -133,7 +133,7 @@ pub fn def() -> MessageDef {
                                     bits: 3,
                                     ty: Ty::Fallible {
                                         ty: "HarqProcesses",
-                                        ctor: "new",
+                                        ctor: "try_from_u8",
                                         getter: "as_u8",
                                     },
                                     doc: "Number of HARQ processes for transmission.",
@@ -144,7 +144,7 @@ pub fn def() -> MessageDef {
                                     bits: 5,
                                     ty: Ty::Fallible {
                                         ty: "MaxHarqReTx",
-                                        ctor: "new",
+                                        ctor: "try_from_u8",
                                         getter: "as_u8",
                                     },
                                     doc: "Maximum HARQ retransmissions.",
@@ -172,7 +172,7 @@ pub fn def() -> MessageDef {
                                     bits: 6,
                                     ty: Ty::Fallible {
                                         ty: "FlowId",
-                                        ctor: "new",
+                                        ctor: "try_from_u8",
                                         getter: "as_u8",
                                     },
                                     doc: "Accepted flow ID.",
@@ -202,7 +202,7 @@ pub fn def() -> MessageDef {
                                     bits: 7,
                                     ty: Ty::Fallible {
                                         ty: "GroupId",
-                                        ctor: "new",
+                                        ctor: "try_from_u8",
                                         getter: "as_u8",
                                     },
                                     doc: "Assigned group ID.",
@@ -214,7 +214,7 @@ pub fn def() -> MessageDef {
                                     bits: 7,
                                     ty: Ty::Fallible {
                                         ty: "ResourceTag",
-                                        ctor: "new",
+                                        ctor: "try_from_u8",
                                         getter: "as_u8",
                                     },
                                     doc: "Assigned resource tag.",

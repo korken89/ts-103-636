@@ -83,7 +83,7 @@ pub fn def() -> MessageDef {
                         bits: 7,
                         ty: Ty::Fallible {
                             ty: "RaLength",
-                            ctor: "new",
+                            ctor: "try_from_u8",
                             getter: "as_u8",
                         },
                         doc: "Allocation length.",
@@ -116,7 +116,7 @@ pub fn def() -> MessageDef {
                 bits: 4,
                 ty: Ty::Fallible {
                     ty: "MaxRachLength",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Maximum RACH transmission length.",
@@ -127,7 +127,7 @@ pub fn def() -> MessageDef {
                 bits: 3,
                 ty: Ty::Fallible {
                     ty: "Cwsig",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Minimum contention window exponent.",
@@ -148,7 +148,7 @@ pub fn def() -> MessageDef {
                 bits: 4,
                 ty: Ty::Fallible {
                     ty: "ResponseWindow",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Response window length code.",
@@ -159,7 +159,7 @@ pub fn def() -> MessageDef {
                 bits: 3,
                 ty: Ty::Fallible {
                     ty: "Cwsig",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Maximum contention window exponent.",
@@ -174,7 +174,7 @@ pub fn def() -> MessageDef {
                         bits: 8,
                         ty: Ty::Fallible {
                             ty: "Repetition",
-                            ctor: "new",
+                            ctor: "try_from_u8",
                             getter: "as_u8",
                         },
                         doc: "Repetition interval.",
@@ -220,7 +220,7 @@ pub fn def() -> MessageDef {
                         bits: 13,
                         ty: Ty::Fallible {
                             ty: "AbsoluteChannel",
-                            ctor: "new",
+                            ctor: "try_from_u16",
                             getter: "as_u16",
                         },
                         doc: "Channel of the random access resource.",
@@ -241,7 +241,7 @@ pub fn def() -> MessageDef {
                         bits: 13,
                         ty: Ty::Fallible {
                             ty: "AbsoluteChannel",
-                            ctor: "new",
+                            ctor: "try_from_u16",
                             getter: "as_u16",
                         },
                         doc: "Channel for the random access response.",

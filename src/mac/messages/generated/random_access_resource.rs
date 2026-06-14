@@ -276,7 +276,7 @@ impl RandomAccessResourceParts {
         } else {
             PacketLengthType::Slot
         };
-        let Some(length) = RaLength::new(buffer[pos] & 0x7F) else {
+        let Some(length) = RaLength::try_from_u8(buffer[pos] & 0x7F) else {
             return Err(ParsingError::ReservedValue);
         };
         pos += 1;
@@ -293,17 +293,18 @@ impl RandomAccessResourceParts {
         } else {
             PacketLengthType::Slot
         };
-        let Some(max_rach_length) = MaxRachLength::new((buffer[pos] >> 3) & 0x0F) else {
+        let Some(max_rach_length) = MaxRachLength::try_from_u8((buffer[pos] >> 3) & 0x0F) else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(cwmin_sig) = Cwsig::new(buffer[pos] & 0x07) else {
+        let Some(cwmin_sig) = Cwsig::try_from_u8(buffer[pos] & 0x07) else {
             return Err(ParsingError::ReservedValue);
         };
         let dect_delay = buffer[pos + 1] & 0x80 != 0;
-        let Some(response_window) = ResponseWindow::new((buffer[pos + 1] >> 3) & 0x0F) else {
+        let Some(response_window) = ResponseWindow::try_from_u8((buffer[pos + 1] >> 3) & 0x0F)
+        else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(cwmax_sig) = Cwsig::new(buffer[pos + 1] & 0x07) else {
+        let Some(cwmax_sig) = Cwsig::try_from_u8(buffer[pos + 1] & 0x07) else {
             return Err(ParsingError::ReservedValue);
         };
         pos += 2;
@@ -311,7 +312,7 @@ impl RandomAccessResourceParts {
             if buffer.len() < pos + 2 {
                 return Err(ParsingError::Truncated);
             }
-            let Some(repetition) = Repetition::new(buffer[pos]) else {
+            let Some(repetition) = Repetition::try_from_u8(buffer[pos]) else {
                 return Err(ParsingError::ReservedValue);
             };
             let validity = Validity(buffer[pos + 1]);
@@ -338,9 +339,9 @@ impl RandomAccessResourceParts {
             if buffer.len() < pos + 2 {
                 return Err(ParsingError::Truncated);
             }
-            let Some(v) =
-                AbsoluteChannel::new(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF)
-            else {
+            let Some(v) = AbsoluteChannel::try_from_u16(
+                u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF,
+            ) else {
                 return Err(ParsingError::ReservedValue);
             };
             pos += 2;
@@ -352,9 +353,9 @@ impl RandomAccessResourceParts {
             if buffer.len() < pos + 2 {
                 return Err(ParsingError::Truncated);
             }
-            let Some(v) =
-                AbsoluteChannel::new(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF)
-            else {
+            let Some(v) = AbsoluteChannel::try_from_u16(
+                u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF,
+            ) else {
                 return Err(ParsingError::ReservedValue);
             };
             pos += 2;

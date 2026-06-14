@@ -172,23 +172,23 @@ mod tests {
                 dl: AllocationPair {
                     start_subslot: 0x015A,
                     length_type: PacketLengthType::Slot,
-                    length: RaLength::new(20).unwrap(),
+                    length: RaLength::try_from_u8(20).unwrap(),
                 },
                 ul: AllocationPair {
                     start_subslot: 0x00B4,
                     length_type: PacketLengthType::Subslot,
-                    length: RaLength::new(10).unwrap(),
+                    length: RaLength::try_from_u8(10).unwrap(),
                 },
                 options: AllocationOptions {
                     add: true,
-                    recipient: Some(ShortRdId::new(0xBEEF).unwrap()),
+                    recipient: Some(ShortRdId::try_from_u16(0xBEEF).unwrap()),
                     repeat: Some(RepeatPolicy {
                         mode: RepeatMode::PerFrame, // Table 6.4.3.3-1 code 001
-                        repetition: Repetition::new(3).unwrap(),
+                        repetition: Repetition::try_from_u8(3).unwrap(),
                         validity: Validity(50),
                     }),
                     sfn_value: Some(0x7E),
-                    channel: Some(AbsoluteChannel::new(0x1234).unwrap()),
+                    channel: Some(AbsoluteChannel::try_from_u16(0x1234).unwrap()),
                     resource_failure_timer: Some(DectScheduledResourceFailure::Ms500),
                 },
             },
@@ -226,7 +226,7 @@ mod tests {
                 pair: AllocationPair {
                     start_subslot: 17,
                     length_type: PacketLengthType::Subslot,
-                    length: RaLength::new(5).unwrap(),
+                    length: RaLength::try_from_u8(5).unwrap(),
                 },
                 options: AllocationOptions::default(),
             },
@@ -261,23 +261,23 @@ mod tests {
                 dl: AllocationPair {
                     start_subslot: 0x100, // requires 9-bit (mu > 4)
                     length_type: PacketLengthType::Slot,
-                    length: RaLength::new(3).unwrap(),
+                    length: RaLength::try_from_u8(3).unwrap(),
                 },
                 ul: AllocationPair {
                     start_subslot: 0x123,
                     length_type: PacketLengthType::Subslot,
-                    length: RaLength::new(7).unwrap(),
+                    length: RaLength::try_from_u8(7).unwrap(),
                 },
                 options: AllocationOptions {
                     add: true,
-                    recipient: Some(ShortRdId::new(0xABCD).unwrap()),
+                    recipient: Some(ShortRdId::try_from_u16(0xABCD).unwrap()),
                     repeat: Some(RepeatPolicy {
                         mode: RepeatMode::PerFrame,
-                        repetition: Repetition::new(4).unwrap(),
+                        repetition: Repetition::try_from_u8(4).unwrap(),
                         validity: Validity(100),
                     }),
                     sfn_value: Some(42),
-                    channel: Some(AbsoluteChannel::new(0x1234).unwrap()),
+                    channel: Some(AbsoluteChannel::try_from_u16(0x1234).unwrap()),
                     resource_failure_timer: Some(DectScheduledResourceFailure::Ms200),
                 },
             },
@@ -322,7 +322,7 @@ mod tests {
                 pair: AllocationPair {
                     start_subslot: 256,
                     length_type: PacketLengthType::Subslot,
-                    length: RaLength::new(0).unwrap(),
+                    length: RaLength::try_from_u8(0).unwrap(),
                 },
                 options: AllocationOptions::default(),
             },

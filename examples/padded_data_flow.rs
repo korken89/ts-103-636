@@ -43,9 +43,9 @@ fn main() {
         let payload = sensor_bytes(1, 0x0123);
         let ie = InformationElement::new_6bit_with_length(IEType6bit::UserPlaneDataFlow1, &payload)
             .unwrap();
-        let pt = LongRdId::new(PT_ID).unwrap();
-        let ft = LongRdId::new(FT_ID).unwrap();
-        let psn = SequenceNumber::new(1).unwrap();
+        let pt = LongRdId::try_from_u32(PT_ID).unwrap();
+        let ft = LongRdId::try_from_u32(FT_ID).unwrap();
+        let psn = SequenceNumber::try_from_u16(1).unwrap();
 
         // Build without padding first to see the bare length.
         let mut buf_bare = [0; 64];
@@ -88,9 +88,9 @@ fn main() {
         let payload = sensor_bytes(2, 0xCAFE);
         let ie = InformationElement::new_6bit_with_length(IEType6bit::UserPlaneDataFlow1, &payload)
             .unwrap();
-        let pt = LongRdId::new(PT_ID).unwrap();
-        let ft = LongRdId::new(FT_ID).unwrap();
-        let psn = SequenceNumber::new(2).unwrap();
+        let pt = LongRdId::try_from_u32(PT_ID).unwrap();
+        let ft = LongRdId::try_from_u32(FT_ID).unwrap();
+        let psn = SequenceNumber::try_from_u16(2).unwrap();
 
         let target = 32;
         let mut buf = [0; 64];
@@ -125,9 +125,9 @@ fn main() {
         // spatial stream. compute_tbs returns the TBS in BITS per ETSI
         // 5.3; the MAC fills (tbs / 8) bytes.
         let phy_subslots = 2;
-        let phy_mcs = Mcs::new(1).unwrap();
-        let phy_beta = Beta::new(1).unwrap();
-        let phy_mu = Mu::new(1).unwrap();
+        let phy_mcs = Mcs::try_from_u8(1).unwrap();
+        let phy_beta = Beta::try_from_u8(1).unwrap();
+        let phy_mu = Mu::try_from_u8(1).unwrap();
         let phy_nss = 1;
         let tbs_bits = compute_tbs(phy_subslots, phy_mcs, phy_beta, phy_mu, phy_nss)
             .expect("supported PHY parameters") as usize;
@@ -139,10 +139,10 @@ fn main() {
         let mut crypto = SoftwareCrypto;
         let int_key = [0x11; 16];
         let cipher_key = [0x22; 16];
-        let psn = SequenceNumber::new(1).unwrap();
+        let psn = SequenceNumber::try_from_u16(1).unwrap();
         let ctx = SecurityContext {
-            tx: LongRdId::new(PT_ID).unwrap(),
-            rx: LongRdId::new(FT_ID).unwrap(),
+            tx: LongRdId::try_from_u32(PT_ID).unwrap(),
+            rx: LongRdId::try_from_u32(FT_ID).unwrap(),
             hpc: 0x1000,
         };
         let payload = sensor_bytes(3, 0x4242);

@@ -101,7 +101,7 @@ impl MacSecurityInfoParts {
         let Some(version) = SecurityVersion::try_from_u8(b0 >> 6) else {
             return Err(ParsingError::ReservedValue);
         };
-        let Some(key_index) = KeyIndex::new((b0 >> 4) & 0x03) else {
+        let Some(key_index) = KeyIndex::try_from_u8((b0 >> 4) & 0x03) else {
             return Err(ParsingError::ReservedValue);
         };
         let Some(iv_type) = SecurityIvType::try_from_u8(b0 & 0x0F) else {

@@ -14,7 +14,7 @@ mod tests {
     fn mac_security_info_round_trip() {
         let parts = MacSecurityInfoParts {
             version: SecurityVersion::Mode1,
-            key_index: KeyIndex::new(2).unwrap(),
+            key_index: KeyIndex::try_from_u8(2).unwrap(),
             iv_type: SecurityIvType::ResynchronizingHpc,
             hpc: 0xDEAD_BEEF,
         };
@@ -76,9 +76,9 @@ mod tests {
             0x78,         // HPC byte 3 (LSB)
         ];
         let parts = MacSecurityInfoParts {
-            version: SecurityVersion::Mode1,             // Table 6.4.3.1-1: 0b00
-            key_index: KeyIndex::new(3).unwrap(),        // 0b11
-            iv_type: SecurityIvType::ResynchronizingHpc, // Table 6.4.3.1-2: 0b0001
+            version: SecurityVersion::Mode1,              // Table 6.4.3.1-1: 0b00
+            key_index: KeyIndex::try_from_u8(3).unwrap(), // 0b11
+            iv_type: SecurityIvType::ResynchronizingHpc,  // Table 6.4.3.1-2: 0b0001
             hpc: 0x1234_5678,
         };
         let mut buf = [0u8; 8];

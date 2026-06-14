@@ -120,9 +120,9 @@ impl JoiningBeaconParts {
         }
         let mut channels = Vec::new();
         for _ in 0..channels_count {
-            let Some(v) =
-                AbsoluteChannel::new(u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF)
-            else {
+            let Some(v) = AbsoluteChannel::try_from_u16(
+                u16::from_be_bytes([buffer[pos], buffer[pos + 1]]) & 0x1FFF,
+            ) else {
                 return Err(ParsingError::ReservedValue);
             };
             pos += 2;

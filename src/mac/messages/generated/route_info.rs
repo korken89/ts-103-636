@@ -95,7 +95,7 @@ impl RouteInfoParts {
         if buffer.len() < 6 {
             return Err(ParsingError::Truncated);
         }
-        let Some(sink_address) = LongRdId::new(u32::from_be_bytes([
+        let Some(sink_address) = LongRdId::try_from_u32(u32::from_be_bytes([
             buffer[0], buffer[1], buffer[2], buffer[3],
         ])) else {
             return Err(ParsingError::ReservedValue);

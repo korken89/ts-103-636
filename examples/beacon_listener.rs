@@ -16,8 +16,8 @@ use ts_103_636::prelude::*;
 /// FT side: build a Cluster Beacon PDU into `buf` and return the slice
 /// that was written.
 fn ft_build_cluster_beacon(buf: &mut [u8], sfn: u8) -> &[u8] {
-    let net = NetworkId24::new(0x12_3456).unwrap();
-    let ft = LongRdId::new(0x2222_BBBB).unwrap();
+    let net = NetworkId24::try_from_u32(0x12_3456).unwrap();
+    let ft = LongRdId::try_from_u32(0x2222_BBBB).unwrap();
 
     let body = ClusterBeaconParts {
         mu: Mu::M1,
@@ -25,12 +25,12 @@ fn ft_build_cluster_beacon(buf: &mut [u8], sfn: u8) -> &[u8] {
         power_const: PowerConst::Unconstrained,
         network_beacon_period: NetworkBeaconPeriod::Ms1000,
         cluster_beacon_period: ClusterBeaconPeriod::Ms100,
-        count_to_trigger: CountToTrigger::new(3).unwrap(),
-        rel_quality: Quality::new(0).unwrap(),
-        min_quality: Quality::new(0).unwrap(),
+        count_to_trigger: CountToTrigger::try_from_u8(3).unwrap(),
+        rel_quality: Quality::try_from_u8(0).unwrap(),
+        min_quality: Quality::try_from_u8(0).unwrap(),
         cluster_max_tx_power: Some(TransmitPower::Dbm13),
         frame_offset: None,
-        next_cluster_channel: Some(AbsoluteChannel::new(0x1A4).unwrap()),
+        next_cluster_channel: Some(AbsoluteChannel::try_from_u16(0x1A4).unwrap()),
         time_to_next: Some(50_000),
     };
 

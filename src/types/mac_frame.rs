@@ -159,7 +159,7 @@ impl SequenceNumber {
     /// 12 bits.
     #[must_use]
     #[inline]
-    pub const fn new(value: u16) -> Option<Self> {
+    pub const fn try_from_u16(value: u16) -> Option<Self> {
         if value & !0x0FFF != 0 {
             return None;
         }
@@ -282,7 +282,7 @@ impl PacketLength {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(raw: u8) -> Option<Self> {
+    pub const fn try_from_u8(raw: u8) -> Option<Self> {
         if raw <= 15 {
             Some(PacketLength(raw))
         } else {
@@ -324,9 +324,9 @@ mod tests {
     #[test]
     fn packet_length_units_one_to_sixteen() {
         for raw in 0..16 {
-            let pl = PacketLength::new(raw).unwrap();
+            let pl = PacketLength::try_from_u8(raw).unwrap();
             assert_eq!(pl.units(), raw + 1);
         }
-        assert!(PacketLength::new(16).is_none());
+        assert!(PacketLength::try_from_u8(16).is_none());
     }
 }

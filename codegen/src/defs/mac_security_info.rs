@@ -32,7 +32,7 @@ pub fn def() -> MessageDef {
                 bits: 2,
                 ty: Ty::Fallible {
                     ty: "KeyIndex",
-                    ctor: "new",
+                    ctor: "try_from_u8",
                     getter: "as_u8",
                 },
                 doc: "Index of the integrity / cipher key pair in use.",

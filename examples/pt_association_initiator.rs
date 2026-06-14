@@ -21,12 +21,12 @@ const NETWORK_ID: u32 = 0x12_3456;
 
 /// FT side: advertise a Joining Beacon listing the channels it serves.
 fn ft_build_joining_beacon(buf: &mut [u8]) -> &[u8] {
-    let net = NetworkId24::new(NETWORK_ID).unwrap();
-    let ft = LongRdId::new(FT_ID).unwrap();
+    let net = NetworkId24::try_from_u32(NETWORK_ID).unwrap();
+    let ft = LongRdId::try_from_u32(FT_ID).unwrap();
 
     let channels = Vec::from_slice(&[
-        AbsoluteChannel::new(0x01A4).unwrap(),
-        AbsoluteChannel::new(0x01A8).unwrap(),
+        AbsoluteChannel::try_from_u16(0x01A4).unwrap(),
+        AbsoluteChannel::try_from_u16(0x01A8).unwrap(),
     ])
     .unwrap();
 
@@ -94,18 +94,18 @@ fn pt_listen_for_joining(received: &[u8]) -> DiscoveredCluster {
 
 /// PT side: build an Association Request targeted at the discovered FT.
 fn pt_build_association_request<'a>(buf: &'a mut [u8], cluster: &DiscoveredCluster) -> &'a [u8] {
-    let pt = LongRdId::new(PT_ID).unwrap();
-    let psn = SequenceNumber::new(1).unwrap();
+    let pt = LongRdId::try_from_u32(PT_ID).unwrap();
+    let psn = SequenceNumber::try_from_u16(1).unwrap();
     let _ = cluster.network_id; // PT would also store this for the secured PDU path.
 
     let body = AssociationRequestParts {
         setup_cause: SetupCause::InitialAssociation,
         power_const: PowerConst::Unconstrained,
         flow_ids: Vec::new(),
-        harq_processes_tx: HarqProcesses::new(2).unwrap(),
-        max_harq_re_tx: MaxHarqReTx::new(5).unwrap(),
-        harq_processes_rx: HarqProcesses::new(2).unwrap(),
-        max_harq_re_rx: MaxHarqReTx::new(5).unwrap(),
+        harq_processes_tx: HarqProcesses::try_from_u8(2).unwrap(),
+        max_harq_re_tx: MaxHarqReTx::try_from_u8(5).unwrap(),
+        harq_processes_rx: HarqProcesses::try_from_u8(2).unwrap(),
+        max_harq_re_rx: MaxHarqReTx::try_from_u8(5).unwrap(),
         ft_mode: None,
     };
 
@@ -144,8 +144,8 @@ fn ft_accept(received: &[u8], response_buf: &mut [u8]) -> usize {
         group: None,
     });
 
-    let ft = LongRdId::new(FT_ID).unwrap();
-    let response_psn = SequenceNumber::new(1).unwrap();
+    let ft = LongRdId::try_from_u32(FT_ID).unwrap();
+    let response_psn = SequenceNumber::try_from_u16(1).unwrap();
     MacPduBuilder::new(response_buf)
         .push_unicast(NotUsed, false, response_psn, their_id, ft)
         .expect("buffer fits header")

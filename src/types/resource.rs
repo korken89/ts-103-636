@@ -18,7 +18,7 @@ impl Repetition {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         match NonZero::new(value) {
             Some(n) => Some(Self(n)),
             None => None,
@@ -223,7 +223,7 @@ impl RaLength {
     /// Construct from a 7-bit value. Returns `None` if `value > 127`.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value & !0x7F != 0 {
             return None;
         }
@@ -304,7 +304,7 @@ impl Cwsig {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value & !0x07 != 0 {
             return None;
         }
@@ -340,7 +340,7 @@ impl ResponseWindow {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(raw: u8) -> Option<Self> {
+    pub const fn try_from_u8(raw: u8) -> Option<Self> {
         if raw & !0x0F != 0 {
             return None;
         }
@@ -381,7 +381,7 @@ impl MaxRachLength {
     /// Construct from a raw value. Returns `None` on out-of-range input.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value & !0x0F != 0 {
             return None;
         }

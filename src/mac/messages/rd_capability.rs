@@ -70,10 +70,10 @@ mod tests {
             max_nss_for_rx: Nss::N2,                // code 0b01
             rx_for_tx_diversity: Nss::N1,           // code 0b00
             rx_gain: RxGain::Db2,                   // code 6
-            max_mcs: Mcs::new(7).unwrap(),
+            max_mcs: Mcs::try_from_u8(7).unwrap(),
             soft_buffer_size: SoftBufferSize::Bytes512000, // code 6
             num_harq_processes: NumHarqProcesses::P8,      // code 0b11
-            harq_feedback_delay: HarqFeedbackDelay::new(6).unwrap(), // 6 subslots
+            harq_feedback_delay: HarqFeedbackDelay::try_from_u8(6).unwrap(), // 6 subslots
         }
     }
 
@@ -236,10 +236,10 @@ mod tests {
             max_nss_for_rx: Nss::N1,
             rx_for_tx_diversity: Nss::N1,
             rx_gain: RxGain::Db0,
-            max_mcs: Mcs::new(4).unwrap(),
+            max_mcs: Mcs::try_from_u8(4).unwrap(),
             soft_buffer_size: SoftBufferSize::Bytes64000,
             num_harq_processes: NumHarqProcesses::P4,
-            harq_feedback_delay: HarqFeedbackDelay::new(2).unwrap(),
+            harq_feedback_delay: HarqFeedbackDelay::try_from_u8(2).unwrap(),
         }
     }
 
@@ -252,10 +252,10 @@ mod tests {
                 max_nss_for_rx: Nss::N2,
                 rx_for_tx_diversity: Nss::N4,
                 rx_gain: RxGain::Db6,
-                max_mcs: Mcs::new(9).unwrap(),
+                max_mcs: Mcs::try_from_u8(9).unwrap(),
                 soft_buffer_size: SoftBufferSize::Bytes256000,
                 num_harq_processes: NumHarqProcesses::P8,
-                harq_feedback_delay: HarqFeedbackDelay::new(5).unwrap(),
+                harq_feedback_delay: HarqFeedbackDelay::try_from_u8(5).unwrap(),
             },
         }
     }

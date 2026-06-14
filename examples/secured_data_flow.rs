@@ -76,8 +76,8 @@ fn pt_build_secured_data<'a>(
     psn: SequenceNumber,
     sample: &SensorSample,
 ) -> &'a [u8] {
-    let pt = LongRdId::new(PT_ID).unwrap();
-    let ft = LongRdId::new(FT_ID).unwrap();
+    let pt = LongRdId::try_from_u32(PT_ID).unwrap();
+    let ft = LongRdId::try_from_u32(FT_ID).unwrap();
 
     let mut payload = [0; SensorSample::ENCODED_LEN];
     sample.encode(&mut payload);
@@ -135,13 +135,13 @@ fn main() {
 
     // One SecurityContext per direction. Both ends keep both contexts.
     let pt_to_ft_ctx = SecurityContext {
-        tx: LongRdId::new(PT_ID).unwrap(),
-        rx: LongRdId::new(FT_ID).unwrap(),
+        tx: LongRdId::try_from_u32(PT_ID).unwrap(),
+        rx: LongRdId::try_from_u32(FT_ID).unwrap(),
         hpc: 0x0000_1000, // PT's TX HPC
     };
     let ft_to_pt_ctx = SecurityContext {
-        tx: LongRdId::new(FT_ID).unwrap(),
-        rx: LongRdId::new(PT_ID).unwrap(),
+        tx: LongRdId::try_from_u32(FT_ID).unwrap(),
+        rx: LongRdId::try_from_u32(PT_ID).unwrap(),
         hpc: 0x0000_2000, // FT's TX HPC
     };
 
@@ -152,7 +152,7 @@ fn main() {
         channel: 1,
         sample: 0x0123,
     };
-    let pt_psn = SequenceNumber::new(1).unwrap();
+    let pt_psn = SequenceNumber::try_from_u16(1).unwrap();
 
     // PT -> FT (encrypted)
     let mut tx_buf = [0; 64];
@@ -192,16 +192,16 @@ fn main() {
     );
 
     // FT -> PT (encrypted ack on Higher Layer Signalling Flow 1)
-    let ack_psn = SequenceNumber::new(1).unwrap();
+    let ack_psn = SequenceNumber::try_from_u16(1).unwrap();
     let mut ack_tx_buf = [0; 64];
-    let ack_payload = 0x0001.to_be_bytes();
+    let ack_payload = 0x0001_u16.to_be_bytes();
     let ack_ie = InformationElement::new_6bit_with_length(
         IEType6bit::HigherLayerSignallingFlow1,
         &ack_payload,
     )
     .expect("ack fits");
-    let pt = LongRdId::new(PT_ID).unwrap();
-    let ft = LongRdId::new(FT_ID).unwrap();
+    let pt = LongRdId::try_from_u32(PT_ID).unwrap();
+    let ft = LongRdId::try_from_u32(FT_ID).unwrap();
     let ack_secured_len = MacPduBuilder::new(&mut ack_tx_buf)
         .push_unicast(UsedNoIe, false, ack_psn, pt, ft)
         .expect("buffer fits header")

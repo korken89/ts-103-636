@@ -37,7 +37,7 @@ impl HarqProcess {
     /// Construct from a raw value. Returns `None` if `value > 7`.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value <= 7 { Some(Self(value)) } else { None }
     }
 
@@ -73,7 +73,7 @@ impl Cqi {
     pub const fn try_from_u8(value: u8) -> Option<Self> {
         match value {
             0 => Some(Self::OutOfRange),
-            1..=12 => match Mcs::new(value - 1) {
+            1..=12 => match Mcs::try_from_u8(value - 1) {
                 Some(m) => Some(Self::Mcs(m)),
                 None => None,
             },
@@ -210,7 +210,7 @@ impl CodebookIndex3 {
     /// Construct from a raw value. Returns `None` if `value > 7`.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value <= 7 { Some(Self(value)) } else { None }
     }
 
@@ -232,7 +232,7 @@ impl CodebookIndex6 {
     /// Construct from a raw value. Returns `None` if `value > 63`.
     #[must_use]
     #[inline]
-    pub const fn new(value: u8) -> Option<Self> {
+    pub const fn try_from_u8(value: u8) -> Option<Self> {
         if value <= 63 { Some(Self(value)) } else { None }
     }
 
@@ -370,21 +370,27 @@ impl Feedback {
         Ok(match format {
             0b0000 => Self::None,
             0b0001 => Self::Format1 {
-                harq_process: ok_or_reserved!(HarqProcess::new(((info >> 9) & 0x7) as u8)),
+                harq_process: ok_or_reserved!(HarqProcess::try_from_u8(((info >> 9) & 0x7) as u8)),
                 ack: (info >> 8) & 1 != 0,
                 buffer_status: ok_or_reserved!(BufferStatus::try_from_u8(bs_mid)),
                 cqi: ok_or_reserved!(Cqi::try_from_u8(cqi4)),
             },
             0b0010 => Self::Format2 {
-                codebook_index: ok_or_reserved!(CodebookIndex3::new(((info >> 9) & 0x7) as u8)),
+                codebook_index: ok_or_reserved!(CodebookIndex3::try_from_u8(
+                    ((info >> 9) & 0x7) as u8
+                )),
                 dual_layer: (info >> 8) & 1 != 0,
                 buffer_status: ok_or_reserved!(BufferStatus::try_from_u8(bs_mid)),
                 cqi: ok_or_reserved!(Cqi::try_from_u8(cqi4)),
             },
             0b0011 => Self::Format3 {
-                harq_process_0: ok_or_reserved!(HarqProcess::new(((info >> 9) & 0x7) as u8)),
+                harq_process_0: ok_or_reserved!(HarqProcess::try_from_u8(
+                    ((info >> 9) & 0x7) as u8
+                )),
                 ack_0: (info >> 8) & 1 != 0,
-                harq_process_1: ok_or_reserved!(HarqProcess::new(((info >> 5) & 0x7) as u8)),
+                harq_process_1: ok_or_reserved!(HarqProcess::try_from_u8(
+                    ((info >> 5) & 0x7) as u8
+                )),
                 ack_1: (info >> 4) & 1 != 0,
                 cqi: ok_or_reserved!(Cqi::try_from_u8(cqi4)),
             },
@@ -393,15 +399,15 @@ impl Feedback {
                 cqi: ok_or_reserved!(Cqi::try_from_u8(cqi4)),
             },
             0b0101 => Self::Format5 {
-                harq_process: ok_or_reserved!(HarqProcess::new(((info >> 9) & 0x7) as u8)),
+                harq_process: ok_or_reserved!(HarqProcess::try_from_u8(((info >> 9) & 0x7) as u8)),
                 ack: (info >> 8) & 1 != 0,
                 mimo: ok_or_reserved!(MimoLayers::try_from_u8(((info >> 6) & 0x3) as u8)),
-                codebook_index: ok_or_reserved!(CodebookIndex6::new((info & 0x3F) as u8)),
+                codebook_index: ok_or_reserved!(CodebookIndex6::try_from_u8((info & 0x3F) as u8)),
             },
             // Format 6: the bit after the process number is reserved
             // (ignored on receive, zero on transmit).
             0b0110 => Self::Format6 {
-                harq_process: ok_or_reserved!(HarqProcess::new(((info >> 9) & 0x7) as u8)),
+                harq_process: ok_or_reserved!(HarqProcess::try_from_u8(((info >> 9) & 0x7) as u8)),
                 buffer_status: ok_or_reserved!(BufferStatus::try_from_u8(bs_mid)),
                 cqi: ok_or_reserved!(Cqi::try_from_u8(cqi4)),
             },
@@ -523,10 +529,10 @@ mod tests {
         // Table 6.2.2-2a: process 5 (101), ACK (1), buffer 32<BS<=64
         // (0011), CQI MCS-2 (0011) -> 101_1_0011_0011.
         let fb = Feedback::Format1 {
-            harq_process: HarqProcess::new(5).unwrap(),
+            harq_process: HarqProcess::try_from_u8(5).unwrap(),
             ack: true,
             buffer_status: BufferStatus::UpTo64,
-            cqi: Cqi::Mcs(Mcs::new(2).unwrap()),
+            cqi: Cqi::Mcs(Mcs::try_from_u8(2).unwrap()),
         };
         assert_eq!(fb.to_raw(), (0b0001, 0b101_1_0011_0011));
         assert_eq!(Feedback::try_from_raw(0b0001, 0b101_1_0011_0011), Ok(fb));
@@ -537,9 +543,9 @@ mod tests {
         // Table 6.2.2-2c: process 1 NACK, process 7 ACK, CQI out of
         // range -> 001_0_111_1_0000.
         let fb = Feedback::Format3 {
-            harq_process_0: HarqProcess::new(1).unwrap(),
+            harq_process_0: HarqProcess::try_from_u8(1).unwrap(),
             ack_0: false,
-            harq_process_1: HarqProcess::new(7).unwrap(),
+            harq_process_1: HarqProcess::try_from_u8(7).unwrap(),
             ack_1: true,
             cqi: Cqi::OutOfRange,
         };
@@ -553,7 +559,7 @@ mod tests {
         // -> 10100001_1100.
         let fb = Feedback::Format4 {
             harq_feedback_bitmap: 0b1010_0001,
-            cqi: Cqi::Mcs(Mcs::new(11).unwrap()),
+            cqi: Cqi::Mcs(Mcs::try_from_u8(11).unwrap()),
         };
         assert_eq!(fb.to_raw(), (0b0100, 0b1010_0001_1100));
         assert_eq!(Feedback::try_from_raw(0b0100, 0b1010_0001_1100), Ok(fb));
@@ -564,10 +570,10 @@ mod tests {
         // Table 6.2.2-2e: process 2 ACK, four layers (10), codebook 33
         // (100001) -> 010_1_10_100001.
         let fb = Feedback::Format5 {
-            harq_process: HarqProcess::new(2).unwrap(),
+            harq_process: HarqProcess::try_from_u8(2).unwrap(),
             ack: true,
             mimo: MimoLayers::Four,
-            codebook_index: CodebookIndex6::new(33).unwrap(),
+            codebook_index: CodebookIndex6::try_from_u8(33).unwrap(),
         };
         assert_eq!(fb.to_raw(), (0b0101, 0b010_1_10_100001));
         assert_eq!(Feedback::try_from_raw(0b0101, 0b010_1_10_100001), Ok(fb));
@@ -583,9 +589,9 @@ mod tests {
         assert_eq!(
             fb,
             Feedback::Format6 {
-                harq_process: HarqProcess::new(3).unwrap(),
+                harq_process: HarqProcess::try_from_u8(3).unwrap(),
                 buffer_status: BufferStatus::UpTo16,
-                cqi: Cqi::Mcs(Mcs::new(1).unwrap()),
+                cqi: Cqi::Mcs(Mcs::try_from_u8(1).unwrap()),
             }
         );
         assert_eq!(fb.to_raw(), (0b0110, 0b011_0_0001_0010));
@@ -596,7 +602,7 @@ mod tests {
         // Table 6.2.2-2g: bs(4) | select(1) | cqi(4) | reserved(3).
         let with_cqi = Feedback::Format7 {
             buffer_status: BufferStatus::UpTo1024,
-            cqi: Some(Cqi::Mcs(Mcs::new(4).unwrap())),
+            cqi: Some(Cqi::Mcs(Mcs::try_from_u8(4).unwrap())),
         };
         assert_eq!(with_cqi.to_raw(), (0b0111, 0b0111_1_0101_000));
         assert_eq!(
@@ -667,8 +673,8 @@ mod tests {
     #[test]
     fn cqi_code_points() {
         assert_eq!(Cqi::OutOfRange.as_u8(), 0);
-        assert_eq!(Cqi::Mcs(Mcs::new(0).unwrap()).as_u8(), 1);
-        assert_eq!(Cqi::Mcs(Mcs::new(11).unwrap()).as_u8(), 12);
+        assert_eq!(Cqi::Mcs(Mcs::try_from_u8(0).unwrap()).as_u8(), 1);
+        assert_eq!(Cqi::Mcs(Mcs::try_from_u8(11).unwrap()).as_u8(), 12);
         assert!(Cqi::try_from_u8(13).is_none());
         assert!(Cqi::try_from_u8(15).is_none());
     }
@@ -678,38 +684,38 @@ mod tests {
         let samples = [
             Feedback::None,
             Feedback::Format1 {
-                harq_process: HarqProcess::new(0).unwrap(),
+                harq_process: HarqProcess::try_from_u8(0).unwrap(),
                 ack: false,
                 buffer_status: BufferStatus::Empty,
                 cqi: Cqi::OutOfRange,
             },
             Feedback::Format2 {
-                codebook_index: CodebookIndex3::new(7).unwrap(),
+                codebook_index: CodebookIndex3::try_from_u8(7).unwrap(),
                 dual_layer: true,
                 buffer_status: BufferStatus::Over131072,
-                cqi: Cqi::Mcs(Mcs::new(7).unwrap()),
+                cqi: Cqi::Mcs(Mcs::try_from_u8(7).unwrap()),
             },
             Feedback::Format3 {
-                harq_process_0: HarqProcess::new(6).unwrap(),
+                harq_process_0: HarqProcess::try_from_u8(6).unwrap(),
                 ack_0: true,
-                harq_process_1: HarqProcess::new(0).unwrap(),
+                harq_process_1: HarqProcess::try_from_u8(0).unwrap(),
                 ack_1: false,
-                cqi: Cqi::Mcs(Mcs::new(3).unwrap()),
+                cqi: Cqi::Mcs(Mcs::try_from_u8(3).unwrap()),
             },
             Feedback::Format4 {
                 harq_feedback_bitmap: 0xFF,
                 cqi: Cqi::OutOfRange,
             },
             Feedback::Format5 {
-                harq_process: HarqProcess::new(7).unwrap(),
+                harq_process: HarqProcess::try_from_u8(7).unwrap(),
                 ack: false,
                 mimo: MimoLayers::Single,
-                codebook_index: CodebookIndex6::new(63).unwrap(),
+                codebook_index: CodebookIndex6::try_from_u8(63).unwrap(),
             },
             Feedback::Format6 {
-                harq_process: HarqProcess::new(1).unwrap(),
+                harq_process: HarqProcess::try_from_u8(1).unwrap(),
                 buffer_status: BufferStatus::UpTo4096,
-                cqi: Cqi::Mcs(Mcs::new(9).unwrap()),
+                cqi: Cqi::Mcs(Mcs::try_from_u8(9).unwrap()),
             },
             Feedback::Format7 {
                 buffer_status: BufferStatus::UpTo128,

@@ -21,18 +21,18 @@ const FT_ID: u32 = 0x2222_BBBB;
 /// PT side: build an Association Request PDU into `buf` and return the
 /// slice that was written.
 fn pt_build_association_request(buf: &mut [u8]) -> &[u8] {
-    let pt = LongRdId::new(PT_ID).unwrap();
-    let ft = LongRdId::new(FT_ID).unwrap();
-    let psn = SequenceNumber::new(1).unwrap();
+    let pt = LongRdId::try_from_u32(PT_ID).unwrap();
+    let ft = LongRdId::try_from_u32(FT_ID).unwrap();
+    let psn = SequenceNumber::try_from_u16(1).unwrap();
 
     let body = AssociationRequestParts {
         setup_cause: SetupCause::InitialAssociation,
         power_const: PowerConst::Unconstrained,
         flow_ids: Vec::new(),
-        harq_processes_tx: HarqProcesses::new(2).unwrap(),
-        max_harq_re_tx: MaxHarqReTx::new(5).unwrap(),
-        harq_processes_rx: HarqProcesses::new(2).unwrap(),
-        max_harq_re_rx: MaxHarqReTx::new(5).unwrap(),
+        harq_processes_tx: HarqProcesses::try_from_u8(2).unwrap(),
+        max_harq_re_tx: MaxHarqReTx::try_from_u8(5).unwrap(),
+        harq_processes_rx: HarqProcesses::try_from_u8(2).unwrap(),
+        max_harq_re_rx: MaxHarqReTx::try_from_u8(5).unwrap(),
         ft_mode: None,
     };
 
@@ -84,9 +84,9 @@ fn ft_receive_and_respond<'a>(received: &[u8], response_buf: &'a mut [u8]) -> &'
         group: None,
     });
 
-    let pt = LongRdId::new(PT_ID).unwrap();
-    let ft = LongRdId::new(FT_ID).unwrap();
-    let response_psn = SequenceNumber::new(1).unwrap();
+    let pt = LongRdId::try_from_u32(PT_ID).unwrap();
+    let ft = LongRdId::try_from_u32(FT_ID).unwrap();
+    let response_psn = SequenceNumber::try_from_u16(1).unwrap();
 
     MacPduBuilder::new(response_buf)
         .push_unicast(NotUsed, false, response_psn, pt, ft)

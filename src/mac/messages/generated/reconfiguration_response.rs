@@ -149,10 +149,10 @@ impl ReconfigurationResponseParts<'_> {
             if buffer.len() < pos + 1 {
                 return Err(ParsingError::Truncated);
             }
-            let Some(processes) = HarqProcesses::new(buffer[pos] >> 5) else {
+            let Some(processes) = HarqProcesses::try_from_u8(buffer[pos] >> 5) else {
                 return Err(ParsingError::ReservedValue);
             };
-            let Some(max_re) = MaxHarqReTx::new(buffer[pos] & 0x1F) else {
+            let Some(max_re) = MaxHarqReTx::try_from_u8(buffer[pos] & 0x1F) else {
                 return Err(ParsingError::ReservedValue);
             };
             pos += 1;
@@ -164,10 +164,10 @@ impl ReconfigurationResponseParts<'_> {
             if buffer.len() < pos + 1 {
                 return Err(ParsingError::Truncated);
             }
-            let Some(processes) = HarqProcesses::new(buffer[pos] >> 5) else {
+            let Some(processes) = HarqProcesses::try_from_u8(buffer[pos] >> 5) else {
                 return Err(ParsingError::ReservedValue);
             };
-            let Some(max_re) = MaxHarqReTx::new(buffer[pos] & 0x1F) else {
+            let Some(max_re) = MaxHarqReTx::try_from_u8(buffer[pos] & 0x1F) else {
                 return Err(ParsingError::ReservedValue);
             };
             pos += 1;

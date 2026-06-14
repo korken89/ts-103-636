@@ -126,21 +126,21 @@ mod tests {
     #[test]
     fn association_response_accept_full_round_trip() {
         let flows = Vec::from_slice(&[
-            FlowId::new(0b000011).unwrap(),
-            FlowId::new(0b000100).unwrap(),
+            FlowId::try_from_u8(0b000011).unwrap(),
+            FlowId::try_from_u8(0b000100).unwrap(),
         ])
         .unwrap();
         let parts = AssociationResponseParts::Accept(AssociationAcceptParts {
             flow_acceptance: FlowAcceptance::Specific(flows),
             harq_override: Some(HarqOverride {
-                harq_processes_rx: HarqProcesses::new(2).unwrap(),
-                max_harq_re_rx: MaxHarqReTx::new(5).unwrap(),
-                harq_processes_tx: HarqProcesses::new(4).unwrap(),
-                max_harq_re_tx: MaxHarqReTx::new(7).unwrap(),
+                harq_processes_rx: HarqProcesses::try_from_u8(2).unwrap(),
+                max_harq_re_rx: MaxHarqReTx::try_from_u8(5).unwrap(),
+                harq_processes_tx: HarqProcesses::try_from_u8(4).unwrap(),
+                max_harq_re_tx: MaxHarqReTx::try_from_u8(7).unwrap(),
             }),
             group: Some(GroupAssignment {
-                group_id: GroupId::new(0x42).unwrap(),
-                resource_tag: ResourceTag::new(0x21).unwrap(),
+                group_id: GroupId::try_from_u8(0x42).unwrap(),
+                resource_tag: ResourceTag::try_from_u8(0x21).unwrap(),
             }),
         });
         let mut buf = [0; 16];
@@ -259,25 +259,25 @@ mod tests {
             0x2A,            // Resource Tag = 0x2A (7-bit)
         ];
         let flows = Vec::from_slice(&[
-            FlowId::new(0x01).unwrap(),
-            FlowId::new(0x02).unwrap(),
-            FlowId::new(0x03).unwrap(),
-            FlowId::new(0x0A).unwrap(),
-            FlowId::new(0x15).unwrap(),
-            FlowId::new(0x20).unwrap(),
+            FlowId::try_from_u8(0x01).unwrap(),
+            FlowId::try_from_u8(0x02).unwrap(),
+            FlowId::try_from_u8(0x03).unwrap(),
+            FlowId::try_from_u8(0x0A).unwrap(),
+            FlowId::try_from_u8(0x15).unwrap(),
+            FlowId::try_from_u8(0x20).unwrap(),
         ])
         .unwrap();
         let parts = AssociationResponseParts::Accept(AssociationAcceptParts {
             flow_acceptance: FlowAcceptance::Specific(flows),
             harq_override: Some(HarqOverride {
-                harq_processes_rx: HarqProcesses::new(2).unwrap(),
-                max_harq_re_rx: MaxHarqReTx::new(5).unwrap(),
-                harq_processes_tx: HarqProcesses::new(3).unwrap(),
-                max_harq_re_tx: MaxHarqReTx::new(10).unwrap(),
+                harq_processes_rx: HarqProcesses::try_from_u8(2).unwrap(),
+                max_harq_re_rx: MaxHarqReTx::try_from_u8(5).unwrap(),
+                harq_processes_tx: HarqProcesses::try_from_u8(3).unwrap(),
+                max_harq_re_tx: MaxHarqReTx::try_from_u8(10).unwrap(),
             }),
             group: Some(GroupAssignment {
-                group_id: GroupId::new(0x55).unwrap(),
-                resource_tag: ResourceTag::new(0x2A).unwrap(),
+                group_id: GroupId::try_from_u8(0x55).unwrap(),
+                resource_tag: ResourceTag::try_from_u8(0x2A).unwrap(),
             }),
         });
         let mut buf = [0u8; 11];

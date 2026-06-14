@@ -68,7 +68,7 @@ pub fn def() -> MessageDef {
                     bits: 16,
                     ty: Ty::Fallible {
                         ty: "ShortRdId",
-                        ctor: "new",
+                        ctor: "try_from_u16",
                         getter: "as_u16",
                     },
                 },
@@ -77,7 +77,7 @@ pub fn def() -> MessageDef {
                     bits: 32,
                     ty: Ty::Fallible {
                         ty: "LongRdId",
-                        ctor: "new",
+                        ctor: "try_from_u32",
                         getter: "as_u32",
                     },
                 },
